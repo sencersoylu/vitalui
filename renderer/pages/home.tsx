@@ -999,7 +999,6 @@ export default function HomePage() {
             flex-direction: row;
             gap: 12px;
             width: 45%;
-            padding: 0 24px;
             margin-bottom: 0px;
           }
 
