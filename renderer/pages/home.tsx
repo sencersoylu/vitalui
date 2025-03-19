@@ -79,11 +79,23 @@ export default function HomePage() {
 
       } else if (data.data.includes('DATA:')) {
         const dataArray = data.data.split(':')[1].split(',');
-        setVitalSigns({
-          heartRate: dataArray[3],
-          oxygenSaturation: dataArray[4],
-          bloodPressure: dataArray[1] + "/" + dataArray[2]
-        });
+        
+      
+        if (dataArray[0] == '4') {
+          setErrorMessage('Motion detected. Please keep your finger on the sensor.');
+          setShowErrorModal(true);
+        }
+        else if (dataArray[0] == '5') {
+          setErrorMessage('Estimation failed. Please try again.');
+          setShowErrorModal(true);
+        }
+        else if (dataArray[0] == '1' || dataArray[0] == '2' || dataArray[0] == '3' || dataArray[0] == '6') {
+          setVitalSigns({
+            heartRate: dataArray[3],
+            oxygenSaturation: dataArray[4],
+            bloodPressure: dataArray[1] + "/" + dataArray[2]
+          });
+        }
       }
     });
     
@@ -144,6 +156,10 @@ export default function HomePage() {
         <Head>
           <title>Page1 - exported project</title>
           <meta property="og:title" content="Page1 - exported project" />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+          />
         </Head>
         <div className="page1-vital-sign-home">
           <div className="page1-basic-header">
@@ -197,7 +213,7 @@ export default function HomePage() {
                 <span className="page1-text15">Oxygen Saturation ( SpO2 )</span>
               </div>
               <div className="page1-frame22">
-                <div className="page1-numberdetail2">
+                <div className="page1-numberdetail1">
                   {vitalSigns.oxygenSaturation && vitalSigns.oxygenSaturation !== '0' ? (
                     <span className="page1-text16">
                       <span>
@@ -258,11 +274,7 @@ export default function HomePage() {
           
         </div>
         <div className="page1-frame24">
-          <img
-            alt="wpfconnectedI250"
-            src={connected ? "/external/wpfconnectedi250-lt9t.svg" : "/external/disconnected-icon.svg"}
-            className="page1-wpfconnected"
-          />
+         
           <span className="page1-text24">{currentTime || '10.03.2025 14:27'}</span>
         </div>
         
@@ -310,6 +322,86 @@ export default function HomePage() {
           </div>
         )}
       </div>
+      <style jsx global>{`
+        * {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .page1-text10 {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 700;
+        }
+
+        .page1-text11 {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 700;
+        }
+
+        .page1-text12 {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 700;
+        }
+
+        .page1-text14 {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 700;
+        }
+
+        .page1-text15 {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 700;
+        }
+
+        .page1-text16 {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 700;
+        }
+
+        .page1-text18 {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 700;
+        }
+
+        .page1-text19 {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 700;
+        }
+
+        .page1-text24 {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 700;
+        }
+
+        .calibration-modal h2 {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 700;
+        }
+
+        .calibration-modal p {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 500;
+        }
+
+        .cancel-button {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 600;
+        }
+
+        .error-modal h2 {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 700;
+        }
+
+        .error-modal p {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 500;
+        }
+
+        .error-button {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 600;
+        }
+      `}</style>
       <style jsx>
         {`
           .page1-container {
@@ -453,6 +545,7 @@ export default function HomePage() {
             line-height: 40px;
             font-stretch: normal;
             text-decoration: none;
+            padding-right: 40px;
           }
           .page1-text14 {
             font-size: 40px;
@@ -507,7 +600,7 @@ export default function HomePage() {
           }
           .page1-numberdetail2 {
             gap: 10px;
-            width: 480px;
+            width: 1100px;
             height: 103px;
             display: flex;
             position: relative;
@@ -530,6 +623,7 @@ export default function HomePage() {
             line-height: 40px;
             font-stretch: normal;
             text-decoration: none;
+            padding-right: 40px;
           }
           .page1-text18 {
             font-size: 40px;
@@ -544,7 +638,7 @@ export default function HomePage() {
           }
           .page1-number-card3 {
             gap: 50px;
-            width: 550px;
+            width: 1147px;
             height: 250px;
             display: flex;
             padding: 18px 24px;
@@ -561,7 +655,7 @@ export default function HomePage() {
           }
           .page1-frame4 {
             gap: 128px;
-            width: 494px;
+            width: 1100px;
             height: 30px;
             display: flex;
             align-items: center;
@@ -583,7 +677,7 @@ export default function HomePage() {
           }
           .page1-frame23 {
             gap: 165px;
-            width: 494px;
+            width: 1100px;
             display: flex;
             padding: 0 16px;
             align-items: center;
