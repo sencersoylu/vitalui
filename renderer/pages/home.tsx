@@ -82,18 +82,8 @@ export default function HomePage() {
         const dataArray = data.data.split(':')[1].split(',');
         
       
-        if (dataArray[0] == '4' && lastStatus != '4') {
-          setErrorMessage('Motion detected. Please keep your finger on the sensor.');
-          setShowErrorModal(true);
-          setTimeout(() => {
-            setShowErrorModal(false);
-          }, 1000);
-        }
-        else if (dataArray[0] == '5' && lastStatus != '5') {
-          setErrorMessage('Estimation failed. Please try again.');
-          setShowErrorModal(true);
-        }
-        else if (dataArray[0] == '1' || dataArray[0] == '2' || dataArray[0] == '3' || dataArray[0] == '6') {
+     
+        if (dataArray[0] == '1' || dataArray[0] == '2' || dataArray[0] == '3' || dataArray[0] == '6' || dataArray[0] == '4' || dataArray[0] == '5') {
           setVitalSigns({
             heartRate: dataArray[3],
             oxygenSaturation: dataArray[4],
@@ -141,7 +131,7 @@ export default function HomePage() {
     // Function to update current time
     const updateCurrentTime = () => {
       const now = new Date();
-      const formattedDate = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const formattedDate = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now.getFullYear()}              ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       setCurrentTime(formattedDate);
     };
     
