@@ -712,7 +712,6 @@ export default function HomePage() {
             gap: 165px;
             width: 1100px;
             display: flex;
-            padding: 0 16px;
             align-items: center;
             flex-shrink: 0;
             justify-content: space-between;
