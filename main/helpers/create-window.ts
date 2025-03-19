@@ -67,6 +67,9 @@ export const createWindow = (
     }
     store.set(key, state)
   }
+process.on('uncaughtException', function (err) {
+  console.log(err);
+})
 
   state = ensureVisibleOnSomeDisplay(restore())
 

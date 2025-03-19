@@ -9,6 +9,11 @@ if (process.platform === 'linux') {
     app.disableHardwareAcceleration();
 }
 
+process.on('uncaughtException', function (err) {
+  console.log(err);
+})
+
+
 if (isProd) {
   serve({ directory: 'app' })
 } else {

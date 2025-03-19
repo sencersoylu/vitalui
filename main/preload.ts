@@ -1,4 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
+process.on('uncaughtException', function (err) {
+  console.log(err);
+})
 
 const handler = {
   send(channel: string, value: unknown) {
