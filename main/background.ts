@@ -5,6 +5,10 @@ import { createWindow } from './helpers'
 
 const isProd = process.env.NODE_ENV === 'production'
 
+if (process.platform === 'linux') {
+    app.disableHardwareAcceleration();
+}
+
 if (isProd) {
   serve({ directory: 'app' })
 } else {
@@ -25,6 +29,7 @@ if (isProd) {
 
   if (isProd) {
     await mainWindow.loadURL('app://./home')
+    
   } else {
     const port = process.argv[2]
     await mainWindow.loadURL(`http://localhost:${port}/home`)
