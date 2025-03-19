@@ -29,6 +29,10 @@ export default function HomePage() {
       // Set current time on connection
       updateCurrentTime();
     });
+
+    socket.on('serialData', (data) => {
+      console.log('Received serial data:', data);
+    });
     
     // Handle disconnection event
     socket.on('disconnect', () => {
