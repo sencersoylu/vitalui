@@ -55,7 +55,7 @@ export default function HomePage() {
     });
 
     socket.on('serialData', (data) => {
-      console.log('Received serial data:', data);
+      // console.log('Received serial data:', data);
       if (data.data.includes('PRO:')) {
         setShowCalibrationModal(true);
         const progress = parseInt(data.data.split(':')[1]);
@@ -107,14 +107,14 @@ export default function HomePage() {
     
     // Listen for vital signs updates
     socket.on('vitalSigns', (data) => {
-      console.log('Received vital signs data:', data);
+      // console.log('Received vital signs data:', data);
       setVitalSigns(data);
       updateCurrentTime();
     });
     
     // Listen for calibration progress updates
     socket.on('calibrationProgress', (data) => {
-      console.log('Calibration progress:', data);
+      //console.log('Calibration progress:', data);
       setCalibrationProgress(data.progress);
       setCalibrationStatus(data.status);
       
@@ -210,7 +210,7 @@ export default function HomePage() {
             </div>
             <div className="page1-number-card2">
               <div className="page1-frame3">
-                <span className="page1-text15">Oxygen Saturation ( SpO2 )</span>
+                <span className="page1-text15">Oxygen Saturation (SpO2)</span>
               </div>
               <div className="page1-frame22">
                 <div className="page1-numberdetail1">
@@ -718,7 +718,7 @@ export default function HomePage() {
           }
           .page1-frame24 {
             gap: 36px;
-            width: 1184px;
+            width: 1140px;
             height: 50px;
             display: flex;
             z-index: 3;
