@@ -54,6 +54,7 @@ export default function HomePage() {
       updateCurrentTime();
     });
 
+    let lastStatus;
     socket.on('serialData', (data) => {
       // console.log('Received serial data:', data);
       if (data.data.includes('PRO:')) {
@@ -81,14 +82,14 @@ export default function HomePage() {
         const dataArray = data.data.split(':')[1].split(',');
         
       
-        if (dataArray[0] == '4') {
+        if (dataArray[0] == '4' && lastStatus != '4') {
           setErrorMessage('Motion detected. Please keep your finger on the sensor.');
           setShowErrorModal(true);
           setTimeout(() => {
             setShowErrorModal(false);
           }, 1000);
         }
-        else if (dataArray[0] == '5') {
+        else if (dataArray[0] == '5' && lastStatus != '5') {
           setErrorMessage('Estimation failed. Please try again.');
           setShowErrorModal(true);
         }
@@ -105,6 +106,8 @@ export default function HomePage() {
             bloodPressure: ''
           });
         }
+              lastStatus = dataArray[0];
+
       }
     });
     
@@ -261,16 +264,17 @@ export default function HomePage() {
             <div className="page1-number-card3">
               <div className="page1-frame4">
                 <span className="page1-text19">Blood Pressure</span>
-              </div>
-              <div className="page1-frame23">
-                <div className="page1-numberdetail2">
-                  <div className="button-container">
-                    <button 
+                 <button 
                       className="calibration-button"
                       onClick={startCalibration}
                     >
                       Calibrate
                     </button>
+              </div>
+              <div className="page1-frame23">
+                <div className="page1-numberdetail2">
+                  <div className="button-container">
+                   
                     <button 
                       className="reset-button"
                       onClick={resetData}
@@ -842,9 +846,9 @@ export default function HomePage() {
           }
 
           .calibration-button {
-            width: 100%;
+            width: 30%;
             padding: 12px 24px;
-            font-size: 48px;
+            font-size: 24px;
             font-weight: 600;
             background-color: rgb(33, 116, 212);
             color: white;
@@ -854,6 +858,7 @@ export default function HomePage() {
             font-family: 'Plus Jakarta Sans';
             transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(33, 116, 212, 0.2);
+            margin-top: 20px;
           }
           
           .calibration-button:hover:not(:disabled) {
