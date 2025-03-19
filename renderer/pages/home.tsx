@@ -22,6 +22,9 @@ export default function HomePage() {
   const [calibrationProgress, setCalibrationProgress] = useState(0);
   // State for calibration status message
   const [calibrationStatus, setCalibrationStatus] = useState('');
+  // State for error modal
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   // Socket reference
   const [socketRef, setSocketRef] = useState(null);
   
@@ -59,9 +62,21 @@ export default function HomePage() {
         setCalibrationProgress(progress);
         setCalibrationStatus(`Calibration in progress: ${progress}%`);
       }
-      if (data.data.includes('OK:CAL')) {
+      else if (data.data.includes('OK:CAL')) {
                 socket.emit('serialSend', 'M');
         setShowCalibrationModal(false);
+      }
+      else if (data.data.includes('ERR:CAL')) {
+        setShowCalibrationModal(false);
+
+        setErrorMessage('Calibration failed. Please try again.');
+        setShowErrorModal(true);
+        setTimeout(() => {
+          setShowErrorModal(false);
+          socket.emit('serialSend', 'R');
+          
+        }, 3000);
+
       }
     });
     
@@ -266,6 +281,23 @@ export default function HomePage() {
                 }}
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Error Modal */}
+        {showErrorModal && (
+          <div className="modal-overlay">
+            <div className="error-modal">
+              <div className="error-icon">⚠️</div>
+              <h2>Error</h2>
+              <p>{errorMessage}</p>
+              <button 
+                className="error-button" 
+                onClick={() => setShowErrorModal(false)}
+              >
+                OK
               </button>
             </div>
           </div>
@@ -759,6 +791,53 @@ export default function HomePage() {
           
           .cancel-button:hover {
             background-color: rgb(220, 220, 220);
+          }
+
+          /* Error Modal Styles */
+          .error-modal {
+            background-color: white;
+            border-radius: 16px;
+            padding: 40px;
+            width: 400px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            text-align: center;
+          }
+
+          .error-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+          }
+
+          .error-modal h2 {
+            font-family: 'Plus Jakarta Sans';
+            font-weight: 700;
+            font-size: 28px;
+            color: rgb(220, 53, 69);
+            margin-bottom: 16px;
+          }
+
+          .error-modal p {
+            font-family: 'Plus Jakarta Sans';
+            font-size: 18px;
+            color: rgb(74, 74, 74);
+            margin-bottom: 30px;
+          }
+
+          .error-button {
+            padding: 12px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            background-color: rgb(220, 53, 69);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Plus Jakarta Sans';
+            transition: background-color 0.3s;
+          }
+
+          .error-button:hover {
+            background-color: rgb(200, 35, 51);
           }
         `}
       </style>
