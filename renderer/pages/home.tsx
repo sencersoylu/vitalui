@@ -264,12 +264,7 @@ export default function HomePage() {
             <div className="page1-number-card3">
               <div className="page1-frame4">
                 <span className="page1-text19">Blood Pressure</span>
-                 <button 
-                      className="calibration-button"
-                      onClick={startCalibration}
-                    >
-                      Calibrate
-                    </button>
+                 
               </div>
               <div className="page1-frame23">
                 <div className="page1-numberdetail2">
@@ -313,6 +308,12 @@ export default function HomePage() {
         <div className="page1-frame24">
          
           <span className="page1-text24">{currentTime || '10.03.2025 14:27'}</span>
+          <button 
+                      className="calibration-button"
+                      onClick={startCalibration}
+                    >
+                      Calibrate
+                    </button>
         </div>
         
         {/* Calibration Modal */}
@@ -754,30 +755,19 @@ export default function HomePage() {
           }
           .page1-frame24 {
             gap: 36px;
-            width: 1140px;
+            width: 1184px;
             height: 50px;
             display: flex;
             z-index: 3;
             position: relative;
-            align-items: flex-start;
+            align-items: center;
             flex-shrink: 0;
-            flex-direction: column;
-            justify-content: center;
-          }
-          .page1-wpfconnected {
-            top: 0px;
-            left: 0px;
-            width: 48px;
-            height: 48px;
-            position: absolute;
+            flex-direction: row;
+            justify-content: space-between;
+            padding: 0 24px;
           }
           .page1-text24 {
-            top: 0px;
             color: rgb(74, 144, 226);
-            width: 100%;
-            height: auto;
-            display: flex;
-            position: absolute;
             font-size: 32px;
             font-style: Bold;
             text-align: left;
@@ -785,7 +775,6 @@ export default function HomePage() {
             font-weight: 700;
             line-height: 100%;
             font-stretch: normal;
-            flex-direction: row-reverse;
             text-decoration: none;
           }
           
@@ -846,9 +835,8 @@ export default function HomePage() {
           }
 
           .calibration-button {
-            width: 30%;
             padding: 12px 24px;
-            font-size: 24px;
+            font-size: 16px;
             font-weight: 600;
             background-color: rgb(33, 116, 212);
             color: white;
@@ -858,10 +846,9 @@ export default function HomePage() {
             font-family: 'Plus Jakarta Sans';
             transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(33, 116, 212, 0.2);
-            margin-top: 20px;
           }
           
-          .calibration-button:hover:not(:disabled) {
+          .calibration-button:hover {
             background-color: rgb(26, 90, 165);
             transform: translateY(-1px);
             box-shadow: 0 4px 6px rgba(33, 116, 212, 0.3);
