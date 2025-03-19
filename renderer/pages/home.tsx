@@ -44,7 +44,7 @@ export default function HomePage() {
       setConnected(true);
 
       setTimeout(() => {
-        //socket.emit('serialSend', 'C');
+        socket.emit('serialSend', 'C');
       }, 1000);
       
       // Set current time on connection
