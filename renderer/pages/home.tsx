@@ -457,7 +457,7 @@ export default function HomePage() {
           .page1-basic-header {
             gap: 216px;
             display: flex;
-            padding: 24px 0 20px;
+            padding: 24px 0 0px;
             align-self: stretch;
             align-items: center;
             flex-shrink: 0;
