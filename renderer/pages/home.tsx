@@ -27,7 +27,7 @@ export default function HomePage() {
   
   useEffect(() => {
     // Initialize socket connection
-    const socket = io('https://3038-83-111-109-94.ngrok-free.app', {
+    const socket = io('http://localhost:4000', {
       withCredentials: true,
       transports: ['websocket', 'polling'],
       extraHeaders: {
@@ -54,7 +54,7 @@ export default function HomePage() {
     socket.on('serialData', (data) => {
       console.log('Received serial data:', data);
       if (data.data.includes('PRO:')) {
-        //setShowCalibrationModal(true);
+        setShowCalibrationModal(true);
         const progress = parseInt(data.data.split(':')[1]);
         setCalibrationProgress(progress);
         setCalibrationStatus(`Calibration in progress: ${progress}%`);
