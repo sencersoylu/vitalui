@@ -89,13 +89,7 @@ export default function HomePage() {
             oxygenSaturation: dataArray[4],
             bloodPressure: dataArray[1] + "/" + dataArray[2]
           });
-        } else if (dataArray[0] == '0') {
-          setVitalSigns({
-            heartRate: '',
-            oxygenSaturation: '',
-            bloodPressure: ''
-          });
-        }
+        } 
               lastStatus = dataArray[0];
 
       }
