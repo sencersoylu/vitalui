@@ -46,9 +46,7 @@ export default function HomePage() {
       console.log('Connected to socket server');
       setConnected(true);
 
-      setTimeout(() => {
-        socket.emit('serialSend', 'C');
-      }, 1000);
+    
       
       // Set current time on connection
       updateCurrentTime();
@@ -146,7 +144,7 @@ export default function HomePage() {
     setCalibrationStatus('Starting calibration...');
     
     if (socketRef) {
-      socketRef.emit('startCalibration');
+      socketRef.emit('serialSend', 'C');
     }
   };
 
@@ -246,6 +244,14 @@ export default function HomePage() {
               </div>
               <div className="page1-frame23">
                 <div className="page1-numberdetail2">
+                     <div className="calibration-button-container">
+                <button 
+                  className="calibration-button"
+                  onClick={startCalibration}
+                >
+                  Calibration
+                </button>
+              </div>
                   {vitalSigns.bloodPressure && vitalSigns.bloodPressure !== '0' ? (
                     <span className="page1-text16">
                       <span>
@@ -269,6 +275,7 @@ export default function HomePage() {
                   )}
                 </div>
               </div>
+           
             </div>
           </div>
           
@@ -798,10 +805,21 @@ export default function HomePage() {
           }
           
           /* Calibration button styles */
+          .calibration-button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 0px;
+            width: 20%;
+            padding: 0 24px;
+            margin-left: -20px;
+            margin-bottom: 40px;
+          }
+
           .calibration-button {
-            margin-top: 20px;
-            padding: 15px 30px;
-            font-size: 20px;
+            width: 100%;
+            padding: 12px 24px;
+            font-size: 16px;
             font-weight: 600;
             background-color: rgb(33, 116, 212);
             color: white;
@@ -809,11 +827,20 @@ export default function HomePage() {
             border-radius: 8px;
             cursor: pointer;
             font-family: 'Plus Jakarta Sans';
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(33, 116, 212, 0.2);
           }
           
-          .calibration-button:hover {
+          .calibration-button:hover:not(:disabled) {
             background-color: rgb(26, 90, 165);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(33, 116, 212, 0.3);
+          }
+
+          .calibration-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            box-shadow: none;
           }
           
           /* Modal styles */
