@@ -7,9 +7,9 @@ import io from 'socket.io-client'
 export default function HomePage() {
   // State to store vital signs data
   const [vitalSigns, setVitalSigns] = useState({
-    heartRate: 72,
-    oxygenSaturation: 72,
-    bloodPressure: '120/80'
+    heartRate: '',
+    oxygenSaturation: '',
+    bloodPressure: ''
   });
   
   // State to track connection status
@@ -43,7 +43,7 @@ export default function HomePage() {
       setConnected(true);
 
       setTimeout(() => {
-        socket.emit('serialSend', 'c');
+        socket.emit('serialSend', 'C');
       }, 1000);
       
       // Set current time on connection
@@ -52,6 +52,12 @@ export default function HomePage() {
 
     socket.on('serialData', (data) => {
       console.log('Received serial data:', data);
+      if (data.data.includes('PRO:')) {
+        //setShowCalibrationModal(true);
+        const progress = parseInt(data.data.split(':')[1]);
+        setCalibrationProgress(progress);
+        setCalibrationStatus(`Calibration in progress: ${progress}%`);
+      }
     });
     
     // Handle disconnection event
@@ -135,17 +141,27 @@ export default function HomePage() {
               </div>
               <div className="page1-frame21">
                 <div className="page1-numberdetail1">
-                  <span className="page1-text12">
-                    <span>
-                      {vitalSigns.heartRate}
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html: ' ',
-                        }}
-                      />
+                  {vitalSigns.heartRate && vitalSigns.heartRate !== '0' ? (
+                    <span className="page1-text12">
+                      <span>
+                        {vitalSigns.heartRate}
+                        <span
+                          dangerouslySetInnerHTML={{
+                            __html: ' ',
+                          }}
+                        />
+                      </span>
+                      <span className="page1-text14">bpm</span>
                     </span>
-                    <span className="page1-text14">bpm</span>
-                  </span>
+                  ) : (
+                    <div className="loading-animation">
+                      <div className="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -155,17 +171,27 @@ export default function HomePage() {
               </div>
               <div className="page1-frame22">
                 <div className="page1-numberdetail2">
-                  <span className="page1-text16">
-                    <span>
-                      {vitalSigns.oxygenSaturation}
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html: ' ',
-                        }}
-                      />
+                  {vitalSigns.oxygenSaturation && vitalSigns.oxygenSaturation !== '0' ? (
+                    <span className="page1-text16">
+                      <span>
+                        {vitalSigns.oxygenSaturation}
+                        <span
+                          dangerouslySetInnerHTML={{
+                            __html: ' ',
+                          }}
+                        />
+                      </span>
+                      <span className="page1-text18">%</span>
                     </span>
-                    <span className="page1-text18">%</span>
-                  </span>
+                  ) : (
+                    <div className="loading-animation">
+                      <div className="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -176,18 +202,28 @@ export default function HomePage() {
                 <span className="page1-text19">Blood Pressure</span>
               </div>
               <div className="page1-frame23">
-                <div className="page1-numberdetail3">
-                  <span className="page1-text20">
-                    <span className="page1-text21">{vitalSigns.bloodPressure}</span>
-                    <span>
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html: ' ',
-                        }}
-                      />
+                <div className="page1-numberdetail2">
+                  {vitalSigns.bloodPressure && vitalSigns.bloodPressure !== '0' ? (
+                    <span className="page1-text16">
+                      <span>
+                        {vitalSigns.bloodPressure}
+                        <span
+                          dangerouslySetInnerHTML={{
+                            __html: ' ',
+                          }}
+                        />
+                      </span>
+                      <span className="page1-text18">mmHg</span>
                     </span>
-                    <span className="page1-text23">mmHg</span>
-                  </span>
+                  ) : (
+                    <div className="loading-animation">
+                      <div className="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -207,8 +243,7 @@ export default function HomePage() {
         {showCalibrationModal && (
           <div className="modal-overlay">
             <div className="calibration-modal">
-              <h2>Calibration in Progress</h2>
-              <p className="calibration-status">{calibrationStatus}</p>
+              <h2>Please keep your finger on sensor untill progress reach 100%</h2>
               <div className="progress-container">
                 <div 
                   className="progress-bar" 
@@ -578,6 +613,50 @@ export default function HomePage() {
             font-stretch: normal;
             flex-direction: row-reverse;
             text-decoration: none;
+          }
+          
+          /* Loading Animation Styles */
+          .loading-animation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+          }
+
+          .loading-dots {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .loading-dots span {
+            width: 12px;
+            height: 12px;
+            background-color: rgb(33, 116, 212);
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 1.4s infinite ease-in-out both;
+          }
+
+          .loading-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+          }
+
+          .loading-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+          }
+
+          @keyframes bounce {
+            0%, 80%, 100% { 
+              transform: scale(0);
+              opacity: 0.3;
+            }
+            40% { 
+              transform: scale(1);
+              opacity: 1;
+            }
           }
           
           /* Calibration button styles */
