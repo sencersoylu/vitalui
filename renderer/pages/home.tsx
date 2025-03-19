@@ -44,7 +44,7 @@ export default function HomePage() {
       setConnected(true);
 
       setTimeout(() => {
-        socket.emit('serialSend', 'C');
+        //socket.emit('serialSend', 'C');
       }, 1000);
       
       // Set current time on connection
@@ -58,6 +58,10 @@ export default function HomePage() {
         const progress = parseInt(data.data.split(':')[1]);
         setCalibrationProgress(progress);
         setCalibrationStatus(`Calibration in progress: ${progress}%`);
+      }
+      if (data.data.includes('OK:CAL')) {
+                socket.emit('serialSend', 'M');
+        setShowCalibrationModal(false);
       }
     });
     
