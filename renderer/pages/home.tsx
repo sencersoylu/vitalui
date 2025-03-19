@@ -46,7 +46,9 @@ export default function HomePage() {
       console.log('Connected to socket server');
       setConnected(true);
 
-    
+    setTimeout(() => {
+      socket.emit('serialSend', 'R');
+    }, 1000);
       
       // Set current time on connection
       updateCurrentTime();
@@ -92,6 +94,12 @@ export default function HomePage() {
             heartRate: dataArray[3],
             oxygenSaturation: dataArray[4],
             bloodPressure: dataArray[1] + "/" + dataArray[2]
+          });
+        } else if (dataArray[0] == '0') {
+          setVitalSigns({
+            heartRate: '',
+            oxygenSaturation: '',
+            bloodPressure: ''
           });
         }
       }
@@ -146,6 +154,15 @@ export default function HomePage() {
     if (socketRef) {
       socketRef.emit('serialSend', 'C');
     }
+  };
+
+  // Function to reset all data
+  const resetData = () => {
+    setVitalSigns({
+      heartRate: '',
+      oxygenSaturation: '',
+      bloodPressure: ''
+    });
   };
 
   return (
@@ -244,14 +261,20 @@ export default function HomePage() {
               </div>
               <div className="page1-frame23">
                 <div className="page1-numberdetail2">
-                     <div className="calibration-button-container">
-                <button 
-                  className="calibration-button"
-                  onClick={startCalibration}
-                >
-                  Calibration
-                </button>
-              </div>
+                  <div className="button-container">
+                    <button 
+                      className="calibration-button"
+                      onClick={startCalibration}
+                    >
+                      Calibration
+                    </button>
+                    <button 
+                      className="reset-button"
+                      onClick={resetData}
+                    >
+                      Reset Data
+                    </button>
+                  </div>
                   {vitalSigns.bloodPressure && vitalSigns.bloodPressure !== '0' ? (
                     <span className="page1-text16">
                       <span>
@@ -819,7 +842,7 @@ export default function HomePage() {
           .calibration-button {
             width: 100%;
             padding: 12px 24px;
-            font-size: 16px;
+            font-size: 24px;
             font-weight: 600;
             background-color: rgb(33, 116, 212);
             color: white;
@@ -966,6 +989,37 @@ export default function HomePage() {
 
           .error-button:hover {
             background-color: rgb(200, 35, 51);
+          }
+
+          /* Button styles */
+          .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 22%;
+            padding: 0 24px;
+            margin-bottom: 0px;
+          }
+
+          .reset-button {
+            width: 100%;
+            padding: 12px 24px;
+            font-size: 24px;
+            font-weight: 600;
+            background-color: rgb(220, 53, 69);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Plus Jakarta Sans';
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+          }
+          
+          .reset-button:hover {
+            background-color: rgb(200, 35, 51);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(220, 53, 69, 0.3);
           }
         `}
       </style>
