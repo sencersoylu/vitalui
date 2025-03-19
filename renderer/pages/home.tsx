@@ -16,15 +16,35 @@ export default function HomePage() {
   const [connected, setConnected] = useState(false);
   // State to store current time
   const [currentTime, setCurrentTime] = useState('');
+  // State for calibration modal
+  const [showCalibrationModal, setShowCalibrationModal] = useState(false);
+  // State for calibration progress
+  const [calibrationProgress, setCalibrationProgress] = useState(0);
+  // State for calibration status message
+  const [calibrationStatus, setCalibrationStatus] = useState('');
+  // Socket reference
+  const [socketRef, setSocketRef] = useState(null);
   
   useEffect(() => {
     // Initialize socket connection
-    const socket = io('http://localhost:4000');
+    const socket = io('http://localhost:4000', {
+      withCredentials: true,
+      extraHeaders: {
+        "Access-Control-Allow-Origin": "*"
+      }
+    });
+    
+    // Store socket reference
+    setSocketRef(socket);
     
     // Handle connection event
     socket.on('connect', () => {
       console.log('Connected to socket server');
       setConnected(true);
+      
+      setTimeout(() => {
+        socket.emit('serialData', 'c');
+      }, 1000);
       
       // Set current time on connection
       updateCurrentTime();
@@ -47,6 +67,20 @@ export default function HomePage() {
       updateCurrentTime();
     });
     
+    // Listen for calibration progress updates
+    socket.on('calibrationProgress', (data) => {
+      console.log('Calibration progress:', data);
+      setCalibrationProgress(data.progress);
+      setCalibrationStatus(data.status);
+      
+      // Close modal when calibration is complete
+      if (data.progress === 100) {
+        setTimeout(() => {
+          setShowCalibrationModal(false);
+        }, 2000);
+      }
+    });
+    
     // Function to update current time
     const updateCurrentTime = () => {
       const now = new Date();
@@ -59,6 +93,17 @@ export default function HomePage() {
       socket.disconnect();
     };
   }, []);
+
+  // Function to start calibration
+  const startCalibration = () => {
+    setShowCalibrationModal(true);
+    setCalibrationProgress(0);
+    setCalibrationStatus('Starting calibration...');
+    
+    if (socketRef) {
+      socketRef.emit('startCalibration');
+    }
+  };
 
   return (
   <>
@@ -147,6 +192,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+          
         </div>
         <div className="page1-frame24">
           <img
@@ -156,6 +202,34 @@ export default function HomePage() {
           />
           <span className="page1-text24">{currentTime || '10.03.2025 14:27'}</span>
         </div>
+        
+        {/* Calibration Modal */}
+        {showCalibrationModal && (
+          <div className="modal-overlay">
+            <div className="calibration-modal">
+              <h2>Calibration in Progress</h2>
+              <p className="calibration-status">{calibrationStatus}</p>
+              <div className="progress-container">
+                <div 
+                  className="progress-bar" 
+                  style={{ width: `${calibrationProgress}%` }}
+                ></div>
+              </div>
+              <p className="progress-percentage">{calibrationProgress}%</p>
+              <button 
+                className="cancel-button" 
+                onClick={() => {
+                  if (socketRef) {
+                    socketRef.emit('cancelCalibration');
+                  }
+                  setShowCalibrationModal(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       <style jsx>
         {`
@@ -165,6 +239,7 @@ export default function HomePage() {
             display: flex;
             align-items: center;
             flex-direction: column;
+            position: relative;
           }
           .page1-vital-sign-home {
             gap: 19px;
@@ -503,6 +578,103 @@ export default function HomePage() {
             font-stretch: normal;
             flex-direction: row-reverse;
             text-decoration: none;
+          }
+          
+          /* Calibration button styles */
+          .calibration-button {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: 600;
+            background-color: rgb(33, 116, 212);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Plus Jakarta Sans';
+            transition: background-color 0.3s;
+          }
+          
+          .calibration-button:hover {
+            background-color: rgb(26, 90, 165);
+          }
+          
+          /* Modal styles */
+          .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+          }
+          
+          .calibration-modal {
+            background-color: white;
+            border-radius: 16px;
+            padding: 40px;
+            width: 500px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            text-align: center;
+          }
+          
+          .calibration-modal h2 {
+            font-family: 'Plus Jakarta Sans';
+            font-weight: 700;
+            font-size: 28px;
+            color: rgb(26, 32, 39);
+            margin-bottom: 20px;
+          }
+          
+          .calibration-status {
+            font-family: 'Plus Jakarta Sans';
+            font-size: 18px;
+            color: rgb(74, 74, 74);
+            margin-bottom: 30px;
+          }
+          
+          .progress-container {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(36, 78, 126, 0.1);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+          }
+          
+          .progress-bar {
+            height: 100%;
+            background-color: rgb(33, 116, 212);
+            transition: width 0.3s ease;
+          }
+          
+          .progress-percentage {
+            font-family: 'Plus Jakarta Sans';
+            font-size: 18px;
+            font-weight: 600;
+            color: rgb(33, 116, 212);
+            margin-bottom: 30px;
+          }
+          
+          .cancel-button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            background-color: rgb(240, 240, 240);
+            color: rgb(74, 74, 74);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Plus Jakarta Sans';
+            transition: background-color 0.3s;
+          }
+          
+          .cancel-button:hover {
+            background-color: rgb(220, 220, 220);
           }
         `}
       </style>
