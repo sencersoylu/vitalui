@@ -266,13 +266,13 @@ export default function HomePage() {
                       className="calibration-button"
                       onClick={startCalibration}
                     >
-                      Calibration
+                      Calibrate
                     </button>
                     <button 
                       className="reset-button"
                       onClick={resetData}
                     >
-                      Reset Data
+                      Reset
                     </button>
                   </div>
                   {vitalSigns.bloodPressure && vitalSigns.bloodPressure !== '0' ? (
@@ -842,7 +842,7 @@ export default function HomePage() {
           .calibration-button {
             width: 100%;
             padding: 12px 24px;
-            font-size: 24px;
+            font-size: 48px;
             font-weight: 600;
             background-color: rgb(33, 116, 212);
             color: white;
@@ -994,9 +994,9 @@ export default function HomePage() {
           /* Button styles */
           .button-container {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             gap: 12px;
-            width: 22%;
+            width: 45%;
             padding: 0 24px;
             margin-bottom: 0px;
           }
@@ -1004,7 +1004,7 @@ export default function HomePage() {
           .reset-button {
             width: 100%;
             padding: 12px 24px;
-            font-size: 24px;
+            font-size: 48px;
             font-weight: 600;
             background-color: rgb(220, 53, 69);
             color: white;
