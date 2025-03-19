@@ -74,9 +74,16 @@ export default function HomePage() {
         setTimeout(() => {
           setShowErrorModal(false);
           socket.emit('serialSend', 'R');
-          
+
         }, 3000);
 
+      } else if (data.data.includes('DATA:')) {
+        const dataArray = data.data.split(':')[1].split(',');
+        setVitalSigns({
+          heartRate: dataArray[3],
+          oxygenSaturation: dataArray[4],
+          bloodPressure: dataArray[1] + "/" + dataArray[2]
+        });
       }
     });
     
