@@ -1,9 +1,61 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import Image from 'next/image'
+import io from 'socket.io-client'
 
 export default function HomePage() {
+  // State to store vital signs data
+  const [vitalSigns, setVitalSigns] = useState({
+    heartRate: 72,
+    oxygenSaturation: 72,
+    bloodPressure: '120/80'
+  });
+  
+  // State to track connection status
+  const [connected, setConnected] = useState(false);
+  // State to store current time
+  const [currentTime, setCurrentTime] = useState('');
+  
+  useEffect(() => {
+    // Initialize socket connection
+    const socket = io('http://localhost:4000');
+    
+    // Handle connection event
+    socket.on('connect', () => {
+      console.log('Connected to socket server');
+      setConnected(true);
+      
+      // Set current time on connection
+      updateCurrentTime();
+    });
+    
+    // Handle disconnection event
+    socket.on('disconnect', () => {
+      console.log('Disconnected from socket server');
+      setConnected(false);
+    });
+    
+    // Listen for vital signs updates
+    socket.on('vitalSigns', (data) => {
+      console.log('Received vital signs data:', data);
+      setVitalSigns(data);
+      updateCurrentTime();
+    });
+    
+    // Function to update current time
+    const updateCurrentTime = () => {
+      const now = new Date();
+      const formattedDate = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      setCurrentTime(formattedDate);
+    };
+    
+    // Clean up socket connection on component unmount
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   return (
   <>
       <div className="page1-container">
@@ -30,13 +82,13 @@ export default function HomePage() {
           <div className="page1-card-container1">
             <div className="page1-number-card1">
               <div className="page1-frame1">
-                <span className="page1-text11">Blood Pressure</span>
+                <span className="page1-text11">Heart Rate</span>
               </div>
               <div className="page1-frame21">
                 <div className="page1-numberdetail1">
                   <span className="page1-text12">
                     <span>
-                      72
+                      {vitalSigns.heartRate}
                       <span
                         dangerouslySetInnerHTML={{
                           __html: ' ',
@@ -56,7 +108,7 @@ export default function HomePage() {
                 <div className="page1-numberdetail2">
                   <span className="page1-text16">
                     <span>
-                      72
+                      {vitalSigns.oxygenSaturation}
                       <span
                         dangerouslySetInnerHTML={{
                           __html: ' ',
@@ -77,7 +129,7 @@ export default function HomePage() {
               <div className="page1-frame23">
                 <div className="page1-numberdetail3">
                   <span className="page1-text20">
-                    <span className="page1-text21">120/80</span>
+                    <span className="page1-text21">{vitalSigns.bloodPressure}</span>
                     <span>
                       <span
                         dangerouslySetInnerHTML={{
@@ -95,10 +147,10 @@ export default function HomePage() {
         <div className="page1-frame24">
           <img
             alt="wpfconnectedI250"
-            src="/external/wpfconnectedi250-lt9t.svg"
+            src={connected ? "/external/wpfconnectedi250-lt9t.svg" : "/external/disconnected-icon.svg"}
             className="page1-wpfconnected"
           />
-          <span className="page1-text24">10.03.2025 14:27</span>
+          <span className="page1-text24">{currentTime || '10.03.2025 14:27'}</span>
         </div>
       </div>
       <style jsx>
