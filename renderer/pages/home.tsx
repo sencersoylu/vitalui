@@ -675,7 +675,6 @@ export default function HomePage() {
             flex-shrink: 0;
           }
           .page1-number-card3 {
-            gap: 50px;
             width: 1147px;
             height: 250px;
             display: flex;
@@ -765,6 +764,7 @@ export default function HomePage() {
             flex-direction: row;
             justify-content: space-between;
             padding: 0 24px;
+            margin-top: 10px;
           }
           .page1-text24 {
             color: rgb(74, 144, 226);
