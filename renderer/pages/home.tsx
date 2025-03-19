@@ -84,6 +84,9 @@ export default function HomePage() {
         if (dataArray[0] == '4') {
           setErrorMessage('Motion detected. Please keep your finger on the sensor.');
           setShowErrorModal(true);
+          setTimeout(() => {
+            setShowErrorModal(false);
+          }, 1000);
         }
         else if (dataArray[0] == '5') {
           setErrorMessage('Estimation failed. Please try again.');
