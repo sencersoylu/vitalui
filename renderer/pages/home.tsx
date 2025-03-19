@@ -16,6 +16,7 @@ export default function HomePage() {
   const [connected, setConnected] = useState(false);
   // State to store current time
   const [currentTime, setCurrentTime] = useState('');
+  const [currentTime2, setCurrentTime2] = useState('');
   // State for calibration modal
   const [showCalibrationModal, setShowCalibrationModal] = useState(false);
   // State for calibration progress
@@ -74,7 +75,6 @@ export default function HomePage() {
         setShowErrorModal(true);
         setTimeout(() => {
           setShowErrorModal(false);
-          socket.emit('serialSend', 'R');
 
         }, 3000);
 
@@ -125,8 +125,10 @@ export default function HomePage() {
     // Function to update current time
     const updateCurrentTime = () => {
       const now = new Date();
-      const formattedDate = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now.getFullYear()}              ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const formattedDate = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now.getFullYear()}`;
       setCurrentTime(formattedDate);
+      const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      setCurrentTime2(formattedTime);
     };
     
     // Clean up socket connection on component unmount
@@ -291,7 +293,8 @@ export default function HomePage() {
         </div>
         <div className="page1-frame24">
          
-          <span className="page1-text24">{currentTime || '10.03.2025 14:27'}</span>
+          <span className="page1-text24">{currentTime || '10.03.2025'}</span>
+           <span className="page1-text24">{currentTime2 || '14:27'}</span>
           <button 
                       className="calibration-button"
                       onClick={startCalibration}
@@ -447,7 +450,7 @@ export default function HomePage() {
             background-color: rgba(250, 252, 254, 1);
           }
           .page1-basic-header {
-            gap: 216px;
+            gap: 236px;
             display: flex;
             padding: 24px 0 0px;
             align-self: stretch;
@@ -738,7 +741,7 @@ export default function HomePage() {
           }
           .page1-frame24 {
             gap: 36px;
-            width: 1184px;
+            width: 1195px;
             height: 50px;
             display: flex;
             z-index: 3;
