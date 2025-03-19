@@ -3,8 +3,11 @@ import {
   BrowserWindow,
   BrowserWindowConstructorOptions,
   Rectangle,
+  app,
 } from 'electron'
 import Store from 'electron-store'
+
+app.commandLine.appendSwitch('--enable-touch-events')
 
 export const createWindow = (
   windowName: string,
@@ -67,9 +70,6 @@ export const createWindow = (
     }
     store.set(key, state)
   }
-process.on('uncaughtException', function (err) {
-  console.log(err);
-})
 
   state = ensureVisibleOnSomeDisplay(restore())
 
@@ -84,6 +84,15 @@ process.on('uncaughtException', function (err) {
   })
 
   win.on('close', saveState)
+
+  // Handle GBM wrapper errors
+  process.on('uncaughtException', (err) => {
+    if (err.message?.includes('gbm_wrapper.cc')) {
+      // Suppress GBM wrapper errors as they don't affect functionality
+      return
+    }
+    console.error('Uncaught Exception:', err)
+  })
 
   return win
 }
