@@ -259,7 +259,14 @@ export default function HomePage() {
     console.log("setValve1");
     if (socketRef) {
       const newValue = valve1Status ? 0 : 1;
-      socketRef.emit('writeBit', { register: "M0500", value: newValue });
+      if (newValue === 0) {
+                socketRef.emit('writeBit', { register: "M0501", value: 0 });
+        socketRef.emit('writeBit', { register: "M0500", value: 1 });
+      } else {
+                socketRef.emit('writeBit', { register: "M0500", value: 0 });
+
+        socketRef.emit('writeBit', { register: "M0501", value: 1 });
+      }
       setValve1Status(!valve1Status);
     }
   }
@@ -268,7 +275,14 @@ export default function HomePage() {
     console.log("setValve2");
     if (socketRef) {
       const newValue = valve2Status ? 0 : 1;
-      socketRef.emit('writeBit', { register: "M0501", value: newValue });
+      if (newValue === 0) {
+                socketRef.emit('writeBit', { register: "M0503", value: 0 });
+        socketRef.emit('writeBit', { register: "M0502", value: 1 });
+      } else {
+                socketRef.emit('writeBit', { register: "M0502", value: 0 });
+
+        socketRef.emit('writeBit', { register: "M0503", value: 1 });
+      }
       setValve2Status(!valve2Status);
     }
   }
