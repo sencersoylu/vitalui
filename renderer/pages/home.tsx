@@ -31,8 +31,7 @@ export default function HomePage() {
   
   useEffect(() => {
     // Initialize socket connection
-    const socket = io('http://localhost:4000', {
-      withCredentials: true,
+    const socket = io('http://172.20.10.3:4000', {
       transports: ['websocket', 'polling'],
       extraHeaders: {
         "Access-Control-Allow-Origin": "http://localhost:8888"
@@ -56,6 +55,10 @@ export default function HomePage() {
     });
 
     let lastStatus;
+    socket.on('data', (data) => {
+      console.log('Received data:', data);
+    }); 
+
     socket.on('serialData', (data) => {
       // console.log('Received serial data:', data);
       if (data.data.includes('PRO:')) {

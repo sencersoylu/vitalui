@@ -28,16 +28,39 @@ export default function HomePage() {
   const [errorMessage, setErrorMessage] = useState('');
   // Socket reference
   const [socketRef, setSocketRef] = useState(null);
+  const [lightStatus, setLightStatus] = useState(false);
+  const [fan1Status, setFan1Status] = useState(false);
+  const [fan2Status, setFan2Status] = useState(false);
+  const [autoMode, setAutoMode] = useState(false);
+  const [airMode, setAirMode] = useState(false);
+  const [ventilMode, setVentilMode] = useState(0); // 0: Off, 1: Low, 2: High
   
   useEffect(() => {
+    console.log("useEffect");
     // Initialize socket connection
-    const socket = io('http://localhost:4000', {
-      withCredentials: true,
+    const socket = io('http://172.20.10.3:4000', {
       transports: ['websocket', 'polling'],
-      extraHeaders: {
-        "Access-Control-Allow-Origin": "http://localhost:8888"
-      }
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
     });
+    
+    // Add error handling
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      setConnected(false);
+    });
+
+    socket.on('error', (error) => {
+      console.error('Socket error:', error);
+      setConnected(false);
+    });
+
+    socket.on('connect_timeout', (timeout) => {
+      console.error('Socket connection timeout:', timeout);
+      setConnected(false);
+    });
+    
     
     // Store socket reference
     setSocketRef(socket);
@@ -56,44 +79,7 @@ export default function HomePage() {
     });
 
     let lastStatus;
-    socket.on('serialData', (data) => {
-      // console.log('Received serial data:', data);
-      if (data.data.includes('PRO:')) {
-        setShowCalibrationModal(true);
-        const progress = parseInt(data.data.split(':')[1]);
-        setCalibrationProgress(progress);
-        setCalibrationStatus(`Calibration in progress: ${progress}%`);
-      }
-      else if (data.data.includes('OK:CAL')) {
-                socket.emit('serialSend', 'M');
-        setShowCalibrationModal(false);
-      }
-      else if (data.data.includes('ERR:CAL')) {
-        setShowCalibrationModal(false);
-
-        setErrorMessage('Calibration failed. Please try again.');
-        setShowErrorModal(true);
-        setTimeout(() => {
-          setShowErrorModal(false);
-
-        }, 3000);
-
-      } else if (data.data.includes('DATA:')) {
-        const dataArray = data.data.split(':')[1].split(',');
-        
-      
-     
-        if (dataArray[0] == '1' || dataArray[0] == '2' || dataArray[0] == '3' || dataArray[0] == '6' || dataArray[0] == '4' || dataArray[0] == '5') {
-          setVitalSigns({
-            heartRate: dataArray[3],
-            oxygenSaturation: dataArray[4],
-            bloodPressure: dataArray[1] + "/" + dataArray[2]
-          });
-        } 
-              lastStatus = dataArray[0];
-
-      }
-    });
+   
     
     // Handle disconnection event
     socket.on('disconnect', () => {
@@ -148,6 +134,70 @@ export default function HomePage() {
     }
   };
 
+  const setLight = () => {
+    console.log("setLight");
+    console.log(socketRef);
+    if (socketRef) {
+      const newValue = lightStatus ? 0 : 255;
+      socketRef.emit('writeRegister', { register: "R01700", value: newValue });
+      setLightStatus(!lightStatus);
+    }
+  }
+
+  const setFan1 = () => {
+    if (socketRef) {
+      const newValue = fan1Status ? 0 : 255;
+      socketRef.emit('writeRegister', { register: "R01704", value: newValue });
+      setFan1Status(!fan1Status);
+    }
+  };
+
+  const setFan2 = () => {
+    if (socketRef) {
+      const newValue = fan2Status ? 0 : 255;
+      socketRef.emit('writeRegister', { register: "R01706", value: newValue });
+      setFan2Status(!fan2Status);
+    }
+  };
+
+  const setVentil = () => {
+    console.log("setVentil");
+    if (socketRef) {
+      const newMode = (ventilMode + 1) % 3;
+      const newValue = newMode === 0 ? 0 : (newMode === 1 ? 1 : 2);
+      console.log("newValue", newValue);
+      if(newValue === 0){
+        socketRef.emit('writeBit', { register: "M0202", value: 0 });
+                socketRef.emit('writeBit', { register: "M0203", value: 0 });
+
+      } else if (newValue === 1) {
+ socketRef.emit('writeBit', { register: "M0202", value: 1 });
+                socketRef.emit('writeBit', { register: "M0203", value: 0 });      } else if (newValue === 2) {
+ socketRef.emit('writeBit', { register: "M0202", value: 0 });
+                socketRef.emit('writeBit', { register: "M0203", value: 1 });      }
+      setVentilMode(newMode);
+    }
+  }
+
+  const setAuto = () => {
+    console.log("setAuto");
+    if (socketRef) {
+      const newValue = autoMode ? 0 : 1;
+      socketRef.emit('writeBit', { register: "M0201", value: newValue  });
+      setAutoMode(!autoMode);
+    }
+
+  }
+
+  const setAir = () => {
+    console.log("setAir");
+    if (socketRef) {
+      const newValue = airMode ? 0 : 1;
+      socketRef.emit('writeBit', { register: "M0200", value: newValue });
+      setAirMode(!airMode);
+    }
+  }
+
   // Function to reset all data
   const resetData = () => {
     setVitalSigns({
@@ -180,19 +230,31 @@ export default function HomePage() {
             </div>
               <div className="vital-sign-home-group46">
                 
-              <button className="vital-sign-home-frame-button1">
+              <button 
+                className="vital-sign-home-frame-button1" 
+                onClick={setAuto}
+                style={{ backgroundColor: autoMode ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
+              >
                 <div className="vital-sign-home-container11">
-                  <span className="vital-sign-home-text11">Otomatik</span>
+                  <span className="vital-sign-home-text11">{autoMode ? 'Manuel' : 'Otomatik'}</span>
                 </div>
               </button>
-              <button className="vital-sign-home-frame-button2">
+                <button className="vital-sign-home-frame-button2" onClick={setAir}
+                style={{ backgroundColor: airMode ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
+              >
                 <div className="vital-sign-home-container12">
-                  <span className="vital-sign-home-text12">Hava</span>
+                  <span className="vital-sign-home-text12">{airMode ? 'Hava' : 'Oksijen'}</span>
                 </div>
               </button>
-              <button className="vital-sign-home-frame-button3">
+              <button 
+                className="vital-sign-home-frame-button3" 
+                onClick={setVentil}
+                style={{ backgroundColor: ventilMode === 0 ? 'rgba(0, 122, 94, 1)' : ventilMode === 1 ? '#C9372C' : '#FFA500' }}
+              >
                 <div className="vital-sign-home-container13">
-                  <span className="vital-sign-home-text13">Ventil</span>
+                  <span className="vital-sign-home-text13">
+                    {ventilMode === 0 ? 'Kapalı' : ventilMode === 1 ? 'Düşük' : 'Yüksek'}
+                  </span>
                 </div>
               </button>
             </div>
@@ -233,14 +295,22 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="vital-sign-home-frame472">
-                <button className="vital-sign-home-frame-button6">
+                <button 
+                  className="vital-sign-home-frame-button6"
+                  onClick={setFan1}
+                  style={{ backgroundColor: fan1Status ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
+                >
                   <div className="vital-sign-home-container16">
-                    <span className="vital-sign-home-text22">Aç</span>
+                    <span className="vital-sign-home-text22">{fan1Status ? 'Kapat' : 'Aç'}</span>
                   </div>
                 </button>
-                <button className="vital-sign-home-frame-button7">
+                <button 
+                  className="vital-sign-home-frame-button7"
+                  onClick={setFan2}
+                  style={{ backgroundColor: fan2Status ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
+                >
                   <div className="vital-sign-home-container17">
-                    <span className="vital-sign-home-text23">Aç</span>
+                    <span className="vital-sign-home-text23">{fan2Status ? 'Kapat' : 'Aç'}</span>
                   </div>
                 </button>
               </div>
@@ -263,9 +333,13 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="vital-sign-home-frame473">
-                <button className="vital-sign-home-frame-button8">
+                <button 
+                  className="vital-sign-home-frame-button8" 
+                  onClick={setLight}
+                  style={{ backgroundColor: lightStatus ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
+                >
                   <div className="vital-sign-home-container18">
-                    <span className="vital-sign-home-text27">Aç</span>
+                    <span className="vital-sign-home-text27">{lightStatus ? 'Kapat' : 'Aç'}</span>
                   </div>
                 </button>
                 <button className="vital-sign-home-frame-button9">
