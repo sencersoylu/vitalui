@@ -38,6 +38,14 @@ export default function HomePage() {
   const [valve1Status, setValve1Status] = useState(false);
   const [valve2Status, setValve2Status] = useState(false);
   
+  // Function to play sound
+  const playSound = () => {
+    const audio = new Audio('/external/bmw-bong.mp3');
+    audio.play().catch(error => {
+      console.error('Error playing sound:', error);
+    });
+  };
+
   useEffect(() => { 
     
     console.log("useEffect");
@@ -86,7 +94,8 @@ export default function HomePage() {
       const errorData = JSON.parse(data);
       console.log('errorData', Number(errorData.data[19]).toString(2));
       let errorArray = Number(errorData.data[19]).toString(2).padStart(16, '0').split('').reverse();
-      if(errorArray[0] === '1'){
+      if (errorArray[0] === '1') {
+        playSound();
         setShowErrorModal(true);
         setErrorMessage('Hata oluştu');
       } else if (errorArray[1] == '0') {
@@ -339,6 +348,7 @@ export default function HomePage() {
                 <span className="vital-sign-home-text18">{valve2Status ? 'Kapat' : 'Aç'}</span>
               </div>
             </button>
+            
           </div>
           <div className="vital-sign-home-frame471">
             <div className="vital-sign-home-number-card3">
