@@ -32,6 +32,16 @@ if (isProd) {
     },
   })
 
+  mainWindow.webContents.on('render-process-gone', function (event, detailed) {
+    //  logger.info("!crashed, reason: " + detailed.reason + ", exitCode = " + detailed.exitCode)
+    if (detailed.reason == "crashed"){
+        // relaunch app
+        app.relaunch({ args: process.argv.slice(1).concat(['--relaunch']) })
+        app.exit(0)
+    }
+})
+
+
   if (isProd) {
     await mainWindow.loadURL('app://./dashboard')
     

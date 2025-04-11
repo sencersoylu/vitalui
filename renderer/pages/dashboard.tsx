@@ -37,20 +37,26 @@ export default function HomePage() {
   const [light2Status, setLight2Status] = useState(false);
   const [valve1Status, setValve1Status] = useState(false);
   const [valve2Status, setValve2Status] = useState(false);
+  const [playing, setPlaying] = useState(false)
   
   // Function to play sound
   const playSound = () => {
-    const audio = new Audio('/external/bmw-bong.mp3');
-    audio.play().catch(error => {
-      console.error('Error playing sound:', error);
-    });
+    if (!playing) {
+      console.log("playSound");
+      setPlaying(true);
+      const newAudio = new Audio('/external/bmw-bong.mp3');
+      //newAudio.loop = true; // Enable looping
+      newAudio.play().catch(error => {
+        console.error('Error playing sound:', error);
+      });
+    } 
   };
 
   useEffect(() => { 
     
     console.log("useEffect");
     // Initialize socket connection
-    const socket = io('http://192.168.2.55:4000', {
+    const socket = io('http://172.20.10.3:4000', {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -95,9 +101,13 @@ export default function HomePage() {
       console.log('errorData', Number(errorData.data[19]).toString(2));
       let errorArray = Number(errorData.data[19]).toString(2).padStart(16, '0').split('').reverse();
       if (errorArray[0] === '1') {
-        playSound();
+        
+        if(!showErrorModal){
         setShowErrorModal(true);
-        setErrorMessage('Hata oluştu');
+          setErrorMessage('Hata oluştu');
+          playSound();
+        }
+     
       } else if (errorArray[1] == '0') {
         setShowErrorModal(false);
         setErrorMessage('');
