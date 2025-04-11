@@ -42,7 +42,7 @@ export default function HomePage() {
     
     console.log("useEffect");
     // Initialize socket connection
-    const socket = io('http://172.20.10.3:4000', {
+    const socket = io('http://192.168.2.55:4000', {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
