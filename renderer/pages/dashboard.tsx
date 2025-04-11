@@ -768,7 +768,6 @@ export default function HomePage() {
             flex-direction: row;
             justify-content: space-between;
             padding: 0 24px;
-            margin-top: 10px;
           }
           .page1-text24 {
             color: rgb(74, 144, 226);
@@ -1043,7 +1042,7 @@ export default function HomePage() {
 .vital-sign-home-basic-header {
   gap: 216px;
   display: flex;
-  padding: 24px 0 20px;
+  padding: 24px 0 0;
   align-self: stretch;
   align-items: center;
   flex-shrink: 0;
