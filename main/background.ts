@@ -33,7 +33,7 @@ if (isProd) {
   })
 
   if (isProd) {
-    await mainWindow.loadURL('app://./home')
+    await mainWindow.loadURL('app://./dashboard')
     
   } else {
     const port = process.argv[2]

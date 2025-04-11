@@ -240,10 +240,10 @@ export default function HomePage() {
                 </div>
               </button>
                 <button className="vital-sign-home-frame-button2" onClick={setAir}
-                style={{ backgroundColor: airMode ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
+                style={{ backgroundColor: airMode ? 'rgb(33,116,212)' : 'rgba(0, 122, 94, 1)' }}
               >
                 <div className="vital-sign-home-container12">
-                  <span className="vital-sign-home-text12">{airMode ? 'Hava' : 'Oksijen'}</span>
+                  <span className="vital-sign-home-text12">{airMode ? 'Oksijen' : 'Hava'}</span>
                 </div>
               </button>
               <button 
@@ -253,7 +253,7 @@ export default function HomePage() {
               >
                 <div className="vital-sign-home-container13">
                   <span className="vital-sign-home-text13">
-                    {ventilMode === 0 ? 'Kapalı' : ventilMode === 1 ? 'Düşük' : 'Yüksek'}
+                    {ventilMode === 0 ? 'Ventilasyon' : ventilMode === 1 ? 'Düşük' : 'Yüksek'}
                   </span>
                 </div>
               </button>
