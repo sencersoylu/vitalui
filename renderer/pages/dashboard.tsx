@@ -35,6 +35,8 @@ export default function HomePage() {
   const [airMode, setAirMode] = useState(false);
   const [ventilMode, setVentilMode] = useState(0); // 0: Off, 1: Low, 2: High
   const [light2Status, setLight2Status] = useState(false);
+  const [valve1Status, setValve1Status] = useState(false);
+  const [valve2Status, setValve2Status] = useState(false);
   
   useEffect(() => {
     console.log("useEffect");
@@ -208,6 +210,24 @@ export default function HomePage() {
     }
   }
 
+  const setValve1 = () => {
+    console.log("setValve1");
+    if (socketRef) {
+      const newValue = valve1Status ? 0 : 1;
+      socketRef.emit('writeBit', { register: "M0500", value: newValue });
+      setValve1Status(!valve1Status);
+    }
+  }
+
+  const setValve2 = () => {
+    console.log("setValve2");
+    if (socketRef) {
+      const newValue = valve2Status ? 0 : 1;
+      socketRef.emit('writeBit', { register: "M0501", value: newValue });
+      setValve2Status(!valve2Status);
+    }
+  }
+
   // Function to reset all data
   const resetData = () => {
     setVitalSigns({
@@ -274,15 +294,23 @@ export default function HomePage() {
               <span className="vital-sign-home-text14">Yardımcı Çıkış</span>
             </div>
             <span className="vital-sign-home-text15">Ana Kabin</span>
-            <button className="vital-sign-home-frame-button4">
+            <button 
+              className="vital-sign-home-frame-button4" 
+              onClick={setValve1}
+              style={{ backgroundColor: valve1Status ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
+            >
               <div className="vital-sign-home-container14">
-                <span className="vital-sign-home-text16">Aç</span>
+                <span className="vital-sign-home-text16">{valve1Status ? 'Kapat' : 'Aç'}</span>
               </div>
             </button>
             <span className="vital-sign-home-text17">Ara Kabin</span>
-            <button className="vital-sign-home-frame-button5">
+            <button 
+              className="vital-sign-home-frame-button5" 
+              onClick={setValve2}
+              style={{ backgroundColor: valve2Status ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
+            >
               <div className="vital-sign-home-container15">
-                <span className="vital-sign-home-text18">Aç</span>
+                <span className="vital-sign-home-text18">{valve2Status ? 'Kapat' : 'Aç'}</span>
               </div>
             </button>
           </div>
