@@ -34,6 +34,7 @@ export default function HomePage() {
   const [autoMode, setAutoMode] = useState(false);
   const [airMode, setAirMode] = useState(false);
   const [ventilMode, setVentilMode] = useState(0); // 0: Off, 1: Low, 2: High
+  const [light2Status, setLight2Status] = useState(false);
   
   useEffect(() => {
     console.log("useEffect");
@@ -198,6 +199,15 @@ export default function HomePage() {
     }
   }
 
+  const setLight2 = () => {
+    console.log("setLight2");
+    if (socketRef) {
+      const newValue = light2Status ? 0 : 255;
+      socketRef.emit('writeRegister', { register: "R01702", value: newValue });
+      setLight2Status(!light2Status);
+    }
+  }
+
   // Function to reset all data
   const resetData = () => {
     setVitalSigns({
@@ -342,9 +352,13 @@ export default function HomePage() {
                     <span className="vital-sign-home-text27">{lightStatus ? 'Kapat' : 'Aç'}</span>
                   </div>
                 </button>
-                <button className="vital-sign-home-frame-button9">
+                <button 
+                  className="vital-sign-home-frame-button9" 
+                  onClick={setLight2}
+                  style={{ backgroundColor: light2Status ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
+                >
                   <div className="vital-sign-home-container19">
-                    <span className="vital-sign-home-text28">Aç</span>
+                    <span className="vital-sign-home-text28">{light2Status ? 'Kapat' : 'Aç'}</span>
                   </div>
                 </button>
               </div>
@@ -355,12 +369,7 @@ export default function HomePage() {
          
           <span className="page1-text24">{currentTime || '10.03.2025'}</span>
            <span className="page1-text24">{currentTime2 || '14:27'}</span>
-          <button 
-                      className="calibration-button"
-                      onClick={startCalibration}
-                    >
-                      Calibrate
-                    </button>
+         
         </div>
       </div>
     </div>

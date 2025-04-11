@@ -85,6 +85,12 @@ export const createWindow = (
 
   win.on('close', saveState)
 
+  win.webContents.on('dom-ready', (event)=> {
+    let css = '* { cursor: none !important; }';
+    win.webContents.insertCSS(css);
+});
+
+
   // Handle GBM wrapper errors
   process.on('uncaughtException', (err) => {
     if (err.message?.includes('gbm_wrapper.cc')) {
