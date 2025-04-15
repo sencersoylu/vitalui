@@ -33,8 +33,7 @@ export default function HomePage() {
   const [socketRef, setSocketRef] = useState(null);
   
   useEffect(() => {
-    setSeatNumber(5)
-    setShowSeatAlarm(true);
+   
     // Initialize socket connection
     const socket = io('http://172.20.10.3:4000', {
       transports: ['websocket', 'polling'],
