@@ -107,16 +107,46 @@ export default function HomePage() {
 
         if (errorArray[1] === "1") {
 
-          setActiveSeatAlarm({seatNumber:errorData.data[16]});
-          setShowSeatAlarmModal(true);
+          if (!showSeatAlarmModal) {
+            setActiveSeatAlarm({ seatNumber: errorData.data[16] });
+            setShowSeatAlarmModal(true);
+          }
           
+        } 
+
+        if (errorArray[2] === "1") {
+          if (!showErrorModal) {
+            setShowErrorModal(true);
+            setErrorMessage('Ana Kabin Yangın Aktiv Edildi!');
+            playSound();
+          }
+        } else if (errorArray[3] === "1") {
+          if (!showErrorModal) {
+            setShowErrorModal(true);
+            setErrorMessage('Ara Kabin Yangın Aktiv Edildi!');
+            playSound();
+          }
+        } else if (errorArray[4] === "1") {
+          if (!showErrorModal) {
+            setShowErrorModal(true);
+            setErrorMessage('Ana Kabin Alev Algılandı!');
+            playSound();
+          }
+        } else if (errorArray[5] === "1") {
+          if (!showErrorModal) {
+            setShowErrorModal(true);
+            setErrorMessage('Ana Kabin Duman Algılandı!');
+            playSound();
+          }
+        } else if (errorArray[6] === "1") {
+          if (!showErrorModal) {
+            setShowErrorModal(true);
+            setErrorMessage('Ara Kabin Duman Algılandı!');
+            playSound();
+          }
         }
         
-        if(!showErrorModal){
-        setShowErrorModal(true);
-          setErrorMessage('Hata oluştu');
-          playSound();
-        }
+        
      
       } else if (errorArray[1] == '0') {
         setShowErrorModal(false);
