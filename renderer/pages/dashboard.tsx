@@ -65,9 +65,7 @@ export default function HomePage() {
       reconnectionDelay: 1000
     });
 
-    //  setActiveSeatAlarm({seatNumber:5});
-    //     setShowSeatAlarmModal(true);
-    
+
     // Add error handling
     socket.on('connect_error', (error) => {
       console.error('Socket connection error:', error);
