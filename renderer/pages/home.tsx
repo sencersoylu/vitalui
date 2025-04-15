@@ -26,10 +26,15 @@ export default function HomePage() {
   // State for error modal
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  // Seat alarm state
+  const [showSeatAlarm, setShowSeatAlarm] = useState(false);
+  const [seatNumber, setSeatNumber] = useState('');
   // Socket reference
   const [socketRef, setSocketRef] = useState(null);
   
   useEffect(() => {
+    setSeatNumber(5)
+    setShowSeatAlarm(true);
     // Initialize socket connection
     const socket = io('http://172.20.10.3:4000', {
       transports: ['websocket', 'polling'],
@@ -68,19 +73,20 @@ export default function HomePage() {
         setCalibrationStatus(`Calibration in progress: ${progress}%`);
       }
       else if (data.data.includes('OK:CAL')) {
-                socket.emit('serialSend', 'M');
+        socket.emit('serialSend', 'M');
         setShowCalibrationModal(false);
       }
       else if (data.data.includes('ERR:CAL')) {
         setShowCalibrationModal(false);
-
         setErrorMessage('Calibration failed. Please try again.');
         setShowErrorModal(true);
         setTimeout(() => {
           setShowErrorModal(false);
-
         }, 3000);
-
+      } else if (data.data.includes('SEAT_ALARM')) {
+        setShowSeatAlarm(true);
+        const seatNum = data.data.split(':')[1];
+        setSeatNumber(seatNum);
       } else if (data.data.includes('DATA:')) {
         const dataArray = data.data.split(':')[1].split(',');
         
@@ -349,6 +355,26 @@ export default function HomePage() {
             </div>
           </div>
         )}
+
+        {/* Seat Alarm Modal */}
+        {showSeatAlarm && (
+          <div className="modal-overlay">
+            <div className="seat-alarm-modal">
+              <div className="alarm-icon">🚨</div>
+              <h2>Seat Alarm</h2>
+              <p>Seat {seatNumber} </p>
+              <button 
+                className="alarm-button" 
+                onClick={() => {
+                  setShowSeatAlarm(false);
+                  setSeatNumber('');
+                }}
+              >
+                Acknowledge
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       <style jsx global>{`
         * {
@@ -428,6 +454,53 @@ export default function HomePage() {
         .error-button {
           font-family: 'Plus Jakarta Sans', sans-serif;
           font-weight: 600;
+        }
+
+        /* Seat Alarm Modal Styles */
+        .seat-alarm-modal {
+          background-color: white;
+          border-radius: 16px;
+          padding: 40px;
+          width: 400px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+          text-align: center;
+        }
+
+        .alarm-icon {
+          font-size: 48px;
+          margin-bottom: 20px;
+        }
+
+        .seat-alarm-modal h2 {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 700;
+          font-size: 28px;
+          color: rgb(255, 193, 7);
+          margin-bottom: 16px;
+        }
+
+        .seat-alarm-modal p {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: 18px;
+          color: rgb(74, 74, 74);
+          margin-bottom: 30px;
+        }
+
+        .alarm-button {
+          padding: 12px 32px;
+          font-size: 16px;
+          font-weight: 600;
+          background-color: rgb(255, 193, 7);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          transition: background-color 0.3s;
+        }
+
+        .alarm-button:hover {
+          background-color: rgb(255, 179, 0);
         }
       `}</style>
       <style jsx>

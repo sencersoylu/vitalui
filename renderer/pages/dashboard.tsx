@@ -37,7 +37,9 @@ export default function HomePage() {
   const [light2Status, setLight2Status] = useState(false);
   const [valve1Status, setValve1Status] = useState(false);
   const [valve2Status, setValve2Status] = useState(false);
-  const [playing, setPlaying] = useState(false)
+  const [playing, setPlaying] = useState(false);
+  const [showSeatAlarmModal, setShowSeatAlarmModal] = useState(false);
+  const [activeSeatAlarm, setActiveSeatAlarm] = useState<{seatNumber: number} | null>(null);
   
   // Function to play sound
   const playSound = () => {
@@ -62,6 +64,9 @@ export default function HomePage() {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000
     });
+
+    //  setActiveSeatAlarm({seatNumber:5});
+    //     setShowSeatAlarmModal(true);
     
     // Add error handling
     socket.on('connect_error', (error) => {
@@ -101,6 +106,13 @@ export default function HomePage() {
       console.log('errorData', Number(errorData.data[19]).toString(2));
       let errorArray = Number(errorData.data[19]).toString(2).padStart(16, '0').split('').reverse();
       if (errorArray[0] === '1') {
+
+        if (errorArray[1] === "1") {
+
+          setActiveSeatAlarm({seatNumber:errorData.data[16]});
+          setShowSeatAlarmModal(true);
+          
+        }
         
         if(!showErrorModal){
         setShowErrorModal(true);
@@ -111,6 +123,8 @@ export default function HomePage() {
       } else if (errorArray[1] == '0') {
         setShowErrorModal(false);
         setErrorMessage('');
+        setActiveSeatAlarm(null);
+        setShowSeatAlarmModal(false);
       }
 
 
@@ -144,6 +158,19 @@ export default function HomePage() {
         setTimeout(() => {
           setShowCalibrationModal(false);
         }, 2000);
+      }
+    });
+
+    // Listen for seat alarm updates
+    socket.on('seatAlarm', (data) => {
+      const { seatNumber, status } = data;
+      if (status) {
+        setActiveSeatAlarm({ seatNumber });
+        setShowSeatAlarmModal(true);
+        playSound();
+      } else {
+        setShowSeatAlarmModal(false);
+        setActiveSeatAlarm(null);
       }
     });
     
@@ -287,6 +314,16 @@ export default function HomePage() {
     }
   }
 
+  const closeSeatAlarmModal = () => {
+    //setShowSeatAlarmModal(false);
+    //setActiveSeatAlarm(null);
+    if (socketRef) {
+            socketRef.emit('writeBit', { register: "M0400", value: 0 });
+
+      socketRef.emit('writeRegister',{ register: "R0030", value: 0 } );
+    }
+  };
+
   // Function to reset all data
   const resetData = () => {
     setVitalSigns({
@@ -298,10 +335,6 @@ export default function HomePage() {
 
   return (
     <>
-       <link
-            href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-            rel="stylesheet"
-          />
       <div className="vital-sign-home-container10">
       
       <div className="vital-sign-home-dashboard">
@@ -479,7 +512,68 @@ export default function HomePage() {
       </div>
     )}
 
+    {/* Seat Alarm Modal */}
+    {showSeatAlarmModal && (
+      <div className="modal-overlay">
+        <div className="seat-alarm-modal">
+          <div className="seat-alarm-icon">
+            <img 
+              src="/external/seat_icon.png" 
+              alt="Seat Icon" 
+              className="seat-icon-image"
+            />
+          </div>
+          <h2>Koltuk Alarmı</h2>
+          <p className="seat-alarm-message">
+            {activeSeatAlarm?.seatNumber} 
+          </p>
+          <button 
+            className="seat-alarm-button"
+            onClick={closeSeatAlarmModal}
+          >
+            Alarmı Kapat
+          </button>
+        </div>
+      </div>
+    )}
+
       <style jsx global>{`
+        @font-face {
+          font-family: 'Plus Jakarta Sans';
+          src: url('/fonts/PlusJakartaSans-Regular.woff2') format('woff2'),
+               url('/fonts/PlusJakartaSans-Regular.woff') format('woff');
+          font-weight: 400;
+          font-style: normal;
+          font-display: swap;
+        }
+
+        @font-face {
+          font-family: 'Plus Jakarta Sans';
+          src: url('/fonts/PlusJakartaSans-Medium.woff2') format('woff2'),
+               url('/fonts/PlusJakartaSans-Medium.woff') format('woff');
+          font-weight: 500;
+          font-style: normal;
+          font-display: swap;
+        }
+
+        @font-face {
+          font-family: 'Plus Jakarta Sans';
+          src: url('/fonts/PlusJakartaSans-SemiBold.woff2') format('woff2'),
+               url('/fonts/PlusJakartaSans-SemiBold.woff') format('woff');
+          font-weight: 600;
+          font-style: normal;
+          font-display: swap;
+        }
+
+        @font-face {
+          font-family: 'Plus Jakarta Sans';
+          src: url('/fonts/PlusJakartaSans-Bold.woff2') format('woff2'),
+               url('/fonts/PlusJakartaSans-Bold.woff') format('woff');
+          font-weight: 700;
+          font-style: normal;
+          font-display: swap;
+        }
+
         * {
           font-family: 'Plus Jakarta Sans', sans-serif;
         }
@@ -1379,6 +1473,76 @@ export default function HomePage() {
           background-color: rgb(200, 35, 51);
           transform: translateY(-1px);
           box-shadow: 0 4px 6px rgba(220, 53, 69, 0.3);
+        }
+
+        /* Seat Alarm Modal Styles */
+        .seat-alarm-modal {
+          background-color: white;
+          border-radius: 24px;
+          padding: 60px;
+          width: 600px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+          text-align: center;
+          animation: pulse 2s infinite;
+        }
+
+        .seat-alarm-icon {
+          margin-bottom: 30px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .seat-icon-image {
+          width: 72px;
+          height: 72px;
+          object-fit: contain;
+        }
+
+        .seat-alarm-modal h2 {
+          font-family: 'Plus Jakarta Sans';
+          font-weight: 700;
+          font-size: 36px;
+          color: #C9372C;
+          margin-bottom: 24px;
+        }
+
+        .seat-alarm-message {
+          font-family: 'Plus Jakarta Sans';
+          font-size: 96px;
+          color: #C9372C;
+          margin-bottom: 40px;
+                    font-weight: 800;
+
+        }
+
+        .seat-alarm-button {
+          padding: 16px 48px;
+          font-size: 20px;
+          font-weight: 600;
+          background-color: #C9372C;
+          color: white;
+          border: none;
+          border-radius: 12px;
+          cursor: pointer;
+          font-family: 'Plus Jakarta Sans';
+          transition: background-color 0.3s;
+        }
+
+        .seat-alarm-button:hover {
+          background-color: rgb(200, 35, 51);
+        }
+
+        @keyframes pulse {
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.02);
+          }
+          100% {
+            transform: scale(1);
+          }
         }
       `}</style>
     </>
