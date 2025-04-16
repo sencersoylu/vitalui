@@ -41,6 +41,49 @@ export default function HomePage() {
   const [showSeatAlarmModal, setShowSeatAlarmModal] = useState(false);
   const [activeSeatAlarm, setActiveSeatAlarm] = useState<{seatNumber: number} | null>(null);
   
+  // Load state from localStorage on component mount
+  useEffect(() => {
+    const savedState = localStorage.getItem('dashboardState');
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      setLightStatus(parsedState.lightStatus);
+      setFan1Status(parsedState.fan1Status);
+      setFan2Status(parsedState.fan2Status);
+      setAutoMode(parsedState.autoMode);
+      setAirMode(parsedState.airMode);
+      setVentilMode(parsedState.ventilMode);
+      setLight2Status(parsedState.light2Status);
+      setValve1Status(parsedState.valve1Status);
+      setValve2Status(parsedState.valve2Status);
+    }
+  }, []);
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    const stateToSave = {
+      lightStatus,
+      fan1Status,
+      fan2Status,
+      autoMode,
+      airMode,
+      ventilMode,
+      light2Status,
+      valve1Status,
+      valve2Status
+    };
+    localStorage.setItem('dashboardState', JSON.stringify(stateToSave));
+  }, [
+    lightStatus,
+    fan1Status,
+    fan2Status,
+    autoMode,
+    airMode,
+    ventilMode,
+    light2Status,
+    valve1Status,
+    valve2Status
+  ]);
+
   // Function to play sound
   const playSound = () => {
     if (!playing) {
