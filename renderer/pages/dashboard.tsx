@@ -39,7 +39,7 @@ export default function HomePage() {
   const [valve2Status, setValve2Status] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [showSeatAlarmModal, setShowSeatAlarmModal] = useState(false);
-  const [activeSeatAlarm, setActiveSeatAlarm] = useState<{seatNumber: number} | null>(null);
+  const [activeSeatAlarm, setActiveSeatAlarm] = useState<{seatNumber: number | string} | null>(null);
   
   // Load state from localStorage on component mount
   useEffect(() => {
@@ -151,8 +151,21 @@ export default function HomePage() {
         if (errorArray[1] === "1") {
 
           if (!showSeatAlarmModal) {
-            setActiveSeatAlarm({ seatNumber: errorData.data[16] });
+            if (errorData.data[16] === 21) {
+              setActiveSeatAlarm({ seatNumber: "Hemşire"});
+              setShowSeatAlarmModal(true);
+            } else if (errorData.data[16] === 22) {
+               setActiveSeatAlarm({ seatNumber: "Ara Bölme 1" });
             setShowSeatAlarmModal(true);
+            } else if (errorData.data[16] === 23) {
+               setActiveSeatAlarm({ seatNumber: "Ara Bölme 2" });
+            setShowSeatAlarmModal(true);
+            }
+            else {
+              setActiveSeatAlarm({ seatNumber: errorData.data[16] });
+            setShowSeatAlarmModal(true);
+            } 
+            
           }
           
         } 
