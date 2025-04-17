@@ -583,7 +583,13 @@ export default function HomePage() {
     {showErrorModal && (
       <div className="modal-overlay">
         <div className="error-modal">
-          <div className="error-icon">⚠️</div>
+          <div className="error-icon">
+            <img 
+              src="/external/alarm.png" 
+              alt="Alarm Icon" 
+              className="alarm-icon-image"
+            />
+          </div>
           <h2>Uyarı</h2>
           <p>{errorMessage}</p>
           <button 
@@ -732,8 +738,16 @@ export default function HomePage() {
         }
 
         .error-icon {
-          font-size: 72px;
           margin-bottom: 30px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .alarm-icon-image {
+          width: 72px;
+          height: 72px;
+          object-fit: contain;
         }
 
         .error-modal h2 {
