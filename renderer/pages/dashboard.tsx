@@ -471,48 +471,7 @@ export default function HomePage() {
             
           </div>
           <div className="vital-sign-home-frame471">
-            <div className="vital-sign-home-number-card3">
-              <div className="vital-sign-home-frame31">
-                <div className="vital-sign-home-frame5">
-                  <span className="vital-sign-home-text19">Fan </span>
-                </div>
-                <div className="vital-sign-home-frame6">
-                  <span className="vital-sign-home-text20">
-                    Main Chamber
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html: ' ',
-                      }}
-                    />
-                  </span>
-                  <span className="vital-sign-home-text21">Entry Chamber</span>
-                </div>
-              </div>
-              <div className="vital-sign-home-frame472">
-                <button 
-                  className="vital-sign-home-frame-button6"
-                  onClick={setFan1}
-                  style={{ backgroundColor: fan1Status === 0 ? '#90a1b9' : fan1Status === 1 ? '#2174d4' : fan1Status === 2 ? '#FFA500' : '#C9372C' }}
-                >
-                  <div className="vital-sign-home-container16">
-                    <span className="vital-sign-home-text22">
-                      {fan1Status === 0 ? 'Off' : fan1Status === 1 ? 'Low' : fan1Status === 2 ? 'Medium' : 'High'}
-                    </span>
-                  </div>
-                </button>
-                <button 
-                  className="vital-sign-home-frame-button7"
-                  onClick={setFan2}
-                  style={{ backgroundColor: fan2Status === 0 ? '#90a1b9' : fan2Status === 1 ? '#2174d4' : fan2Status === 2 ? '#FFA500' : '#C9372C' }}
-                >
-                  <div className="vital-sign-home-container17">
-                    <span className="vital-sign-home-text23">
-                      {fan2Status === 0 ? 'Off' : fan2Status === 1 ? 'Low' : fan2Status === 2 ? 'Medium' : 'High'}
-                    </span>
-                  </div>
-                </button>
-              </div>
-            </div>
+            
             <div className="vital-sign-home-number-card4">
               <div className="vital-sign-home-frame32">
                 <div className="vital-sign-home-frame7">
@@ -553,6 +512,37 @@ export default function HomePage() {
                     </span>
                   </div>
                 </button>
+              </div>
+              </div>
+              <div className="vital-sign-home-number-card3">
+              <div className="vital-sign-home-frame31">
+                <div className="vital-sign-home-frame5">
+                  <span className="vital-sign-home-text19">Fan </span>
+                </div>
+                <div className="vital-sign-home-frame6">
+                  <span className="vital-sign-home-text20">
+                    Main Chamber
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: ' ',
+                      }}
+                    />
+                  </span>
+                </div>
+              </div>
+              <div className="vital-sign-home-frame472">
+                <button 
+                  className="vital-sign-home-frame-button6"
+                  onClick={setFan1}
+                  style={{ backgroundColor: fan1Status === 0 ? '#90a1b9' : fan1Status === 1 ? '#2174d4' : fan1Status === 2 ? '#FFA500' : '#C9372C' }}
+                >
+                  <div className="vital-sign-home-container16">
+                    <span className="vital-sign-home-text22">
+                      {fan1Status === 0 ? 'Off' : fan1Status === 1 ? 'Low' : fan1Status === 2 ? 'Medium' : 'High'}
+                    </span>
+                  </div>
+                </button>
+               
               </div>
             </div>
           </div>
@@ -1151,7 +1141,7 @@ export default function HomePage() {
      
         .vital-sign-home-text19 {
           color: rgba(26, 32, 39, 1);
-          width: 402px;
+          width: 100%;
           height: auto;
           font-size: 36px;
           font-style: Bold;
@@ -1181,6 +1171,7 @@ export default function HomePage() {
           font-stretch: normal;
           text-decoration: none;
           text-align: center;
+          width:100%;
         }
      
         .vital-sign-home-text21 {
@@ -1204,7 +1195,7 @@ export default function HomePage() {
         }
      
         .vital-sign-home-frame-button6 {
-          width: 150px;
+          width: 85%;
           height: 66px;
           display: flex;
           padding: 0 12px;
