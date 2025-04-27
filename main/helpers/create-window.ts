@@ -19,6 +19,7 @@ export const createWindow = (
   const defaultSize = {
     width: options.width,
     height: options.height,
+    
   }
   let state = {}
 

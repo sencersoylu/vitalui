@@ -112,10 +112,13 @@ export default function HomePage() {
               setActiveSeatAlarm({ seatNumber: "Nurse"});
               setShowSeatAlarmModal(true);
             } else if (errorData.data[16] === 22) {
-              setActiveSeatAlarm({ seatNumber: "Entry Chamber 1" });
+              setActiveSeatAlarm({ seatNumber: "Entry 1" });
               setShowSeatAlarmModal(true);
             } else if (errorData.data[16] === 23) {
-              setActiveSeatAlarm({ seatNumber: "Entry Chamber 2" });
+              setActiveSeatAlarm({ seatNumber: "Entry 2" });
+              setShowSeatAlarmModal(true);
+            } else if (errorData.data[16] === 24) {
+              setActiveSeatAlarm({ seatNumber: "Entry Nurse"});
               setShowSeatAlarmModal(true);
             } else {
               setActiveSeatAlarm({ seatNumber: errorData.data[16] });
@@ -151,7 +154,7 @@ export default function HomePage() {
         } else if (errorArray[6] === "1") {
           if (!showErrorModal) {
             setShowErrorModal(true);
-            setErrorMessage('Middle Chamber Smoke Detected!');
+            setErrorMessage('Entry Chamber Smoke Detected!');
             playSound();
           }
         }
