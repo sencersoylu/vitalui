@@ -226,7 +226,7 @@ export default function HomePage() {
     if (socketRef) {
       const newValue = lightStatus ? 0 : 255;
       socketRef.emit('writeRegister', { register: "R01700", value: newValue });
-      setLightStatus(!lightStatus);
+      setLightStatus(newValue);
     }
   }
 
@@ -234,7 +234,7 @@ export default function HomePage() {
     if (socketRef) {
       const newValue = fan1Status ? 0 : 255;
       socketRef.emit('writeRegister', { register: "R01704", value: newValue });
-      setFan1Status(!fan1Status);
+      setFan1Status(newValue);
     }
   };
 
@@ -242,7 +242,7 @@ export default function HomePage() {
     if (socketRef) {
       const newValue = fan2Status ? 0 : 255;
       socketRef.emit('writeRegister', { register: "R01706", value: newValue });
-      setFan2Status(!fan2Status);
+      setFan2Status(newValue);
     }
   };
 
@@ -295,7 +295,7 @@ export default function HomePage() {
     if (socketRef) {
       const newValue = light2Status ? 0 : 255;
       socketRef.emit('writeRegister', { register: "R01702", value: newValue });
-      setLight2Status(!light2Status);
+      setLight2Status(newValue);
     }
   }
 
