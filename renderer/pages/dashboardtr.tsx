@@ -109,13 +109,13 @@ export default function HomePage() {
         if (errorArray[1] === "1") {
           if (!showSeatAlarmModal) {
             if (errorData.data[16] === 21) {
-              setActiveSeatAlarm({ seatNumber: "Nurse"});
+              setActiveSeatAlarm({ seatNumber: "Hemşire"});
               setShowSeatAlarmModal(true);
             } else if (errorData.data[16] === 22) {
-              setActiveSeatAlarm({ seatNumber: "Entry Chamber 1" });
+              setActiveSeatAlarm({ seatNumber: "Ara Bölme 1" });
               setShowSeatAlarmModal(true);
             } else if (errorData.data[16] === 23) {
-              setActiveSeatAlarm({ seatNumber: "Entry Chamber 2" });
+              setActiveSeatAlarm({ seatNumber: "Ara Bölme 2" });
               setShowSeatAlarmModal(true);
             } else {
               setActiveSeatAlarm({ seatNumber: errorData.data[16] });
@@ -127,31 +127,31 @@ export default function HomePage() {
         if (errorArray[2] === "1") {
           if (!showErrorModal) {
             setShowErrorModal(true);
-            setErrorMessage('Main Chamber Fire Suppression System Activated!');
+            setErrorMessage('Ana Kabin Yangın Aktiv Edildi!');
             playSound();
           }
         } else if (errorArray[3] === "1") {
           if (!showErrorModal) {
             setShowErrorModal(true);
-            setErrorMessage('Entry Chamber Fire Suppression System Activated!');
+            setErrorMessage('Ara Kabin Yangın Aktiv Edildi!');
             playSound();
           }
         } else if (errorArray[4] === "1") {
           if (!showErrorModal) {
             setShowErrorModal(true);
-            setErrorMessage('Main Chamber Flame Detected!');
+            setErrorMessage('Ana Kabin Alev Algılandı!');
             playSound();
           }
         } else if (errorArray[5] === "1") {
           if (!showErrorModal) {
             setShowErrorModal(true);
-            setErrorMessage('Main Chamber Smoke Detected!');
+            setErrorMessage('Ana Kabin Duman Algılandı!');
             playSound();
           }
         } else if (errorArray[6] === "1") {
           if (!showErrorModal) {
             setShowErrorModal(true);
-            setErrorMessage('Middle Chamber Smoke Detected!');
+            setErrorMessage('Ara Kabin Duman Algılandı!');
             playSound();
           }
         }
@@ -224,70 +224,25 @@ export default function HomePage() {
     console.log("setLight");
     console.log(socketRef);
     if (socketRef) {
-      const newValue = (lightStatus + 1) % 4;
-      let regValue = 0;
-      switch(newValue) {
-        case 0: // Off
-          regValue = 0;
-          break;
-        case 1: // Low
-          regValue = 85;
-          break;
-        case 2: // Medium
-          regValue = 170;
-          break;
-        case 3: // High
-          regValue = 255;
-          break;
-      }
-      socketRef.emit('writeRegister', { register: "R01700", value: regValue });
-      setLightStatus(newValue);
+      const newValue = lightStatus ? 0 : 255;
+      socketRef.emit('writeRegister', { register: "R01700", value: newValue });
+      setLightStatus(!lightStatus);
     }
   }
 
   const setFan1 = () => {
     if (socketRef) {
-      const newValue = (fan1Status + 1) % 4;
-      let regValue = 0;
-      switch(newValue) {
-        case 0: // Off
-          regValue = 0;
-          break;
-        case 1: // Low
-          regValue = 85;
-          break;
-        case 2: // Medium
-          regValue = 170;
-          break;
-        case 3: // High
-          regValue = 255;
-          break;
-      }
-      socketRef.emit('writeRegister', { register: "R01704", value: regValue });
-      setFan1Status(newValue);
+      const newValue = fan1Status ? 0 : 255;
+      socketRef.emit('writeRegister', { register: "R01704", value: newValue });
+      setFan1Status(!fan1Status);
     }
   };
 
   const setFan2 = () => {
     if (socketRef) {
-      const newValue = (fan2Status + 1) % 4;
-      let regValue = 0;
-      switch(newValue) {
-        case 0: // Off
-          regValue = 0;
-          break;
-        case 1: // Low
-          regValue = 85;
-          break;
-        case 2: // Medium
-          regValue = 170;
-          break;
-        case 3: // High
-          regValue = 255;
-          break;
-      }
-      socketRef.emit('writeRegister', { register: "R01706", value: regValue });
-      setFan2Status(newValue);
+      const newValue = fan2Status ? 0 : 255;
+      socketRef.emit('writeRegister', { register: "R01706", value: newValue });
+      setFan2Status(!fan2Status);
     }
   };
 
@@ -338,24 +293,9 @@ export default function HomePage() {
   const setLight2 = () => {
     console.log("setLight2");
     if (socketRef) {
-      const newValue = (light2Status + 1) % 4;
-      let regValue = 0;
-      switch(newValue) {
-        case 0: // Off
-          regValue = 0;
-          break;
-        case 1: // Low
-          regValue = 85;
-          break;
-        case 2: // Medium
-          regValue = 170;
-          break;
-        case 3: // High
-          regValue = 255;
-          break;
-      }
-      socketRef.emit('writeRegister', { register: "R01702", value: regValue });
-      setLight2Status(newValue);
+      const newValue = light2Status ? 0 : 255;
+      socketRef.emit('writeRegister', { register: "R01702", value: newValue });
+      setLight2Status(!light2Status);
     }
   }
 
@@ -411,7 +351,7 @@ export default function HomePage() {
         <div className="vital-sign-home-card-container">
           <div className="vital-sign-home-number-card1">
             <div className="vital-sign-home-frame1">
-              <span className="vital-sign-home-text10">Chamber Control</span>
+              <span className="vital-sign-home-text10">Kabin Kontrol</span>
             </div>
               <div className="vital-sign-home-group46">
                 
@@ -421,14 +361,14 @@ export default function HomePage() {
                 style={{ backgroundColor: autoMode ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
               >
                 <div className="vital-sign-home-container11">
-                  <span className="vital-sign-home-text11">{autoMode ? 'Manual' : 'Automatic'}</span>
+                  <span className="vital-sign-home-text11">{autoMode ? 'Manuel' : 'Otomatik'}</span>
                 </div>
               </button>
                 <button className="vital-sign-home-frame-button2" onClick={setAir}
                 style={{ backgroundColor: airMode ? 'rgb(33,116,212)' : 'rgba(0, 122, 94, 1)' }}
               >
                 <div className="vital-sign-home-container12">
-                  <span className="vital-sign-home-text12">{airMode ? 'Oxygen' : 'Air'}</span>
+                  <span className="vital-sign-home-text12">{airMode ? 'Oksijen' : 'Hava'}</span>
                 </div>
               </button>
               <button 
@@ -438,7 +378,7 @@ export default function HomePage() {
               >
                 <div className="vital-sign-home-container13">
                   <span className="vital-sign-home-text13">
-                    {ventilMode === 0 ? 'Ventilation' : ventilMode === 1 ? 'Low' : 'High'}
+                    {ventilMode === 0 ? 'Ventilasyon' : ventilMode === 1 ? 'Düşük' : 'Yüksek'}
                   </span>
                 </div>
               </button>
@@ -446,26 +386,26 @@ export default function HomePage() {
           </div>
           <div className="vital-sign-home-number-card2">
             <div className="vital-sign-home-frame4">
-              <span className="vital-sign-home-text14">Auxiliary Output</span>
+              <span className="vital-sign-home-text14">Yardımcı Çıkış</span>
             </div>
-            <span className="vital-sign-home-text15">Main Chamber</span>
+            <span className="vital-sign-home-text15">Ana Kabin</span>
             <button 
               className="vital-sign-home-frame-button4" 
               onClick={setValve1}
               style={{ backgroundColor: valve1Status ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
             >
               <div className="vital-sign-home-container14">
-                <span className="vital-sign-home-text16">{valve1Status ? 'Close' : 'Open'}</span>
+                <span className="vital-sign-home-text16">{valve1Status ? 'Kapat' : 'Aç'}</span>
               </div>
             </button>
-            <span className="vital-sign-home-text17">Entry Chamber</span>
+            <span className="vital-sign-home-text17">Ara Kabin</span>
             <button 
               className="vital-sign-home-frame-button5" 
               onClick={setValve2}
               style={{ backgroundColor: valve2Status ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
             >
               <div className="vital-sign-home-container15">
-                <span className="vital-sign-home-text18">{valve2Status ? 'Close' : 'Open'}</span>
+                <span className="vital-sign-home-text18">{valve2Status ? 'Kapat' : 'Aç'}</span>
               </div>
             </button>
             
@@ -478,37 +418,33 @@ export default function HomePage() {
                 </div>
                 <div className="vital-sign-home-frame6">
                   <span className="vital-sign-home-text20">
-                    Main Chamber
+                    Ana Kabin
                     <span
                       dangerouslySetInnerHTML={{
                         __html: ' ',
                       }}
                     />
                   </span>
-                  <span className="vital-sign-home-text21">Entry Chamber</span>
+                  <span className="vital-sign-home-text21">Ara Kabin</span>
                 </div>
               </div>
               <div className="vital-sign-home-frame472">
                 <button 
                   className="vital-sign-home-frame-button6"
                   onClick={setFan1}
-                  style={{ backgroundColor: fan1Status === 0 ? '#90a1b9' : fan1Status === 1 ? '#2174d4' : fan1Status === 2 ? '#FFA500' : '#C9372C' }}
+                  style={{ backgroundColor: fan1Status ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
                 >
                   <div className="vital-sign-home-container16">
-                    <span className="vital-sign-home-text22">
-                      {fan1Status === 0 ? 'Off' : fan1Status === 1 ? 'Low' : fan1Status === 2 ? 'Medium' : 'High'}
-                    </span>
+                    <span className="vital-sign-home-text22">{fan1Status ? 'Kapat' : 'Aç'}</span>
                   </div>
                 </button>
                 <button 
                   className="vital-sign-home-frame-button7"
                   onClick={setFan2}
-                  style={{ backgroundColor: fan2Status === 0 ? '#90a1b9' : fan2Status === 1 ? '#2174d4' : fan2Status === 2 ? '#FFA500' : '#C9372C' }}
+                  style={{ backgroundColor: fan2Status ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
                 >
                   <div className="vital-sign-home-container17">
-                    <span className="vital-sign-home-text23">
-                      {fan2Status === 0 ? 'Off' : fan2Status === 1 ? 'Low' : fan2Status === 2 ? 'Medium' : 'High'}
-                    </span>
+                    <span className="vital-sign-home-text23">{fan2Status ? 'Kapat' : 'Aç'}</span>
                   </div>
                 </button>
               </div>
@@ -516,41 +452,37 @@ export default function HomePage() {
             <div className="vital-sign-home-number-card4">
               <div className="vital-sign-home-frame32">
                 <div className="vital-sign-home-frame7">
-                  <span className="vital-sign-home-text24">Lighting </span>
+                  <span className="vital-sign-home-text24">Aydınlatma </span>
                 </div>
                 <div className="vital-sign-home-frame8">
                   <span className="vital-sign-home-text25">
-                    Main Chamber
+                    Ana Kabin
                     <span
                       dangerouslySetInnerHTML={{
                         __html: ' ',
                       }}
                     />
                   </span>
-                    <span className="vital-sign-home-text26">Entry Chamber</span>
+                  <span className="vital-sign-home-text26">Ara Kabin</span>
                 </div>
               </div>
               <div className="vital-sign-home-frame473">
                 <button 
                   className="vital-sign-home-frame-button8" 
                   onClick={setLight}
-                  style={{ backgroundColor: lightStatus === 0 ? '#90a1b9' : lightStatus === 1 ? '#2174d4' : lightStatus === 2 ? '#FFA500' : '#C9372C' }}
+                  style={{ backgroundColor: lightStatus ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
                 >
                   <div className="vital-sign-home-container18">
-                    <span className="vital-sign-home-text27">
-                      {lightStatus === 0 ? 'Off' : lightStatus === 1 ? 'Low' : lightStatus === 2 ? 'Medium' : 'High'}
-                    </span>
+                    <span className="vital-sign-home-text27">{lightStatus ? 'Kapat' : 'Aç'}</span>
                   </div>
                 </button>
                 <button 
                   className="vital-sign-home-frame-button9" 
                   onClick={setLight2}
-                  style={{ backgroundColor: light2Status === 0 ? '#90a1b9' : light2Status === 1 ? '#2174d4' : light2Status === 2 ? '#FFA500' : '#C9372C' }}
+                  style={{ backgroundColor: light2Status ? '#C9372C' : 'rgba(0, 122, 94, 1)' }}
                 >
                   <div className="vital-sign-home-container19">
-                    <span className="vital-sign-home-text28">
-                      {light2Status === 0 ? 'Off' : light2Status === 1 ? 'Low' : light2Status === 2 ? 'Medium' : 'High'}
-                    </span>
+                    <span className="vital-sign-home-text28">{light2Status ? 'Kapat' : 'Aç'}</span>
                   </div>
                 </button>
               </div>
@@ -577,13 +509,13 @@ export default function HomePage() {
               className="alarm-icon-image"
             />
           </div>
-          <h2>Warning</h2>
+          <h2>Uyarı</h2>
           <p>{errorMessage}</p>
           <button 
             className="error-button"
             onClick={closeModal}
           >
-            Close
+            Kapat
           </button>
         </div>
       </div>
@@ -600,7 +532,7 @@ export default function HomePage() {
               className="seat-icon-image"
             />
           </div>
-          <h2>Seat Alarm</h2>
+          <h2>Koltuk Alarmı</h2>
           <p className="seat-alarm-message">
             {activeSeatAlarm?.seatNumber} 
           </p>
@@ -608,7 +540,7 @@ export default function HomePage() {
             className="seat-alarm-button"
             onClick={closeSeatAlarmModal}
           >
-            Close Alarm
+            Alarmı Kapat
           </button>
         </div>
       </div>
@@ -806,7 +738,6 @@ export default function HomePage() {
           width: 498px;
           height: 91px;
         }
-
      
         .vital-sign-home-card-container {
           gap: 23px;
@@ -820,11 +751,11 @@ export default function HomePage() {
         }
      
         .vital-sign-home-number-card1 {
-          gap: 105px;
+          gap: 50px;
           width: 300px;
           height: 512px;
           display: flex;
-          padding: 10px 10px;
+          padding: 18px 24px;
           overflow: hidden;
           flex-wrap: wrap;
           align-items: flex-start;
@@ -855,7 +786,7 @@ export default function HomePage() {
           text-align: center;
           font-family: Plus Jakarta Sans;
           font-weight: 700;
-          line-height: 45px;
+          line-height: 24px;
           font-stretch: normal;
           text-decoration: none;
         }
@@ -979,7 +910,7 @@ export default function HomePage() {
           width: 291px;
           height: 512px;
           display: flex;
-          padding: 10px 10px;
+          padding: 18px 24px;
           overflow: hidden;
           align-items: center;
           flex-shrink: 0;
@@ -1009,7 +940,7 @@ export default function HomePage() {
           text-align: center;
           font-family: Plus Jakarta Sans;
           font-weight: 700;
-          line-height: 45px;
+          line-height: 24px;
           font-stretch: normal;
           text-decoration: none;
         }
@@ -1022,7 +953,7 @@ export default function HomePage() {
           text-align: center;
           font-family: Plus Jakarta Sans;
           font-weight: 500;
-          line-height: 35px;
+          line-height: 24px;
           font-stretch: normal;
           text-decoration: none;
         }
@@ -1068,7 +999,7 @@ export default function HomePage() {
           text-align: center;
           font-family: Plus Jakarta Sans;
           font-weight: 500;
-          line-height: 35px;
+          line-height: 24px;
           font-stretch: normal;
           text-decoration: none;
         }
@@ -1115,11 +1046,11 @@ export default function HomePage() {
         }
      
         .vital-sign-home-number-card3 {
-          gap: 15px;
+          gap: 28px;
           width: 450px;
           height: 230px;
           display: flex;
-          padding: 10px 10px;
+          padding: 18px 24px;
           overflow: hidden;
           align-items: flex-end;
           flex-shrink: 0;
@@ -1177,10 +1108,9 @@ export default function HomePage() {
           text-align: left;
           font-family: "Plus Jakarta Sans";
           font-weight: 500;
-          line-height: 35px;
+          line-height: 24px;
           font-stretch: normal;
           text-decoration: none;
-          text-align: center;
         }
      
         .vital-sign-home-text21 {
@@ -1191,15 +1121,14 @@ export default function HomePage() {
           text-align: left;
           font-family: Plus Jakarta Sans;
           font-weight: 500;
-          line-height: 35px;
+          line-height: 24px;
           font-stretch: normal;
           text-decoration: none;
-          text-align: center;
         }
      
         .vital-sign-home-frame472 {
          display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
           width:100%;
         }
      
@@ -1268,11 +1197,11 @@ export default function HomePage() {
         }
      
         .vital-sign-home-number-card4 {
-          gap: 15px;
+          gap: 28px;
           width: 450px;
           height: 230px;
           display: flex;
-          padding: 10px 10px;
+          padding: 18px 24px;
           overflow: hidden;
           align-items: flex-end;
           flex-shrink: 0;
@@ -1330,10 +1259,9 @@ export default function HomePage() {
           text-align: left;
           font-family: Plus Jakarta Sans;
           font-weight: 400;
-          line-height: 35px;
+          line-height: 24px;
           font-stretch: normal;
           text-decoration: none;
-          text-align: center;
         }
      
         .vital-sign-home-text26 {
@@ -1344,15 +1272,14 @@ export default function HomePage() {
           text-align: left;
           font-family: Plus Jakarta Sans;
           font-weight: 500;
-          line-height: 35px;
+          line-height: 24px;
           font-stretch: normal;
           text-decoration: none;
-          text-align: center;
         }
      
         .vital-sign-home-frame473 {
          display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
           width:100%;
         }
      
