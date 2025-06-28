@@ -40,11 +40,11 @@ if (isProd) {
 
 
   if (isProd) {
-    await mainWindow.loadURL('app://./dashboard')
+    await mainWindow.loadURL('app://./home')
     
   } else {
     const port = process.argv[2]
-    await mainWindow.loadURL(`http://localhost:${port}/dashboard`)
+    await mainWindow.loadURL(`http://localhost:${port}/home`)
     mainWindow.webContents.openDevTools()
   }
 })()
