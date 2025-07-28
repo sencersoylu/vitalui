@@ -35,7 +35,7 @@ export default function HomePage() {
   useEffect(() => {
    
     // Initialize socket connection
-    const socket = io('http://localhost:4000', {
+    const socket = io('https://6b07-83-111-109-94.ngrok-free.app', {
       transports: ['websocket', 'polling'],
       extraHeaders: {
         "Access-Control-Allow-Origin": "http://localhost:8888"
