@@ -116,13 +116,13 @@ export default function HomePage() {
 							setActiveSeatAlarm({ seatNumber: 'Nurse' });
 							setShowSeatAlarmModal(true);
 						} else if (errorData.data[16] === 22) {
-							setActiveSeatAlarm({ seatNumber: 'Entry 1' });
+							setActiveSeatAlarm({ seatNumber: 'Ante 1' });
 							setShowSeatAlarmModal(true);
 						} else if (errorData.data[16] === 23) {
-							setActiveSeatAlarm({ seatNumber: 'Entry 2' });
+							setActiveSeatAlarm({ seatNumber: 'Ante 2' });
 							setShowSeatAlarmModal(true);
 						} else if (errorData.data[16] === 24) {
-							setActiveSeatAlarm({ seatNumber: 'Entry Nurse' });
+							setActiveSeatAlarm({ seatNumber: 'Ante Nurse' });
 							setShowSeatAlarmModal(true);
 						} else {
 							setActiveSeatAlarm({ seatNumber: errorData.data[16] });
@@ -140,7 +140,7 @@ export default function HomePage() {
 				} else if (errorArray[3] === '1') {
 					if (!showErrorModal) {
 						setShowErrorModal(true);
-						setErrorMessage('Entry Chamber Fire Suppression System Activated!');
+						setErrorMessage('Ante Chamber Fire Suppression System Activated!');
 						playSound();
 					}
 				} else if (errorArray[4] === '1') {
@@ -158,7 +158,7 @@ export default function HomePage() {
 				} else if (errorArray[6] === '1') {
 					if (!showErrorModal) {
 						setShowErrorModal(true);
-						setErrorMessage('Entry Chamber Smoke Detected!');
+						setErrorMessage('Ante Chamber Smoke Detected!');
 						playSound();
 					}
 				}
@@ -497,7 +497,7 @@ export default function HomePage() {
 									</span>
 								</div>
 							</button>
-							<span className="vital-sign-home-text17">Entry Chamber</span>
+							<span className="vital-sign-home-text17">Ante Chamber</span>
 							<button
 								className="vital-sign-home-frame-button5"
 								onClick={setValve2}
@@ -528,9 +528,7 @@ export default function HomePage() {
 												}}
 											/>
 										</span>
-										<span className="vital-sign-home-text26">
-											Entry Chamber
-										</span>
+										<span className="vital-sign-home-text26">Ante Chamber</span>
 									</div>
 								</div>
 								<div className="vital-sign-home-frame473">

@@ -50,8 +50,8 @@ export default function O2AnalyzerPage() {
 		lastCalibration: '15.03.2025 09:30',
 	};
 
-	const entryChamberData = {
-		title: 'Entry',
+	const anteChamberData = {
+		title: 'Ante',
 		o2Level: 19.0,
 		alarmLevel: 24,
 		isAlarmActive: true,
@@ -129,12 +129,10 @@ export default function O2AnalyzerPage() {
 							isMuted={mutedAlarms[mainChamberData.title] || false}
 						/>
 						<O2AnalyzerCard
-							{...entryChamberData}
-							onSettingsClick={() =>
-								handleSettingsClick(entryChamberData.title)
-							}
-							onMuteAlarm={() => handleMuteAlarm(entryChamberData.title)}
-							isMuted={mutedAlarms[entryChamberData.title] || false}
+							{...anteChamberData}
+							onSettingsClick={() => handleSettingsClick(anteChamberData.title)}
+							onMuteAlarm={() => handleMuteAlarm(anteChamberData.title)}
+							isMuted={mutedAlarms[anteChamberData.title] || false}
 						/>
 					</div>
 				</div>
@@ -158,7 +156,7 @@ export default function O2AnalyzerPage() {
 					initialAlarmLevel={
 						selectedChamber === 'Main'
 							? mainChamberData.alarmLevel
-							: entryChamberData.alarmLevel
+							: anteChamberData.alarmLevel
 					}
 				/>
 			</div>
