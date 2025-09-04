@@ -4,15 +4,78 @@ import Image from 'next/image';
 import toast, { Toaster } from 'react-hot-toast';
 import { O2AnalyzerCard } from '../components/O2AnalyzerCard';
 import { O2AnalyzerSettings } from '../components/O2AnalyzerSettings';
+import { useChambers } from '../hooks/useChambers';
+import { useLatestReading } from '../hooks/useReadings';
+import { useChamberAlarms } from '../hooks/useAlarms';
+import { Chamber } from '../api/chambers';
+
+// ChamberCard wrapper component
+interface ChamberCardProps {
+	chamber: Chamber;
+	onSettingsClick: () => void;
+	onMuteAlarm: () => void;
+	isMuted: boolean;
+}
+
+const ChamberCard: React.FC<ChamberCardProps> = ({
+	chamber,
+	onSettingsClick,
+	onMuteAlarm,
+	isMuted,
+}) => {
+	const { reading, loading: readingLoading } = useLatestReading(
+		chamber.id,
+		true,
+		5000 // 5 saniye aralıklarla güncelle
+	);
+	const { alarms } = useChamberAlarms(chamber.id);
+
+	const activeAlarms = Array.isArray(alarms)
+		? alarms.filter((alarm) => alarm.isActive)
+		: [];
+	const hasActiveAlarms = activeAlarms.length > 0;
+
+	// Default values if no reading is available
+	const o2Level = reading?.o2Level ?? chamber.lastValue ?? 21.0;
+	const alarmLevel = chamber.alarmLevelHigh;
+	const lastCalibration = chamber.calibrationDate
+		? new Date(chamber.calibrationDate).toLocaleDateString('tr-TR') +
+		  ' ' +
+		  new Date(chamber.calibrationDate).toLocaleTimeString('tr-TR', {
+				hour: '2-digit',
+				minute: '2-digit',
+		  })
+		: 'Never';
+
+	return (
+		<O2AnalyzerCard
+			title={chamber.name}
+			o2Level={o2Level}
+			alarmLevel={alarmLevel}
+			isAlarmActive={hasActiveAlarms}
+			lastCalibration={lastCalibration}
+			onSettingsClick={onSettingsClick}
+			onMuteAlarm={onMuteAlarm}
+			isMuted={isMuted}
+		/>
+	);
+};
 
 export default function O2AnalyzerPage() {
 	const [currentTime, setCurrentTime] = useState('');
 	const [currentDate, setCurrentDate] = useState('');
 	const [settingsOpen, setSettingsOpen] = useState(false);
-	const [selectedChamber, setSelectedChamber] = useState<string>('');
-	const [mutedAlarms, setMutedAlarms] = useState<{ [key: string]: boolean }>(
+	const [selectedChamber, setSelectedChamber] = useState<Chamber | null>(null);
+	const [mutedAlarms, setMutedAlarms] = useState<{ [key: number]: boolean }>(
 		{}
 	);
+
+	// Backend data hooks
+	const {
+		chambers,
+		loading: chambersLoading,
+		error: chambersError,
+	} = useChambers();
 
 	// Function to update current time and date
 	const updateDateTime = () => {
@@ -41,38 +104,31 @@ export default function O2AnalyzerPage() {
 		return () => clearInterval(interval);
 	}, []);
 
-	// Sample data for the O2 analyzer cards
-	const mainChamberData = {
-		title: 'Main',
-		o2Level: 21.2,
-		alarmLevel: 24,
-		isAlarmActive: true,
-		lastCalibration: '15.03.2025 09:30',
-	};
+	// Display error messages
+	useEffect(() => {
+		if (chambersError) {
+			toast.error(`Chambers Error: ${chambersError}`, {
+				duration: 5000,
+				position: 'top-center',
+			});
+		}
+	}, [chambersError]);
 
-	const anteChamberData = {
-		title: 'Ante',
-		o2Level: 19.0,
-		alarmLevel: 24,
-		isAlarmActive: true,
-		lastCalibration: '14.03.2025 16:45',
-	};
-
-	const handleSettingsClick = (chamberTitle: string) => {
-		setSelectedChamber(chamberTitle);
+	const handleSettingsClick = (chamber: Chamber) => {
+		setSelectedChamber(chamber);
 		setSettingsOpen(true);
 	};
 
-	const handleMuteAlarm = (chamberTitle: string) => {
-		const isMuted = mutedAlarms[chamberTitle] || false;
+	const handleMuteAlarm = (chamber: Chamber) => {
+		const isMuted = mutedAlarms[chamber.id] || false;
 
 		if (isMuted) {
 			// Unmute the alarm
 			setMutedAlarms((prev) => ({
 				...prev,
-				[chamberTitle]: false,
+				[chamber.id]: false,
 			}));
-			toast.success(`${chamberTitle} alarm activated`, {
+			toast.success(`${chamber.name} alarm activated`, {
 				duration: 3000,
 				position: 'top-center',
 			});
@@ -80,9 +136,9 @@ export default function O2AnalyzerPage() {
 			// Mute the alarm
 			setMutedAlarms((prev) => ({
 				...prev,
-				[chamberTitle]: true,
+				[chamber.id]: true,
 			}));
-			toast.success(`${chamberTitle} alarm muted for 5 minutes`, {
+			toast.success(`${chamber.name} alarm muted for 5 minutes`, {
 				duration: 3000,
 				position: 'top-center',
 			});
@@ -91,11 +147,35 @@ export default function O2AnalyzerPage() {
 			setTimeout(() => {
 				setMutedAlarms((prev) => ({
 					...prev,
-					[chamberTitle]: false,
+					[chamber.id]: false,
 				}));
 			}, 5 * 60 * 1000); // 5 minutes
 		}
 	};
+
+	// Loading state
+	if (chambersLoading) {
+		return (
+			<div className="h-screen bg-[#f5f7fa] flex items-center justify-center">
+				<div className="text-center">
+					<div className="animate-spin rounded-full h-32 w-32 border-b-2 border-brand-blue mx-auto mb-4"></div>
+					<p className="text-xl text-brand-blue">Loading chambers...</p>
+				</div>
+			</div>
+		);
+	}
+
+	// Error state
+	if (chambersError && chambers.length === 0) {
+		return (
+			<div className="h-screen bg-[#f5f7fa] flex items-center justify-center">
+				<div className="text-center">
+					<p className="text-xl text-red-600 mb-4">Error loading chambers</p>
+					<p className="text-gray-600">{chambersError}</p>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<>
@@ -122,18 +202,15 @@ export default function O2AnalyzerPage() {
 				{/* Main Content */}
 				<div className="flex-1 flex items-center justify-center px-8">
 					<div className="flex gap-8 items-center w-full max-w-5xl justify-center">
-						<O2AnalyzerCard
-							{...mainChamberData}
-							onSettingsClick={() => handleSettingsClick(mainChamberData.title)}
-							onMuteAlarm={() => handleMuteAlarm(mainChamberData.title)}
-							isMuted={mutedAlarms[mainChamberData.title] || false}
-						/>
-						<O2AnalyzerCard
-							{...anteChamberData}
-							onSettingsClick={() => handleSettingsClick(anteChamberData.title)}
-							onMuteAlarm={() => handleMuteAlarm(anteChamberData.title)}
-							isMuted={mutedAlarms[anteChamberData.title] || false}
-						/>
+						{chambers.map((chamber) => (
+							<ChamberCard
+								key={chamber.id}
+								chamber={chamber}
+								onSettingsClick={() => handleSettingsClick(chamber)}
+								onMuteAlarm={() => handleMuteAlarm(chamber)}
+								isMuted={mutedAlarms[chamber.id] || false}
+							/>
+						))}
 					</div>
 				</div>
 
@@ -148,17 +225,16 @@ export default function O2AnalyzerPage() {
 				</div>
 
 				{/* Settings Modal */}
-				<O2AnalyzerSettings
-					isOpen={settingsOpen}
-					onClose={() => setSettingsOpen(false)}
-					chamberTitle={selectedChamber}
-					initialCalibrationLevel={selectedChamber === 'Main' ? 21 : 21}
-					initialAlarmLevel={
-						selectedChamber === 'Main'
-							? mainChamberData.alarmLevel
-							: anteChamberData.alarmLevel
-					}
-				/>
+				{selectedChamber && (
+					<O2AnalyzerSettings
+						isOpen={settingsOpen}
+						onClose={() => {
+							setSettingsOpen(false);
+							setSelectedChamber(null);
+						}}
+						chamber={selectedChamber}
+					/>
+				)}
 			</div>
 
 			{/* Toast Notifications */}
