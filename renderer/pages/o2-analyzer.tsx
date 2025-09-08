@@ -26,7 +26,7 @@ const ChamberCard: React.FC<ChamberCardProps> = ({
 	const { reading, loading: readingLoading } = useLatestReading(
 		chamber.id,
 		true,
-		5000 // 5 saniye aralıklarla güncelle
+		5000 // Update every 5 seconds
 	);
 	const { alarms } = useChamberAlarms(chamber.id);
 
@@ -39,9 +39,9 @@ const ChamberCard: React.FC<ChamberCardProps> = ({
 	const o2Level = reading?.o2Level ?? chamber.lastValue ?? 21.0;
 	const alarmLevel = chamber.alarmLevelHigh;
 	const lastCalibration = chamber.calibrationDate
-		? new Date(chamber.calibrationDate).toLocaleDateString('tr-TR') +
+		? new Date(chamber.calibrationDate).toLocaleDateString('en-US') +
 		  ' ' +
-		  new Date(chamber.calibrationDate).toLocaleTimeString('tr-TR', {
+		  new Date(chamber.calibrationDate).toLocaleTimeString('en-US', {
 				hour: '2-digit',
 				minute: '2-digit',
 		  })
