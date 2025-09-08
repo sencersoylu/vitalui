@@ -34,7 +34,7 @@ export default function HomePage() {
 
 	useEffect(() => {
 		// Initialize socket connection
-		const socket = io('https://6p', {
+		const socket = io('https://localhost:4000', {
 			transports: ['websocket', 'polling'],
 			extraHeaders: {
 				'Access-Control-Allow-Origin': 'http://localhost:8888',
