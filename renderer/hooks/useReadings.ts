@@ -95,7 +95,7 @@ export const useReadings = (chamberId: number | null): UseReadingsReturn => {
 	};
 };
 
-// En son okumayı almak için hook
+// Hook for getting the latest reading
 export const useLatestReading = (
 	chamberId: number | null,
 	autoRefresh: boolean = false,

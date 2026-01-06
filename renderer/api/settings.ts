@@ -1,13 +1,9 @@
 import { api } from './index';
-import {
-	Chamber,
-	ThreePointCalibrationData,
-	CalibrationPoints,
-} from './chambers';
+import { Chamber, CalibrationPoints } from './chambers';
 
 // Settings API Functions - Backend integration prompt'a göre ayrı endpoint'ler
 
-// Oda ayarlarını getir
+// Get chamber settings
 export const getChamberSettings = async (
 	chamberId: number
 ): Promise<Chamber> => {
@@ -15,12 +11,12 @@ export const getChamberSettings = async (
 		const response = await api.get(`/settings/${chamberId}`);
 		return response.data.data;
 	} catch (error) {
-		console.error('Oda ayarları getirilemedi:', error);
+		console.error('Chamber settings could not be retrieved:', error);
 		throw error;
 	}
 };
 
-// Oda ayarlarını güncelle
+// Update chamber settings
 export const updateChamberSettings = async (
 	chamberId: number,
 	settings: Partial<Chamber>
@@ -29,36 +25,12 @@ export const updateChamberSettings = async (
 		const response = await api.put(`/settings/${chamberId}`, settings);
 		return response.data.data;
 	} catch (error) {
-		console.error('Oda ayarları güncellenemedi:', error);
+		console.error('Chamber settings could not be updated:', error);
 		throw error;
 	}
 };
 
-// 3 noktalı kalibrasyon yap
-export const performThreePointCalibration = async (
-	chamberId: number,
-	calibrationData: ThreePointCalibrationData
-): Promise<any> => {
-	try {
-		const response = await api.post(
-			`/settings/${chamberId}/calibrate-three-point`,
-			{
-				zeroPointRaw: calibrationData.zeroPointRaw,
-				midPointRaw: calibrationData.midPointRaw,
-				hundredPointRaw: calibrationData.hundredPointRaw,
-				midPointCalibrated: calibrationData.midPointCalibrated || 21.0,
-				calibratedBy: calibrationData.calibratedBy || 'operator',
-				notes: calibrationData.notes || '',
-			}
-		);
-		return response.data;
-	} catch (error) {
-		console.error('3 noktalı kalibrasyon yapılamadı:', error);
-		throw error;
-	}
-};
-
-// Aktif kalibrasyon noktalarını getir (Chamber verilerinden)
+// Get active calibration points (from Chamber data)
 export const getActiveCalibrationPoints = async (
 	chamberId: number
 ): Promise<CalibrationPoints> => {
@@ -66,7 +38,7 @@ export const getActiveCalibrationPoints = async (
 		const response = await api.get(`/settings/${chamberId}/calibration-points`);
 		return response.data.data;
 	} catch (error) {
-		console.error('Kalibrasyon noktaları getirilemedi:', error);
+		console.error('Calibration points could not be retrieved:', error);
 		throw error;
 	}
 };
@@ -88,7 +60,7 @@ export const calibrateReading = async (
 	}
 };
 
-// Tek nokta kalibrasyon (legacy)
+// Single point calibration (legacy)
 export const calibrateChamber = async (
 	chamberId: number,
 	calibrationLevel: number
@@ -96,12 +68,12 @@ export const calibrateChamber = async (
 	try {
 		await api.post(`/settings/${chamberId}/calibrate`, { calibrationLevel });
 	} catch (error) {
-		console.error('Kalibrasyon yapılamadı:', error);
+		console.error('Calibration could not be performed:', error);
 		throw error;
 	}
 };
 
-// Kalibrasyon geçmişini getir
+// Get calibration history
 export const getCalibrationHistory = async (
 	chamberId: number
 ): Promise<any[]> => {
@@ -111,45 +83,45 @@ export const getCalibrationHistory = async (
 		);
 		return response.data.data;
 	} catch (error) {
-		console.error('Kalibrasyon geçmişi getirilemedi:', error);
+		console.error('Calibration history could not be retrieved:', error);
 		throw error;
 	}
 };
 
-// Kalibrasyon durumunu kontrol et
+// Check calibration status
 export const getCalibrationStatus = async (chamberId: number): Promise<any> => {
 	try {
 		const response = await api.get(`/settings/${chamberId}/calibration-status`);
 		return response.data.data;
 	} catch (error) {
-		console.error('Kalibrasyon durumu kontrol edilemedi:', error);
+		console.error('Calibration status could not be checked:', error);
 		throw error;
 	}
 };
 
-// Kalibrasyon gerekli işaretle
+// Mark calibration as required
 export const markCalibrationRequired = async (
 	chamberId: number
 ): Promise<void> => {
 	try {
 		await api.post(`/settings/${chamberId}/calibration-required`);
 	} catch (error) {
-		console.error('Kalibrasyon gerekli işaretlenemedi:', error);
+		console.error('Calibration could not be marked as required:', error);
 		throw error;
 	}
 };
 
-// Sensör değişikliğini kaydet
+// Record sensor change
 export const recordSensorChange = async (chamberId: number): Promise<void> => {
 	try {
 		await api.post(`/settings/${chamberId}/sensor-changed`);
 	} catch (error) {
-		console.error('Sensör değişikliği kaydedilemedi:', error);
+		console.error('Sensor change could not be recorded:', error);
 		throw error;
 	}
 };
 
-// Kalibrasyon istatistiklerini getir
+// Get calibration statistics
 export const getCalibrationStats = async (): Promise<{
 	totalChambers: number;
 	upToDate: number;
@@ -161,7 +133,7 @@ export const getCalibrationStats = async (): Promise<{
 		const response = await api.get('/settings/calibration/stats');
 		return response.data.data;
 	} catch (error) {
-		console.error('Kalibrasyon istatistikleri getirilemedi:', error);
+		console.error('Calibration statistics could not be retrieved:', error);
 		throw error;
 	}
 };

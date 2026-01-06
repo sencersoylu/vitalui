@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import { NumericKeypad } from './NumericKeypad';
 import { Chamber, updateAlarmLevel } from '../api/chambers';
 import { useCalibration, useCalibrationPoints } from '../hooks/useCalibration';
-import ThreePointCalibration from './ThreePointCalibration';
 
 interface O2AnalyzerSettingsProps {
 	isOpen: boolean;
@@ -22,9 +21,6 @@ export function O2AnalyzerSettings({
 	const [showKeypad, setShowKeypad] = useState(true);
 	const [calibrationLevel, setCalibrationLevel] = useState(21);
 	const [alarmLevel, setAlarmLevel] = useState(chamber.alarmLevelHigh);
-	const [activeTab, setActiveTab] = useState<'legacy' | 'threepoint'>(
-		'threepoint'
-	);
 	const [savingAlarmLevel, setSavingAlarmLevel] = useState(false);
 
 	// Backend hooks
@@ -119,7 +115,7 @@ export function O2AnalyzerSettings({
 		try {
 			const response = await updateAlarmLevel(chamber.id, alarmLevel);
 			toast.success(
-				`${chamber.name} alarm seviyesi başarıyla güncellendi: ${alarmLevel}%`,
+				`${chamber.name} alarm level successfully updated: ${alarmLevel}%`,
 				{
 					duration: 4000,
 					position: 'top-center',
@@ -130,7 +126,7 @@ export function O2AnalyzerSettings({
 			console.error('Alarm level update failed:', error);
 			const errorMessage =
 				error.response?.data?.message || error.message || 'Unknown error';
-			toast.error(`Alarm seviyesi güncellenemedi: ${errorMessage}`, {
+			toast.error(`Alarm level could not be updated: ${errorMessage}`, {
 				duration: 4000,
 				position: 'top-center',
 			});
@@ -224,7 +220,7 @@ export function O2AnalyzerSettings({
 							<div className="flex items-center gap-3 mb-4">
 								<Zap className="w-6 h-6 text-brand-blue" />
 								<h3 className="text-xl font-bold text-brand-blue">
-									Kalibrasyon Ayarları
+									Calibration Settings
 								</h3>
 							</div>
 
@@ -232,89 +228,54 @@ export function O2AnalyzerSettings({
 							{calibrationPoints && (
 								<div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
 									<h4 className="font-semibold text-green-800 mb-2">
-										Mevcut Kalibrasyon
+										Current Calibration
 									</h4>
 									<div className="text-sm text-green-700 space-y-1">
-										<p>0% noktası: {calibrationPoints.raw0}</p>
-										<p>21% noktası: {calibrationPoints.raw21}</p>
-										<p>100% noktası: {calibrationPoints.raw100}</p>
 										<p>
-											Son kalibrasyon:{' '}
+											Last calibration:{' '}
 											{new Date(
 												calibrationPoints.calibrationDate
-											).toLocaleDateString('tr-TR')}
+											).toLocaleDateString('en-US')}
 										</p>
 									</div>
 								</div>
 							)}
 
-							{/* Tab Navigation */}
-							<div className="flex bg-gray-100 rounded-lg p-1 mb-4">
+							{/* Calibration Content */}
+							<div className="bg-blue-50 rounded-2xl p-6">
+								<div className="mb-4">
+									<div className="flex justify-between items-center mb-2">
+										<label className="text-gray-700 font-medium">
+											Calibration Level
+										</label>
+										<span className="text-2xl font-bold text-brand-blue">
+											{calibrationLevel}%
+										</span>
+									</div>
+									<input
+										type="range"
+										min="0"
+										max="100"
+										value={calibrationLevel}
+										onChange={(e) =>
+											setCalibrationLevel(Number(e.target.value))
+										}
+										className="w-full h-8 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+									/>
+									<div className="flex justify-between text-sm text-gray-500 mt-1">
+										<span>0%</span>
+										<span>100%</span>
+									</div>
+								</div>
+
 								<button
-									onClick={() => setActiveTab('threepoint')}
-									className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-										activeTab === 'threepoint'
-											? 'bg-white text-brand-blue shadow-sm'
-											: 'text-gray-600 hover:text-gray-800'
-									}`}>
-									3 Noktalı Kalibrasyon
-								</button>
-								<button
-									onClick={() => setActiveTab('legacy')}
-									className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-										activeTab === 'legacy'
-											? 'bg-white text-brand-blue shadow-sm'
-											: 'text-gray-600 hover:text-gray-800'
-									}`}>
-									Tek Nokta (Legacy)
+									onClick={handleCalibrate}
+									disabled={calibrating}
+									className="w-full bg-brand-blue text-white py-3 rounded-xl hover:bg-blue-600 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+									<Zap className="w-5 h-5" />
+									{calibrating ? 'Calibrating...' : 'Single Point Calibration'}
 								</button>
 							</div>
-
-							{/* Tab Content */}
-							{activeTab === 'threepoint' ? (
-								<ThreePointCalibration
-									chamberId={chamber.id}
-									chamberName={chamber.name}
-									onCalibrationComplete={refetchCalibrationPoints}
-								/>
-							) : (
-								<div className="bg-blue-50 rounded-2xl p-6">
-									<div className="mb-4">
-										<div className="flex justify-between items-center mb-2">
-											<label className="text-gray-700 font-medium">
-												Kalibrasyon Seviyesi
-											</label>
-											<span className="text-2xl font-bold text-brand-blue">
-												{calibrationLevel}%
-											</span>
-										</div>
-										<input
-											type="range"
-											min="0"
-											max="100"
-											value={calibrationLevel}
-											onChange={(e) =>
-												setCalibrationLevel(Number(e.target.value))
-											}
-											className="w-full h-8 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-										/>
-										<div className="flex justify-between text-sm text-gray-500 mt-1">
-											<span>0%</span>
-											<span>100%</span>
-										</div>
-									</div>
-
-									<button
-										onClick={handleCalibrate}
-										disabled={calibrating}
-										className="w-full bg-brand-blue text-white py-3 rounded-xl hover:bg-blue-600 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-										<Zap className="w-5 h-5" />
-										{calibrating
-											? 'Kalibrasyon yapılıyor...'
-											: 'Tek Nokta Kalibrasyon'}
-									</button>
-								</div>
-							)}
 						</div>
 
 						{/* Alarm Level Setting */}
@@ -357,10 +318,10 @@ export function O2AnalyzerSettings({
 								className="w-full bg-red-600 text-white py-3 rounded-xl hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
 								<Save className="w-5 h-5" />
 								{savingAlarmLevel
-									? 'Kaydediliyor...'
+									? 'Saving...'
 									: alarmLevel === chamber.alarmLevelHigh
-									? 'Değişiklik Yok'
-									: 'Alarm Seviyesini Kaydet'}
+									? 'No Changes'
+									: 'Save Alarm Level'}
 							</button>
 						</div>
 

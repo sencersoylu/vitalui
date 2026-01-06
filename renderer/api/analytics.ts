@@ -95,7 +95,7 @@ export const getO2Trends = async (
 	}
 };
 
-// Kalibrasyon raporlarını getir
+// Get calibration reports
 export const getCalibrationReports = async (
 	chamberId?: number
 ): Promise<CalibrationReport[]> => {
@@ -106,12 +106,12 @@ export const getCalibrationReports = async (
 		const response = await api.get(url);
 		return response.data.data;
 	} catch (error) {
-		console.error('Kalibrasyon raporları getirilemedi:', error);
+		console.error('Calibration reports could not be retrieved:', error);
 		throw error;
 	}
 };
 
-// Alarm özet raporlarını getir
+// Get alarm summary reports
 export const getAlarmSummary = async (
 	startDate?: string,
 	endDate?: string,
@@ -128,12 +128,12 @@ export const getAlarmSummary = async (
 		);
 		return response.data.data;
 	} catch (error) {
-		console.error('Alarm özet raporları getirilemedi:', error);
+		console.error('Alarm summary reports could not be retrieved:', error);
 		throw error;
 	}
 };
 
-// Kalibrasyon istatistiklerini getir
+// Get calibration statistics
 export const getCalibrationStats = async (): Promise<{
 	totalChambers: number;
 	upToDate: number;
@@ -145,7 +145,7 @@ export const getCalibrationStats = async (): Promise<{
 		const response = await api.get('/settings/calibration/stats');
 		return response.data.data;
 	} catch (error) {
-		console.error('Kalibrasyon istatistikleri getirilemedi:', error);
+		console.error('Calibration statistics could not be retrieved:', error);
 		throw error;
 	}
 };

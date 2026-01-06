@@ -1,20 +1,20 @@
 import { api } from './index';
 
-// Chamber Types - Backend veri modeline göre güncellendi
+// Chamber Types - Updated according to backend data model
 export interface Chamber {
 	id: number;
 	name: string; // "Main" veya "Entry"
 	description: string;
-	lastValue: number; // Son okunan O2 değeri (DECIMAL 5,2)
-	// Kalibrasyon verileri (Chamber modeli içinde)
-	raw0: number | null; // 0% kalibrasyon için ham değer (INTEGER)
-	raw21: number | null; // 21% kalibrasyon için ham değer (INTEGER)
-	raw100: string | null; // 100% kalibrasyon için ham değer (TEXT)
-	calibrationDate: string; // Son kalibrasyon tarihi
-	// Alarm seviyeleri
-	alarmLevelHigh: number; // Yüksek alarm seviyesi (DECIMAL 5,2, default: 24.0)
-	alarmLevelLow: number; // Düşük alarm seviyesi (DECIMAL 5,2, default: 16.0)
-	lastSensorChange: string; // Son sensör değişim tarihi
+	lastValue: number; // Last read O2 value (DECIMAL 5,2)
+	// Calibration data (within Chamber model)
+	raw0: number | null; // Raw value for 0% calibration (INTEGER)
+	raw21: number | null; // Raw value for 21% calibration (INTEGER)
+	raw100: string | null; // Raw value for 100% calibration (TEXT)
+	calibrationDate: string; // Last calibration date
+	// Alarm levels
+	alarmLevelHigh: number; // High alarm level (DECIMAL 5,2, default: 24.0)
+	alarmLevelLow: number; // Low alarm level (DECIMAL 5,2, default: 16.0)
+	lastSensorChange: string; // Last sensor change date
 	isActive: boolean; // Oda aktif mi? (default: true)
 	createdAt: string;
 	updatedAt: string;
@@ -41,7 +41,7 @@ export interface AlarmLevelUpdateResponse {
 export interface O2Reading {
 	id: number;
 	chamberId: number; // Oda ID (Foreign Key)
-	o2Level: number; // Kalibre edilmiş O2 seviyesi (DECIMAL 5,2, 0-100%)
+	o2Level: number; // Calibrated O2 level (DECIMAL 5,2, 0-100%)
 	temperature: number | null; // Sıcaklık (DECIMAL 5,2, -50 ile 100°C arası, nullable)
 	humidity: number | null; // Nem (DECIMAL 5,2, 0-100%, nullable)
 	timestamp: string; // Okuma zamanı (default: NOW)
@@ -50,17 +50,7 @@ export interface O2Reading {
 	updatedAt: string;
 }
 
-// 3 Noktalı Kalibrasyon için veri yapısı
-export interface ThreePointCalibrationData {
-	zeroPointRaw: number; // 0% için okunan ham değer
-	midPointRaw: number; // Orta nokta için okunan ham değer
-	hundredPointRaw: number; // 100% için okunan ham değer
-	midPointCalibrated?: number; // Orta nokta kalibre değeri (varsayılan 21%)
-	calibratedBy?: string; // Kalibrasyonu yapan kişi
-	notes?: string; // İsteğe bağlı notlar
-}
-
-// Kalibrasyon noktalarını temsil eden interface
+// Interface representing calibration points
 export interface CalibrationPoints {
 	raw0: number;
 	raw21: number;
@@ -130,7 +120,7 @@ export const createChamber = async (
 	}
 };
 
-// Oda verilerini güncelle
+// Update chamber data
 export const updateChamber = async (
 	chamberId: number,
 	chamberData: Partial<Chamber>
@@ -139,7 +129,7 @@ export const updateChamber = async (
 		const response = await api.put(`/chambers/${chamberId}`, chamberData);
 		return response.data.data;
 	} catch (error) {
-		console.error('Oda güncellenemedi:', error);
+		console.error('Chamber could not be updated:', error);
 		throw error;
 	}
 };
@@ -179,7 +169,7 @@ export const getChamberReadings = async (
 	}
 };
 
-// En son okumayı getir
+// Get the latest reading
 export const getLatestReading = async (
 	chamberId: number
 ): Promise<O2Reading> => {
@@ -187,12 +177,12 @@ export const getLatestReading = async (
 		const response = await api.get(`/chambers/${chamberId}/readings/latest`);
 		return response.data.data;
 	} catch (error) {
-		console.error('Son okuma getirilemedi:', error);
+		console.error('Latest reading could not be retrieved:', error);
 		throw error;
 	}
 };
 
-// Yeni okuma ekle (otomatik kalibrasyon)
+// Add new reading (automatic calibration)
 export const addReading = async (
 	chamberId: number,
 	readingData: {
@@ -249,7 +239,7 @@ export const getReadingHistory = async (
 
 // Alarm Level Functions
 
-// Alarm seviyesini güncelle
+// Update alarm level
 export const updateAlarmLevel = async (
 	chamberId: number,
 	alarmLevelHigh: number
@@ -260,9 +250,9 @@ export const updateAlarmLevel = async (
 		});
 		return response.data;
 	} catch (error) {
-		console.error('Alarm seviyesi güncellenemedi:', error);
+		console.error('Alarm level could not be updated:', error);
 		throw error;
 	}
 };
 
-// Not: Settings ve Kalibrasyon fonksiyonları artık ayrı settings.ts dosyasında
+// Note: Settings and Calibration functions are now in separate settings.ts file

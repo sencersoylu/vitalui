@@ -1,16 +1,16 @@
 import { api } from './index';
 
-// Alarm Types - Backend veri modeline göre güncellendi
+// Alarm Types - Updated according to backend data model
 export interface Alarm {
 	id: number;
 	chamberId: number; // Oda ID (Foreign Key)
 	alarmType: string; // 'high_o2', 'low_o2', 'sensor_error', 'calibration_due' (ENUM)
-	isActive: boolean; // Alarm aktif mi? (default: true)
-	isMuted: boolean; // Alarm susturuldu mu? (default: false)
+	isActive: boolean; // Is alarm active? (default: true)
+	isMuted: boolean; // Is alarm muted? (default: false)
 	mutedUntil: string | null; // Susturma bitiş zamanı (nullable)
-	triggeredAt: string; // Alarm tetiklenme zamanı (default: NOW)
-	resolvedAt: string | null; // Alarm çözülme zamanı (nullable)
-	o2LevelWhenTriggered: number | null; // Alarm tetiklendiğindeki O2 seviyesi (DECIMAL 5,2, nullable)
+	triggeredAt: string; // Alarm trigger time (default: NOW)
+	resolvedAt: string | null; // Alarm resolution time (nullable)
+	o2LevelWhenTriggered: number | null; // O2 level when alarm was triggered (DECIMAL 5,2, nullable)
 	createdAt: string;
 	updatedAt: string;
 }
@@ -27,7 +27,7 @@ export interface AlarmStats {
 
 // Alarm API Functions
 
-// Aktif alarmları listele
+// List active alarms
 export const getActiveAlarms = async (): Promise<Alarm[]> => {
 	try {
 		const response = await api.get('/alarms');
@@ -43,12 +43,12 @@ export const getActiveAlarms = async (): Promise<Alarm[]> => {
 
 		return data;
 	} catch (error) {
-		console.error('Aktif alarmlar getirilemedi:', error);
+		console.error('Active alarms could not be retrieved:', error);
 		throw error;
 	}
 };
 
-// Alarm geçmişini getir
+// Get alarm history
 export const getAlarmHistory = async (chamberId?: number): Promise<Alarm[]> => {
 	try {
 		const url = chamberId
@@ -67,23 +67,23 @@ export const getAlarmHistory = async (chamberId?: number): Promise<Alarm[]> => {
 
 		return data;
 	} catch (error) {
-		console.error('Alarm geçmişi getirilemedi:', error);
+		console.error('Alarm history could not be retrieved:', error);
 		throw error;
 	}
 };
 
-// Alarm istatistiklerini getir
+// Get alarm statistics
 export const getAlarmStats = async (): Promise<AlarmStats> => {
 	try {
 		const response = await api.get('/alarms/stats');
 		return response.data.data;
 	} catch (error) {
-		console.error('Alarm istatistikleri getirilemedi:', error);
+		console.error('Alarm statistics could not be retrieved:', error);
 		throw error;
 	}
 };
 
-// Belirli odanın alarmlarını getir
+// Get alarms for specific chamber
 export const getChamberAlarms = async (chamberId: number): Promise<Alarm[]> => {
 	try {
 		const response = await api.get(`/alarms/${chamberId}`);
@@ -101,12 +101,12 @@ export const getChamberAlarms = async (chamberId: number): Promise<Alarm[]> => {
 
 		return data;
 	} catch (error) {
-		console.error('Oda alarmları getirilemedi:', error);
+		console.error('Chamber alarms could not be retrieved:', error);
 		throw error;
 	}
 };
 
-// Alarmı sustur
+// Mute alarm
 export const muteAlarm = async (
 	chamberId: number,
 	duration?: number
@@ -115,22 +115,22 @@ export const muteAlarm = async (
 		const payload = duration ? { duration } : {};
 		await api.post(`/alarms/${chamberId}/mute`, payload);
 	} catch (error) {
-		console.error('Alarm susturulamadı:', error);
+		console.error('Alarm could not be muted:', error);
 		throw error;
 	}
 };
 
-// Alarmı çöz
+// Resolve alarm
 export const resolveAlarm = async (chamberId: number): Promise<void> => {
 	try {
 		await api.post(`/alarms/${chamberId}/resolve`);
 	} catch (error) {
-		console.error('Alarm çözülemedi:', error);
+		console.error('Alarm could not be resolved:', error);
 		throw error;
 	}
 };
 
-// Tüm aktif alarmları sustur
+// Mute all active alarms
 export const muteAllAlarms = async (duration?: number): Promise<void> => {
 	try {
 		const activeAlarms = await getActiveAlarms();
@@ -139,12 +139,12 @@ export const muteAllAlarms = async (duration?: number): Promise<void> => {
 		);
 		await Promise.all(mutePromises);
 	} catch (error) {
-		console.error('Tüm alarmlar susturulamadı:', error);
+		console.error('All alarms could not be muted:', error);
 		throw error;
 	}
 };
 
-// Oda için tüm aktif alarmları sustur
+// Mute all active alarms for chamber
 export const muteChamberAlarms = async (
 	chamberId: number,
 	duration?: number
@@ -152,7 +152,7 @@ export const muteChamberAlarms = async (
 	try {
 		await muteAlarm(chamberId, duration);
 	} catch (error) {
-		console.error('Oda alarmları susturulamadı:', error);
+		console.error('Chamber alarms could not be muted:', error);
 		throw error;
 	}
 };

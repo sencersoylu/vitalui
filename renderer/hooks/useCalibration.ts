@@ -5,12 +5,11 @@ import {
 	getCalibrationHistory,
 	getCalibrationStatus,
 	markCalibrationRequired,
-	performThreePointCalibration,
 	getActiveCalibrationPoints,
 	calibrateReading,
 	getCalibrationStats,
 } from '../api/settings';
-import { ThreePointCalibrationData, CalibrationPoints } from '../api/chambers';
+import { CalibrationPoints } from '../api/chambers';
 import { handleApiError } from '../api';
 
 interface CalibrationHistoryItem {
@@ -40,10 +39,6 @@ interface UseCalibrationReturn {
 	calibrating: boolean;
 	error: string | null;
 	calibrate: (chamberId: number, level: number) => Promise<boolean>;
-	performThreePoint: (
-		chamberId: number,
-		data: ThreePointCalibrationData
-	) => Promise<boolean>;
 	calibrateRawReading: (
 		chamberId: number,
 		rawValue: number
@@ -80,7 +75,7 @@ interface UseCalibrationPointsReturn {
 	refetch: () => Promise<void>;
 }
 
-// Kalibrasyon işlemlerini yönetmek için hook
+// Hook for managing calibration operations
 export const useCalibration = (): UseCalibrationReturn => {
 	const [calibrating, setCalibrating] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -98,25 +93,6 @@ export const useCalibration = (): UseCalibrationReturn => {
 			const errorMessage = handleApiError(err);
 			setError(errorMessage);
 			console.error('Calibration error:', err);
-			return false;
-		} finally {
-			setCalibrating(false);
-		}
-	};
-
-	const performThreePoint = async (
-		chamberId: number,
-		data: ThreePointCalibrationData
-	): Promise<boolean> => {
-		try {
-			setCalibrating(true);
-			setError(null);
-			await performThreePointCalibration(chamberId, data);
-			return true;
-		} catch (err) {
-			const errorMessage = handleApiError(err);
-			setError(errorMessage);
-			console.error('Three point calibration error:', err);
 			return false;
 		} finally {
 			setCalibrating(false);
@@ -169,14 +145,13 @@ export const useCalibration = (): UseCalibrationReturn => {
 		calibrating,
 		error,
 		calibrate,
-		performThreePoint,
 		calibrateRawReading,
 		recordSensorChanged,
 		markRequired,
 	};
 };
 
-// Kalibrasyon geçmişini yönetmek için hook
+// Hook for managing calibration history
 export const useCalibrationHistory = (
 	chamberId: number | null
 ): UseCalibrationHistoryReturn => {
@@ -216,7 +191,7 @@ export const useCalibrationHistory = (
 	};
 };
 
-// Kalibrasyon durumunu yönetmek için hook
+// Hook for managing calibration status
 export const useCalibrationStatus = (
 	chamberId: number | null
 ): UseCalibrationStatusReturn => {
@@ -256,7 +231,7 @@ export const useCalibrationStatus = (
 	};
 };
 
-// Kalibrasyon istatistiklerini yönetmek için hook
+// Hook for managing calibration statistics
 export const useCalibrationStats = (): UseCalibrationStatsReturn => {
 	const [stats, setStats] = useState<CalibrationStats | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -289,7 +264,7 @@ export const useCalibrationStats = (): UseCalibrationStatsReturn => {
 	};
 };
 
-// Kalibrasyon noktalarını yönetmek için hook
+// Hook for managing calibration points
 export const useCalibrationPoints = (
 	chamberId: number | null
 ): UseCalibrationPointsReturn => {

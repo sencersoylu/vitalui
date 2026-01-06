@@ -45,7 +45,7 @@ interface UseChamberAlarmsReturn {
 	muteAllChamberAlarms: (duration?: number) => Promise<boolean>;
 }
 
-// Aktif alarmları yönetmek için hook
+// Hook for managing active alarms
 export const useActiveAlarms = (
 	autoRefresh: boolean = true,
 	refreshInterval: number = 5000
@@ -76,7 +76,7 @@ export const useActiveAlarms = (
 		try {
 			setError(null);
 			await muteAlarm(chamberId, duration);
-			// Alarm listesini güncelle
+			// Update alarm list
 			setAlarms((prev) =>
 				prev.map((alarm) =>
 					alarm.chamberId === chamberId ? { ...alarm, isMuted: true } : alarm
@@ -95,7 +95,7 @@ export const useActiveAlarms = (
 		try {
 			setError(null);
 			await resolveAlarm(chamberId);
-			// Alarm listesini güncelle - chamberId'ye ait alarmları inactive yap
+			// Update alarm list - mark alarms belonging to chamberId as inactive
 			setAlarms((prev) =>
 				prev.map((alarm) =>
 					alarm.chamberId === chamberId ? { ...alarm, isActive: false } : alarm
@@ -114,7 +114,7 @@ export const useActiveAlarms = (
 		try {
 			setError(null);
 			await muteAllAlarms(duration);
-			// Tüm alarmları muted olarak işaretle
+			// Mark all alarms as muted
 			setAlarms((prev) => prev.map((alarm) => ({ ...alarm, isMuted: true })));
 			return true;
 		} catch (err) {
@@ -150,7 +150,7 @@ export const useActiveAlarms = (
 	};
 };
 
-// Alarm geçmişini yönetmek için hook
+// Hook for managing alarm history
 export const useAlarmHistory = (): UseAlarmHistoryReturn => {
 	const [history, setHistory] = useState<Alarm[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -183,7 +183,7 @@ export const useAlarmHistory = (): UseAlarmHistoryReturn => {
 	};
 };
 
-// Alarm istatistiklerini yönetmek için hook
+// Hook for managing alarm statistics
 export const useAlarmStats = (): UseAlarmStatsReturn => {
 	const [stats, setStats] = useState<AlarmStats | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -216,7 +216,7 @@ export const useAlarmStats = (): UseAlarmStatsReturn => {
 	};
 };
 
-// Belirli bir odanın alarmlarını yönetmek için hook
+// Hook for managing alarms of a specific chamber
 export const useChamberAlarms = (
 	chamberId: number | null
 ): UseChamberAlarmsReturn => {
@@ -250,7 +250,7 @@ export const useChamberAlarms = (
 		try {
 			setError(null);
 			await muteChamberAlarms(chamberId, duration);
-			// Tüm alarmları muted olarak işaretle
+			// Mark all alarms as muted
 			setAlarms((prev) => prev.map((alarm) => ({ ...alarm, isMuted: true })));
 			return true;
 		} catch (err) {
