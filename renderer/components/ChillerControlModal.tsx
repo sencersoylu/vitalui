@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Snowflake, Thermometer, Power } from 'lucide-react';
 import { useDashboardStore } from '../store';
 
@@ -22,6 +22,7 @@ export function ChillerControlModal({
 	} = useDashboardStore();
 
 	const [localSetTemp, setLocalSetTemp] = useState(chillerSetTemp);
+	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 	// Sync local state with store when modal opens
 	useEffect(() => {
@@ -30,21 +31,36 @@ export function ChillerControlModal({
 		}
 	}, [isOpen, chillerSetTemp]);
 
+	// Cleanup debounce timer on unmount
+	useEffect(() => {
+		return () => {
+			if (debounceTimerRef.current) {
+				clearTimeout(debounceTimerRef.current);
+			}
+		};
+	}, []);
+
 	const handleSetTempChange = (value: number) => {
 		setLocalSetTemp(value);
-	};
 
-	const handleSetTempConfirm = () => {
-		if (socketRef) {
-			// Write target temperature to register 0x0005
-			// Value is in 0.1°C units, so multiply by 10
-			const tempValue = Math.round(localSetTemp * 10);
-			socketRef.emit('writeRegister', {
-				register: 'D00202',
-				value: tempValue,
-			});
-			setChillerSetTemp(localSetTemp);
+		// Clear existing timer
+		if (debounceTimerRef.current) {
+			clearTimeout(debounceTimerRef.current);
 		}
+
+		// Debounce: write to register after 500ms of no changes
+		debounceTimerRef.current = setTimeout(() => {
+			if (socketRef) {
+				// Write target temperature to register
+				// Value is in 0.1°C units, so multiply by 10
+				const tempValue = Math.round(value * 10);
+				socketRef.emit('writeRegister', {
+					register: 'D00202',
+					value: tempValue,
+				});
+				setChillerSetTemp(value);
+			}
+		}, 500);
 	};
 
 	const handleToggleChiller = () => {
@@ -93,8 +109,8 @@ export function ChillerControlModal({
 						</div>
 						<div
 							className={`px-3 py-1 rounded-full text-sm font-medium ${chillerRunning
-									? 'bg-green-500 text-white'
-									: 'bg-gray-300 text-gray-600'
+								? 'bg-green-500 text-white'
+								: 'bg-gray-300 text-gray-600'
 								}`}>
 							{chillerRunning ? 'Running' : 'Stopped'}
 						</div>
@@ -131,22 +147,14 @@ export function ChillerControlModal({
 						<span>20°C</span>
 						<span>35°C</span>
 					</div>
-					<button
-						onClick={handleSetTempConfirm}
-						disabled={localSetTemp === chillerSetTemp}
-						className="w-full mt-4 bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-						{localSetTemp === chillerSetTemp
-							? 'No Changes'
-							: 'Apply Temperature'}
-					</button>
 				</div>
 
 				{/* Run/Stop Toggle */}
 				<button
 					onClick={handleToggleChiller}
 					className={`w-full py-4 rounded-xl font-medium text-lg flex items-center justify-center gap-3 transition-all ${chillerRunning
-							? 'bg-red-500 hover:bg-red-600 text-white'
-							: 'bg-green-500 hover:bg-green-600 text-white'
+						? 'bg-red-500 hover:bg-red-600 text-white'
+						: 'bg-green-500 hover:bg-green-600 text-white'
 						}`}>
 					<Power className="w-6 h-6" />
 					{chillerRunning ? 'Stop Chiller' : 'Start Chiller'}
