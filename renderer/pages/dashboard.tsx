@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import io from 'socket.io-client';
 import { useDashboardStore } from '../store';
+import { ChillerControlModal } from '../components/ChillerControlModal';
 
 export default function HomePage() {
 	// Get state and actions from the store
@@ -14,6 +15,7 @@ export default function HomePage() {
 		showCalibrationModal,
 		showErrorModal,
 		showSeatAlarmModal,
+		showChillerModal,
 		calibrationProgress,
 		calibrationStatus,
 		errorMessage,
@@ -28,12 +30,15 @@ export default function HomePage() {
 		valve2Status,
 		playing,
 		activeSeatAlarm,
+		chillerRunning,
+		chillerCurrentTemp,
 		setConnected,
 		setCurrentTime,
 		setCurrentTime2,
 		setShowCalibrationModal,
 		setShowErrorModal,
 		setShowSeatAlarmModal,
+		setShowChillerModal,
 		setCalibrationProgress,
 		setCalibrationStatus,
 		setErrorMessage,
@@ -48,6 +53,8 @@ export default function HomePage() {
 		setValve2Status,
 		setPlaying,
 		setActiveSeatAlarm,
+		setChillerRunning,
+		setChillerCurrentTemp,
 	} = useDashboardStore();
 
 	// Socket reference
@@ -104,6 +111,8 @@ export default function HomePage() {
 		socket.on('data', (data) => {
 			const errorData = JSON.parse(data);
 			console.log('errorData', Number(errorData.data[19]).toString(2));
+			setChillerCurrentTemp(errorData.data[15] / 10);
+
 			let errorArray = Number(errorData.data[19])
 				.toString(2)
 				.padStart(16, '0')
@@ -198,6 +207,16 @@ export default function HomePage() {
 			} else {
 				setShowSeatAlarmModal(false);
 				setActiveSeatAlarm(null);
+			}
+		});
+
+		// Listen for chiller data updates
+		socket.on('chillerData', (data) => {
+			if (data.currentTemp !== undefined) {
+				setChillerCurrentTemp(data.currentTemp / 10); // Convert from 0.1°C units
+			}
+			if (data.running !== undefined) {
+				setChillerRunning(data.running === 1);
 			}
 		});
 
@@ -476,6 +495,21 @@ export default function HomePage() {
 										</span>
 									</div>
 								</button>
+								<button
+									className="vital-sign-home-frame-button-chiller"
+									onClick={() => setShowChillerModal(true)}
+									style={{
+										backgroundColor: chillerRunning ? '#06b6d4' : '#90a1b9',
+									}}>
+									<div className="vital-sign-home-container-chiller">
+										<span className="vital-sign-home-text-chiller">
+											Chiller{' '}
+											{chillerRunning
+												? `${chillerCurrentTemp.toFixed(1)}°C`
+												: 'Off'}
+										</span>
+									</div>
+								</button>
 							</div>
 						</div>
 						<div className="vital-sign-home-number-card2">
@@ -676,6 +710,13 @@ export default function HomePage() {
 					</div>
 				</div>
 			)}
+
+			{/* Chiller Control Modal */}
+			<ChillerControlModal
+				isOpen={showChillerModal}
+				onClose={() => setShowChillerModal(false)}
+				socketRef={socketRef}
+			/>
 
 			<style jsx global>{`
 				@font-face {
@@ -882,7 +923,7 @@ export default function HomePage() {
 				}
 
 				.vital-sign-home-number-card1 {
-					gap: 105px;
+					gap: 20px;
 					width: 300px;
 					height: 512px;
 					display: flex;
@@ -924,7 +965,7 @@ export default function HomePage() {
 
 				.vital-sign-home-group46 {
 					width: 235px;
-					height: 276px;
+					height: 381px;
 					display: flex;
 					position: relative;
 					align-items: flex-start;
@@ -1024,6 +1065,42 @@ export default function HomePage() {
 				}
 
 				.vital-sign-home-text13 {
+					color: rgba(255, 255, 255, 1);
+					height: auto;
+					font-size: 24px;
+					font-style: Medium;
+					text-align: center;
+					font-family: Plus Jakarta Sans;
+					font-weight: 500;
+					line-height: 20px;
+					font-stretch: normal;
+					text-decoration: none;
+				}
+
+				.vital-sign-home-frame-button-chiller {
+					top: 315px;
+					left: 0px;
+					width: 235px;
+					height: 66px;
+					display: flex;
+					padding: 0 12px;
+					position: absolute;
+					align-items: center;
+					flex-shrink: 0;
+					border-radius: 3px;
+					justify-content: center;
+					background-color: #90a1b9;
+					transition: background-color 0.3s ease;
+				}
+
+				.vital-sign-home-container-chiller {
+					gap: 4px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+
+				.vital-sign-home-text-chiller {
 					color: rgba(255, 255, 255, 1);
 					height: auto;
 					font-size: 24px;

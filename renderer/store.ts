@@ -16,9 +16,19 @@ interface DashboardState {
   showCalibrationModal: boolean
   showErrorModal: boolean
   showSeatAlarmModal: boolean
+  showChillerModal: boolean
   setShowCalibrationModal: (show: boolean) => void
   setShowErrorModal: (show: boolean) => void
   setShowSeatAlarmModal: (show: boolean) => void
+  setShowChillerModal: (show: boolean) => void
+  
+  // Chiller states
+  chillerRunning: boolean
+  chillerCurrentTemp: number
+  chillerSetTemp: number
+  setChillerRunning: (running: boolean) => void
+  setChillerCurrentTemp: (temp: number) => void
+  setChillerSetTemp: (temp: number) => void
   
   // Calibration states
   calibrationProgress: number
@@ -69,6 +79,7 @@ export const useDashboardStore = create<DashboardState>()(
       showCalibrationModal: false,
       showErrorModal: false,
       showSeatAlarmModal: false,
+      showChillerModal: false,
       calibrationProgress: 0,
       calibrationStatus: '',
       errorMessage: '',
@@ -83,6 +94,9 @@ export const useDashboardStore = create<DashboardState>()(
       valve2Status: false,
       playing: false,
       activeSeatAlarm: null,
+      chillerRunning: false,
+      chillerCurrentTemp: 20.0,
+      chillerSetTemp: 20.0,
       
       // Setters
       setConnected: (connected) => set({ connected }),
@@ -91,6 +105,10 @@ export const useDashboardStore = create<DashboardState>()(
       setShowCalibrationModal: (show) => set({ showCalibrationModal: show }),
       setShowErrorModal: (show) => set({ showErrorModal: show }),
       setShowSeatAlarmModal: (show) => set({ showSeatAlarmModal: show }),
+      setShowChillerModal: (show) => set({ showChillerModal: show }),
+      setChillerRunning: (running) => set({ chillerRunning: running }),
+      setChillerCurrentTemp: (temp) => set({ chillerCurrentTemp: temp }),
+      setChillerSetTemp: (temp) => set({ chillerSetTemp: temp }),
       setCalibrationProgress: (progress) => set({ calibrationProgress: progress }),
       setCalibrationStatus: (status) => set({ calibrationStatus: status }),
       setErrorMessage: (message) => set({ errorMessage: message }),
