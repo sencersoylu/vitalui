@@ -92,19 +92,18 @@ export function ChillerControlModal({
 							</span>
 						</div>
 						<div
-							className={`px-3 py-1 rounded-full text-sm font-medium ${
-								chillerRunning
-									? 'bg-cyan-500 text-white'
+							className={`px-3 py-1 rounded-full text-sm font-medium ${chillerRunning
+									? 'bg-green-500 text-white'
 									: 'bg-gray-300 text-gray-600'
-							}`}>
+								}`}>
 							{chillerRunning ? 'Running' : 'Stopped'}
 						</div>
 					</div>
 					<div className="text-center">
-						<span className="text-6xl font-bold text-cyan-600">
+						<span className="text-6xl font-bold text-gray-600">
 							{chillerCurrentTemp.toFixed(1)}
 						</span>
-						<span className="text-3xl text-cyan-500 ml-1">°C</span>
+						<span className="text-3xl text-gray-600 ml-1">°C</span>
 					</div>
 				</div>
 
@@ -145,11 +144,10 @@ export function ChillerControlModal({
 				{/* Run/Stop Toggle */}
 				<button
 					onClick={handleToggleChiller}
-					className={`w-full py-4 rounded-xl font-medium text-lg flex items-center justify-center gap-3 transition-all ${
-						chillerRunning
+					className={`w-full py-4 rounded-xl font-medium text-lg flex items-center justify-center gap-3 transition-all ${chillerRunning
 							? 'bg-red-500 hover:bg-red-600 text-white'
 							: 'bg-green-500 hover:bg-green-600 text-white'
-					}`}>
+						}`}>
 					<Power className="w-6 h-6" />
 					{chillerRunning ? 'Stop Chiller' : 'Start Chiller'}
 				</button>

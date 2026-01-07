@@ -400,16 +400,16 @@ export default function HomePage() {
 											ventilMode === 0
 												? 'rgba(0, 122, 94, 1)'
 												: ventilMode === 1
-												? '#C9372C'
-												: '#FFA500',
+													? '#C9372C'
+													: '#FFA500',
 									}}>
 									<div className="vital-sign-home-container13">
 										<span className="vital-sign-home-text13">
 											{ventilMode === 0
 												? 'Ventilasyon'
 												: ventilMode === 1
-												? 'Düşük'
-												: 'Yüksek'}
+													? 'Düşük'
+													: 'Yüksek'}
 										</span>
 									</div>
 								</button>
@@ -599,8 +599,7 @@ export default function HomePage() {
 			<style jsx global>{`
 				@font-face {
 					font-family: 'Poppins';
-					src: url('/fonts/PlusJakartaSans-Regular.woff2') format('woff2'),
-						url('/fonts/PlusJakartaSans-Regular.woff') format('woff');
+					src: url('/fonts/plus-jakarta-sans-v8-latin-regular.woff2') format('woff2');
 					font-weight: 400;
 					font-style: normal;
 					font-display: swap;
@@ -608,8 +607,7 @@ export default function HomePage() {
 
 				@font-face {
 					font-family: 'Poppins';
-					src: url('/fonts/PlusJakartaSans-Medium.woff2') format('woff2'),
-						url('/fonts/PlusJakartaSans-Medium.woff') format('woff');
+					src: url('/fonts/plus-jakarta-sans-v8-latin-500.woff2') format('woff2');
 					font-weight: 500;
 					font-style: normal;
 					font-display: swap;
@@ -617,8 +615,7 @@ export default function HomePage() {
 
 				@font-face {
 					font-family: 'Poppins';
-					src: url('/fonts/PlusJakartaSans-SemiBold.woff2') format('woff2'),
-						url('/fonts/PlusJakartaSans-SemiBold.woff') format('woff');
+					src: url('/fonts/plus-jakarta-sans-v8-latin-600.woff2') format('woff2');
 					font-weight: 600;
 					font-style: normal;
 					font-display: swap;
@@ -626,8 +623,7 @@ export default function HomePage() {
 
 				@font-face {
 					font-family: 'Poppins';
-					src: url('/fonts/PlusJakartaSans-Bold.woff2') format('woff2'),
-						url('/fonts/PlusJakartaSans-Bold.woff') format('woff');
+					src: url('/fonts/plus-jakarta-sans-v8-latin-700.woff2') format('woff2');
 					font-weight: 700;
 					font-style: normal;
 					font-display: swap;
