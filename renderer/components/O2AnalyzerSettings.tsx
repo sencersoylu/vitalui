@@ -9,12 +9,14 @@ interface O2AnalyzerSettingsProps {
 	isOpen: boolean;
 	onClose: () => void;
 	chamber: Chamber;
+	onUpdate?: () => void; // Callback to refresh data after update
 }
 
 export function O2AnalyzerSettings({
 	isOpen,
 	onClose,
 	chamber,
+	onUpdate,
 }: O2AnalyzerSettingsProps) {
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const [password, setPassword] = useState('');
@@ -122,6 +124,10 @@ export function O2AnalyzerSettings({
 				}
 			);
 			console.log('Alarm level updated:', response.data);
+			// Call onUpdate callback to refresh parent data
+			if (onUpdate) {
+				onUpdate();
+			}
 		} catch (error: any) {
 			console.error('Alarm level update failed:', error);
 			const errorMessage =

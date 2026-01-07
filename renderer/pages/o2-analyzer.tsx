@@ -40,11 +40,11 @@ const ChamberCard: React.FC<ChamberCardProps> = ({
 	const alarmLevel = chamber.alarmLevelHigh;
 	const lastCalibration = chamber.calibrationDate
 		? new Date(chamber.calibrationDate).toLocaleDateString('en-US') +
-		  ' ' +
-		  new Date(chamber.calibrationDate).toLocaleTimeString('en-US', {
-				hour: '2-digit',
-				minute: '2-digit',
-		  })
+		' ' +
+		new Date(chamber.calibrationDate).toLocaleTimeString('en-US', {
+			hour: '2-digit',
+			minute: '2-digit',
+		})
 		: 'Never';
 
 	return (
@@ -75,6 +75,7 @@ export default function O2AnalyzerPage() {
 		chambers,
 		loading: chambersLoading,
 		error: chambersError,
+		refetch: refetchChambers,
 	} = useChambers();
 
 	// Function to update current time and date
@@ -233,6 +234,7 @@ export default function O2AnalyzerPage() {
 							setSelectedChamber(null);
 						}}
 						chamber={selectedChamber}
+						onUpdate={refetchChambers}
 					/>
 				)}
 			</div>
