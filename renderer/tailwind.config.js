@@ -16,6 +16,15 @@ module.exports = {
 			green: colors.green,
 			transparent: 'transparent',
 			current: 'currentColor',
+			// Additional colors for modern UI
+			slate: colors.slate,
+			emerald: colors.emerald,
+			amber: colors.amber,
+			orange: colors.orange,
+			rose: colors.rose,
+			indigo: colors.indigo,
+			violet: colors.violet,
+			cyan: colors.cyan,
 		},
 		extend: {
 			fontFamily: {

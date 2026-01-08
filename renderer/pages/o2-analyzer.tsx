@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import toast, { Toaster } from 'react-hot-toast';
-import io, { Socket } from 'socket.io-client';
+import io from 'socket.io-client';
 import { O2AnalyzerCard } from '../components/O2AnalyzerCard';
 import { O2AnalyzerSettings } from '../components/O2AnalyzerSettings';
 import { useChambers } from '../hooks/useChambers';
@@ -57,11 +57,11 @@ const ChamberCard: React.FC<ChamberCardProps> = ({
 	// Last calibration formatting
 	const lastCalibration = chamber.calibrationDate
 		? new Date(chamber.calibrationDate).toLocaleDateString('en-US') +
-		' ' +
-		new Date(chamber.calibrationDate).toLocaleTimeString('en-US', {
-			hour: '2-digit',
-			minute: '2-digit',
-		})
+		  ' ' +
+		  new Date(chamber.calibrationDate).toLocaleTimeString('en-US', {
+				hour: '2-digit',
+				minute: '2-digit',
+		  })
 		: 'Never';
 
 	return (
@@ -88,7 +88,7 @@ export default function O2AnalyzerPage() {
 	);
 
 	// Socket reference for PLC communication
-	const socketRef = useRef<Socket | null>(null);
+	const socketRef = useRef<any>(null);
 
 	// Track previous alarm states to detect changes
 	const prevAlarmStatesRef = useRef<{ [key: number]: boolean }>({});
@@ -115,7 +115,10 @@ export default function O2AnalyzerPage() {
 		});
 
 		socket.on('connect', () => {
-			console.log('O2 Analyzer: Connected to socket server, socket.id:', socket.id);
+			console.log(
+				'O2 Analyzer: Connected to socket server, socket.id:',
+				socket.id
+			);
 			setSocketConnected(true);
 		});
 
@@ -125,7 +128,10 @@ export default function O2AnalyzerPage() {
 		});
 
 		socket.on('disconnect', (reason) => {
-			console.log('O2 Analyzer: Disconnected from socket server, reason:', reason);
+			console.log(
+				'O2 Analyzer: Disconnected from socket server, reason:',
+				reason
+			);
 			setSocketConnected(false);
 		});
 
@@ -228,7 +234,9 @@ export default function O2AnalyzerPage() {
 				}));
 				// Re-enable alarm bit after unmute timeout
 				if (socketRef.current && socketRef.current.connected) {
-					console.log(`O2 Analyzer: Auto-unmute - Writing to ${register} value 1`);
+					console.log(
+						`O2 Analyzer: Auto-unmute - Writing to ${register} value 1`
+					);
 					socketRef.current.emit('writeBit', { register, value: 1 });
 				}
 			}, 5 * 60 * 1000); // 5 minutes
@@ -237,46 +245,63 @@ export default function O2AnalyzerPage() {
 
 	// Handle alarm state changes and write to PLC bits
 	// M00407 = Main Chamber alarm, M00408 = Ante Chamber alarm
-	const handleAlarmStateChange = useCallback((chamberId: number, hasAlarm: boolean) => {
-		const prevState = prevAlarmStatesRef.current[chamberId];
+	const handleAlarmStateChange = useCallback(
+		(chamberId: number, hasAlarm: boolean) => {
+			const prevState = prevAlarmStatesRef.current[chamberId];
 
-		console.log(`O2 Analyzer: handleAlarmStateChange - chamberId: ${chamberId}, hasAlarm: ${hasAlarm}, prevState: ${prevState}`);
+			console.log(
+				`O2 Analyzer: handleAlarmStateChange - chamberId: ${chamberId}, hasAlarm: ${hasAlarm}, prevState: ${prevState}`
+			);
 
-		// Skip first load (when prevState is undefined) - just store the initial state
-		if (prevState === undefined) {
-			console.log(`O2 Analyzer: First load for chamber ${chamberId}, storing initial state: ${hasAlarm}`);
-			prevAlarmStatesRef.current[chamberId] = hasAlarm;
-			return;
-		}
-
-		// Only write to PLC if state has actually changed
-		if (prevState !== hasAlarm) {
-			prevAlarmStatesRef.current[chamberId] = hasAlarm;
-			console.log(`O2 Analyzer: Alarm state CHANGED for chamber ${chamberId}: ${prevState} -> ${hasAlarm}`);
-
-			// Only write to PLC when alarm becomes ACTIVE (hasAlarm = true)
-			if (hasAlarm && socketRef.current && socketRef.current.connected) {
-				// Find chamber to determine which bit to write
-				const chamber = chambers.find(c => c.id === chamberId);
-				console.log('O2 Analyzer: Found chamber:', chamber);
-				if (chamber) {
-					// Main Chamber -> M0407, Ante Chamber -> M0408
-					const isMainChamber = chamber.name.toLowerCase().includes('main');
-					const register = isMainChamber ? 'M0407' : 'M0408';
-
-					console.log(`O2 Analyzer: ALARM ACTIVE - EMITTING writeBit - register: ${register}, value: 1`);
-					socketRef.current.emit('writeBit', {
-						register: register,
-						value: 1
-					});
-				}
-			} else if (!hasAlarm) {
-				console.log(`O2 Analyzer: Alarm cleared for chamber ${chamberId}, no PLC write needed`);
-			} else {
-				console.warn(`O2 Analyzer: Socket NOT connected! ref: ${socketRef.current !== null}, connected: ${socketRef.current?.connected}`);
+			// Skip first load (when prevState is undefined) - just store the initial state
+			if (prevState === undefined) {
+				console.log(
+					`O2 Analyzer: First load for chamber ${chamberId}, storing initial state: ${hasAlarm}`
+				);
+				prevAlarmStatesRef.current[chamberId] = hasAlarm;
+				return;
 			}
-		}
-	}, [chambers]);
+
+			// Only write to PLC if state has actually changed
+			if (prevState !== hasAlarm) {
+				prevAlarmStatesRef.current[chamberId] = hasAlarm;
+				console.log(
+					`O2 Analyzer: Alarm state CHANGED for chamber ${chamberId}: ${prevState} -> ${hasAlarm}`
+				);
+
+				// Only write to PLC when alarm becomes ACTIVE (hasAlarm = true)
+				if (hasAlarm && socketRef.current && socketRef.current.connected) {
+					// Find chamber to determine which bit to write
+					const chamber = chambers.find((c) => c.id === chamberId);
+					console.log('O2 Analyzer: Found chamber:', chamber);
+					if (chamber) {
+						// Main Chamber -> M0407, Ante Chamber -> M0408
+						const isMainChamber = chamber.name.toLowerCase().includes('main');
+						const register = isMainChamber ? 'M0407' : 'M0408';
+
+						console.log(
+							`O2 Analyzer: ALARM ACTIVE - EMITTING writeBit - register: ${register}, value: 1`
+						);
+						socketRef.current.emit('writeBit', {
+							register: register,
+							value: 1,
+						});
+					}
+				} else if (!hasAlarm) {
+					console.log(
+						`O2 Analyzer: Alarm cleared for chamber ${chamberId}, no PLC write needed`
+					);
+				} else {
+					console.warn(
+						`O2 Analyzer: Socket NOT connected! ref: ${
+							socketRef.current !== null
+						}, connected: ${socketRef.current?.connected}`
+					);
+				}
+			}
+		},
+		[chambers]
+	);
 
 	// Loading state
 	if (chambersLoading) {
