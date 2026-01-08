@@ -169,12 +169,14 @@ export default function HomePage() {
 						setShowErrorModal(true);
 						setErrorMessage('Ante Chamber Smoke Detected!');
 						playSound();
-					}else if (errorArray[7] === '1') {
+					}
+				} else if (errorArray[7] === '1') {
 					if (!showErrorModal) {
 						setShowErrorModal(true);
 						setErrorMessage('Main Chamber High O2 Level!');
 						playSound();
-					}else if (errorArray[8] === '1') {
+					}
+				} else if (errorArray[8] === '1') {
 					if (!showErrorModal) {
 						setShowErrorModal(true);
 						setErrorMessage('Ante Chamber High O2 Level!');
@@ -492,16 +494,16 @@ export default function HomePage() {
 											ventilMode === 0
 												? 'rgba(0, 122, 94, 1)'
 												: ventilMode === 1
-													? '#C9372C'
-													: '#FFA500',
+												? '#C9372C'
+												: '#FFA500',
 									}}>
 									<div className="vital-sign-home-container13">
 										<span className="vital-sign-home-text13">
 											{ventilMode === 0
 												? 'Ventilation'
 												: ventilMode === 1
-													? 'Low'
-													: 'High'}
+												? 'Low'
+												: 'High'}
 										</span>
 									</div>
 								</button>
@@ -584,20 +586,20 @@ export default function HomePage() {
 												lightStatus === 0
 													? '#90a1b9'
 													: lightStatus === 1
-														? '#2174d4'
-														: lightStatus === 2
-															? '#FFA500'
-															: '#C9372C',
+													? '#2174d4'
+													: lightStatus === 2
+													? '#FFA500'
+													: '#C9372C',
 										}}>
 										<div className="vital-sign-home-container18">
 											<span className="vital-sign-home-text27">
 												{lightStatus === 0
 													? 'Off'
 													: lightStatus === 1
-														? 'Low'
-														: lightStatus === 2
-															? 'Medium'
-															: 'High'}
+													? 'Low'
+													: lightStatus === 2
+													? 'Medium'
+													: 'High'}
 											</span>
 										</div>
 									</button>
@@ -609,20 +611,20 @@ export default function HomePage() {
 												light2Status === 0
 													? '#90a1b9'
 													: light2Status === 1
-														? '#2174d4'
-														: light2Status === 2
-															? '#FFA500'
-															: '#C9372C',
+													? '#2174d4'
+													: light2Status === 2
+													? '#FFA500'
+													: '#C9372C',
 										}}>
 										<div className="vital-sign-home-container19">
 											<span className="vital-sign-home-text28">
 												{light2Status === 0
 													? 'Off'
 													: light2Status === 1
-														? 'Low'
-														: light2Status === 2
-															? 'Medium'
-															: 'High'}
+													? 'Low'
+													: light2Status === 2
+													? 'Medium'
+													: 'High'}
 											</span>
 										</div>
 									</button>
@@ -653,20 +655,20 @@ export default function HomePage() {
 												fan1Status === 0
 													? '#90a1b9'
 													: fan1Status === 1
-														? '#2174d4'
-														: fan1Status === 2
-															? '#FFA500'
-															: '#C9372C',
+													? '#2174d4'
+													: fan1Status === 2
+													? '#FFA500'
+													: '#C9372C',
 										}}>
 										<div className="vital-sign-home-container16">
 											<span className="vital-sign-home-text22">
 												{fan1Status === 0
 													? 'Off'
 													: fan1Status === 1
-														? 'Low'
-														: fan1Status === 2
-															? 'Medium'
-															: 'High'}
+													? 'Low'
+													: fan1Status === 2
+													? 'Medium'
+													: 'High'}
 											</span>
 										</div>
 									</button>
@@ -731,7 +733,8 @@ export default function HomePage() {
 			<style jsx global>{`
 				@font-face {
 					font-family: 'Poppins';
-					src: url('/fonts/plus-jakarta-sans-v8-latin-regular.woff2') format('woff2');
+					src: url('/fonts/plus-jakarta-sans-v8-latin-regular.woff2')
+						format('woff2');
 					font-weight: 400;
 					font-style: normal;
 					font-display: swap;
@@ -739,7 +742,8 @@ export default function HomePage() {
 
 				@font-face {
 					font-family: 'Poppins';
-					src: url('/fonts/plus-jakarta-sans-v8-latin-500.woff2') format('woff2');
+					src: url('/fonts/plus-jakarta-sans-v8-latin-500.woff2')
+						format('woff2');
 					font-weight: 500;
 					font-style: normal;
 					font-display: swap;
@@ -747,7 +751,8 @@ export default function HomePage() {
 
 				@font-face {
 					font-family: 'Poppins';
-					src: url('/fonts/plus-jakarta-sans-v8-latin-600.woff2') format('woff2');
+					src: url('/fonts/plus-jakarta-sans-v8-latin-600.woff2')
+						format('woff2');
 					font-weight: 600;
 					font-style: normal;
 					font-display: swap;
@@ -755,7 +760,8 @@ export default function HomePage() {
 
 				@font-face {
 					font-family: 'Poppins';
-					src: url('/fonts/plus-jakarta-sans-v8-latin-700.woff2') format('woff2');
+					src: url('/fonts/plus-jakarta-sans-v8-latin-700.woff2')
+						format('woff2');
 					font-weight: 700;
 					font-style: normal;
 					font-display: swap;
