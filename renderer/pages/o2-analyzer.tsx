@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import toast, { Toaster } from 'react-hot-toast';
+import io, { Socket } from 'socket.io-client';
 import { O2AnalyzerCard } from '../components/O2AnalyzerCard';
 import { O2AnalyzerSettings } from '../components/O2AnalyzerSettings';
 import { useChambers } from '../hooks/useChambers';
@@ -15,6 +16,7 @@ interface ChamberCardProps {
 	onSettingsClick: () => void;
 	onMuteAlarm: () => void;
 	isMuted: boolean;
+	onAlarmStateChange: (chamberId: number, hasAlarm: boolean) => void;
 }
 
 const ChamberCard: React.FC<ChamberCardProps> = ({
@@ -22,6 +24,7 @@ const ChamberCard: React.FC<ChamberCardProps> = ({
 	onSettingsClick,
 	onMuteAlarm,
 	isMuted,
+	onAlarmStateChange,
 }) => {
 	const { reading, loading: readingLoading } = useLatestReading(
 		chamber.id,
@@ -30,14 +33,28 @@ const ChamberCard: React.FC<ChamberCardProps> = ({
 	);
 	const { alarms } = useChamberAlarms(chamber.id);
 
+	// Get O2 level from reading or chamber
+	const o2Level = reading?.o2Level ?? chamber.lastValue ?? 21.0;
+	const alarmLevel = chamber.alarmLevelHigh;
+
+	// Check for active alarms from backend
 	const activeAlarms = Array.isArray(alarms)
 		? alarms.filter((alarm) => alarm.isActive)
 		: [];
-	const hasActiveAlarms = activeAlarms.length > 0;
+	const hasBackendAlarms = activeAlarms.length > 0;
 
-	// Default values if no reading is available
-	const o2Level = reading?.o2Level ?? chamber.lastValue ?? 21.0;
-	const alarmLevel = chamber.alarmLevelHigh;
+	// Also check if O2 level exceeds alarm threshold (frontend check)
+	const hasO2Alarm = o2Level > alarmLevel;
+
+	// Alarm is active if either backend reports alarm OR O2 level exceeds threshold
+	const hasActiveAlarms = hasBackendAlarms || hasO2Alarm;
+
+	// Report alarm state changes to parent
+	useEffect(() => {
+		onAlarmStateChange(chamber.id, hasActiveAlarms);
+	}, [chamber.id, hasActiveAlarms, onAlarmStateChange]);
+
+	// Last calibration formatting
 	const lastCalibration = chamber.calibrationDate
 		? new Date(chamber.calibrationDate).toLocaleDateString('en-US') +
 		' ' +
@@ -70,6 +87,12 @@ export default function O2AnalyzerPage() {
 		{}
 	);
 
+	// Socket reference for PLC communication
+	const socketRef = useRef<Socket | null>(null);
+
+	// Track previous alarm states to detect changes
+	const prevAlarmStatesRef = useRef<{ [key: number]: boolean }>({});
+
 	// Backend data hooks
 	const {
 		chambers,
@@ -77,6 +100,43 @@ export default function O2AnalyzerPage() {
 		error: chambersError,
 		refetch: refetchChambers,
 	} = useChambers();
+
+	// Socket connection state
+	const [socketConnected, setSocketConnected] = useState(false);
+
+	// Initialize socket connection
+	useEffect(() => {
+		console.log('O2 Analyzer: Initializing socket connection...');
+		const socket = io('http://192.168.77.100:4000', {
+			transports: ['websocket', 'polling'],
+			reconnection: true,
+			reconnectionAttempts: 5,
+			reconnectionDelay: 1000,
+		});
+
+		socket.on('connect', () => {
+			console.log('O2 Analyzer: Connected to socket server, socket.id:', socket.id);
+			setSocketConnected(true);
+		});
+
+		socket.on('connect_error', (error) => {
+			console.error('O2 Analyzer: Socket connection error:', error.message);
+			setSocketConnected(false);
+		});
+
+		socket.on('disconnect', (reason) => {
+			console.log('O2 Analyzer: Disconnected from socket server, reason:', reason);
+			setSocketConnected(false);
+		});
+
+		socketRef.current = socket;
+		console.log('O2 Analyzer: Socket ref set:', socketRef.current !== null);
+
+		return () => {
+			console.log('O2 Analyzer: Cleaning up socket connection');
+			socket.disconnect();
+		};
+	}, []);
 
 	// Function to update current time and date
 	const updateDateTime = () => {
@@ -123,6 +183,10 @@ export default function O2AnalyzerPage() {
 	const handleMuteAlarm = (chamber: Chamber) => {
 		const isMuted = mutedAlarms[chamber.id] || false;
 
+		// Determine which PLC bit to write based on chamber name
+		const isMainChamber = chamber.name.toLowerCase().includes('main');
+		const register = isMainChamber ? 'M0407' : 'M0408';
+
 		if (isMuted) {
 			// Unmute the alarm
 			setMutedAlarms((prev) => ({
@@ -133,6 +197,12 @@ export default function O2AnalyzerPage() {
 				duration: 3000,
 				position: 'top-center',
 			});
+
+			// Write to PLC - set alarm bit back to 1 (alarm active)
+			if (socketRef.current && socketRef.current.connected) {
+				console.log(`O2 Analyzer: Unmute - Writing to ${register} value 1`);
+				socketRef.current.emit('writeBit', { register, value: 1 });
+			}
 		} else {
 			// Mute the alarm
 			setMutedAlarms((prev) => ({
@@ -144,15 +214,69 @@ export default function O2AnalyzerPage() {
 				position: 'top-center',
 			});
 
+			// Write to PLC - set alarm bit to 0 (muted/silenced)
+			if (socketRef.current && socketRef.current.connected) {
+				console.log(`O2 Analyzer: Mute - Writing to ${register} value 0`);
+				socketRef.current.emit('writeBit', { register, value: 0 });
+			}
+
 			// Auto unmute after 5 minutes
 			setTimeout(() => {
 				setMutedAlarms((prev) => ({
 					...prev,
 					[chamber.id]: false,
 				}));
+				// Re-enable alarm bit after unmute timeout
+				if (socketRef.current && socketRef.current.connected) {
+					console.log(`O2 Analyzer: Auto-unmute - Writing to ${register} value 1`);
+					socketRef.current.emit('writeBit', { register, value: 1 });
+				}
 			}, 5 * 60 * 1000); // 5 minutes
 		}
 	};
+
+	// Handle alarm state changes and write to PLC bits
+	// M00407 = Main Chamber alarm, M00408 = Ante Chamber alarm
+	const handleAlarmStateChange = useCallback((chamberId: number, hasAlarm: boolean) => {
+		const prevState = prevAlarmStatesRef.current[chamberId];
+
+		console.log(`O2 Analyzer: handleAlarmStateChange - chamberId: ${chamberId}, hasAlarm: ${hasAlarm}, prevState: ${prevState}`);
+
+		// Skip first load (when prevState is undefined) - just store the initial state
+		if (prevState === undefined) {
+			console.log(`O2 Analyzer: First load for chamber ${chamberId}, storing initial state: ${hasAlarm}`);
+			prevAlarmStatesRef.current[chamberId] = hasAlarm;
+			return;
+		}
+
+		// Only write to PLC if state has actually changed
+		if (prevState !== hasAlarm) {
+			prevAlarmStatesRef.current[chamberId] = hasAlarm;
+			console.log(`O2 Analyzer: Alarm state CHANGED for chamber ${chamberId}: ${prevState} -> ${hasAlarm}`);
+
+			// Only write to PLC when alarm becomes ACTIVE (hasAlarm = true)
+			if (hasAlarm && socketRef.current && socketRef.current.connected) {
+				// Find chamber to determine which bit to write
+				const chamber = chambers.find(c => c.id === chamberId);
+				console.log('O2 Analyzer: Found chamber:', chamber);
+				if (chamber) {
+					// Main Chamber -> M0407, Ante Chamber -> M0408
+					const isMainChamber = chamber.name.toLowerCase().includes('main');
+					const register = isMainChamber ? 'M0407' : 'M0408';
+
+					console.log(`O2 Analyzer: ALARM ACTIVE - EMITTING writeBit - register: ${register}, value: 1`);
+					socketRef.current.emit('writeBit', {
+						register: register,
+						value: 1
+					});
+				}
+			} else if (!hasAlarm) {
+				console.log(`O2 Analyzer: Alarm cleared for chamber ${chamberId}, no PLC write needed`);
+			} else {
+				console.warn(`O2 Analyzer: Socket NOT connected! ref: ${socketRef.current !== null}, connected: ${socketRef.current?.connected}`);
+			}
+		}
+	}, [chambers]);
 
 	// Loading state
 	if (chambersLoading) {
@@ -210,6 +334,7 @@ export default function O2AnalyzerPage() {
 								onSettingsClick={() => handleSettingsClick(chamber)}
 								onMuteAlarm={() => handleMuteAlarm(chamber)}
 								isMuted={mutedAlarms[chamber.id] || false}
+								onAlarmStateChange={handleAlarmStateChange}
 							/>
 						))}
 					</div>
