@@ -3,8 +3,8 @@ import axios from 'axios';
 // API Base URL - Backend'in çalışacağı port
 const API_BASE_URL =
 	process.env.NODE_ENV === 'production'
-		? 'http://192.168.77.201:3001/api'
-		: 'http://192.168.77.201:3001/api';
+		? 'http://localhost:3001/api'
+		: 'http://localhost:3001/api';
 
 // API instance oluştur
 export const api = axios.create({
