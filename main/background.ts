@@ -38,10 +38,10 @@ if (isProd) {
 	});
 
 	if (isProd) {
-		await mainWindow.loadURL('app://./o2-analyzer');
+		await mainWindow.loadURL('app://./dashboard');
 	} else {
 		const port = process.argv[2];
-		await mainWindow.loadURL(`http://localhost:${port}/o2-analyzer`);
+		await mainWindow.loadURL(`http://localhost:${port}/dashboard`);
 		mainWindow.webContents.openDevTools();
 	}
 })();

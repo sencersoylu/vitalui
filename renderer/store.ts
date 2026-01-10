@@ -2,6 +2,10 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 interface DashboardState {
+  // Theme state
+  darkMode: boolean
+  setDarkMode: (dark: boolean) => void
+  
   // Connection state
   connected: boolean
   setConnected: (connected: boolean) => void
@@ -73,6 +77,7 @@ export const useDashboardStore = create<DashboardState>()(
   persist(
     (set) => ({
       // Initial states
+      darkMode: true,
       connected: false,
       currentTime: '',
       currentTime2: '',
@@ -99,6 +104,7 @@ export const useDashboardStore = create<DashboardState>()(
       chillerSetTemp: 20.0,
       
       // Setters
+      setDarkMode: (dark) => set({ darkMode: dark }),
       setConnected: (connected) => set({ connected }),
       setCurrentTime: (time) => set({ currentTime: time }),
       setCurrentTime2: (time) => set({ currentTime2: time }),

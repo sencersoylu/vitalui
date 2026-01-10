@@ -50,26 +50,45 @@ const Card = ({
 	title,
 	children,
 	className = '',
+	isDark = true,
 }: {
 	title: string;
 	children: React.ReactNode;
 	className?: string;
+	isDark?: boolean;
 }) => (
 	<div
 		className={`
-			bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10
-			shadow-2xl shadow-black/20 overflow-hidden
+			backdrop-blur-xl rounded-2xl border overflow-hidden flex flex-col
+			shadow-2xl transition-all duration-500
+			${
+				isDark
+					? 'bg-white/5 border-white/10 shadow-black/20'
+					: 'bg-white/80 border-slate-200 shadow-slate-300/50'
+			}
 			${className}
 		`}>
-		<div className="px-6 py-4 border-b border-white/10 bg-white/5">
-			<h2 className="text-xl font-bold text-white tracking-tight">{title}</h2>
+		<div
+			className={`px-6 py-4 border-b transition-all duration-500 ${
+				isDark
+					? 'border-white/10 bg-white/5'
+					: 'border-slate-200 bg-slate-100/50'
+			}`}>
+			<h2
+				className={`text-xl font-bold tracking-tight transition-colors duration-500 ${
+					isDark ? 'text-white' : 'text-slate-800'
+				}`}>
+				{title}
+			</h2>
 		</div>
-		<div className="p-6">{children}</div>
+		<div className="p-6 flex-1">{children}</div>
 	</div>
 );
 
 export default function HomePage() {
 	const {
+		darkMode,
+		setDarkMode,
 		connected,
 		currentTime,
 		currentTime2,
@@ -134,8 +153,8 @@ export default function HomePage() {
 		const socket = io('http://192.168.77.100:4000', {
 			transports: ['websocket', 'polling'],
 			reconnection: true,
-			reconnectionAttempts: 5,
-			reconnectionDelay: 1000,
+			reconnectionAttempts: 10000,
+			reconnectionDelay: 5000,
 		});
 
 		socket.on('connect_error', (error) => {
@@ -490,12 +509,29 @@ export default function HomePage() {
 			</Head>
 
 			{/* Main Container */}
-			<div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+			<div
+				className={`min-h-screen overflow-hidden transition-all duration-500 ${
+					darkMode
+						? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
+						: 'bg-gradient-to-br from-sky-100 via-slate-100 to-amber-50'
+				}`}>
 				{/* Decorative background elements */}
 				<div className="absolute inset-0 overflow-hidden pointer-events-none">
-					<div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
-					<div className="absolute -bottom-40 -left-40 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl" />
-					<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-3xl" />
+					<div
+						className={`absolute -top-40 -right-40 w-80 h-80 rounded-full blur-3xl transition-all duration-500 ${
+							darkMode ? 'bg-blue-500/10' : 'bg-sky-400/20'
+						}`}
+					/>
+					<div
+						className={`absolute -bottom-40 -left-40 w-80 h-80 rounded-full blur-3xl transition-all duration-500 ${
+							darkMode ? 'bg-emerald-500/10' : 'bg-amber-400/20'
+						}`}
+					/>
+					<div
+						className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl transition-all duration-500 ${
+							darkMode ? 'bg-indigo-500/5' : 'bg-violet-300/10'
+						}`}
+					/>
 				</div>
 
 				{/* Content */}
@@ -505,9 +541,43 @@ export default function HomePage() {
 						<img
 							alt="Hipertech Logo"
 							src="/external/hipertechlogo2501-ygje.svg"
-							className="h-16 w-auto"
+							className={`h-16 w-auto transition-all duration-500 ${
+								!darkMode && 'brightness-0'
+							}`}
 						/>
 						<div className="flex items-center gap-4">
+							{/* Theme Toggle Button */}
+							<button
+								onClick={() => setDarkMode(!darkMode)}
+								className={`
+									flex items-center justify-center w-10 h-10 rounded-full
+									transition-all duration-500 hover:scale-110 active:scale-95
+									${
+										darkMode
+											? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30'
+											: 'bg-indigo-500/20 text-indigo-600 border border-indigo-500/30 hover:bg-indigo-500/30'
+									}
+								`}>
+								{darkMode ? (
+									<svg
+										className="w-5 h-5"
+										fill="currentColor"
+										viewBox="0 0 20 20">
+										<path
+											fillRule="evenodd"
+											d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+											clipRule="evenodd"
+										/>
+									</svg>
+								) : (
+									<svg
+										className="w-5 h-5"
+										fill="currentColor"
+										viewBox="0 0 20 20">
+										<path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+									</svg>
+								)}
+							</button>
 							{/* Connection Status */}
 							<div
 								className={`
@@ -526,8 +596,16 @@ export default function HomePage() {
 								{connected ? 'Connected' : 'Disconnected'}
 							</div>
 							{/* Date & Time */}
-							<div className="bg-white/5 backdrop-blur-lg rounded-full px-6 py-2 border border-white/10">
-								<span className="text-white/80 font-medium text-lg">
+							<div
+								className={`backdrop-blur-lg rounded-full px-6 py-2 border transition-all duration-500 ${
+									darkMode
+										? 'bg-white/5 border-white/10'
+										: 'bg-white/60 border-slate-200'
+								}`}>
+								<span
+									className={`font-medium text-lg transition-colors duration-500 ${
+										darkMode ? 'text-white/80' : 'text-slate-700'
+									}`}>
 									{currentTime || '10.03.2025'} • {currentTime2 || '14:27'}
 								</span>
 							</div>
@@ -538,8 +616,11 @@ export default function HomePage() {
 					<div className="flex-1 grid grid-cols-12 gap-6">
 						{/* Chamber Control - Left Column */}
 						<div className="col-span-3">
-							<Card title="Chamber Control" className="h-full">
-								<div className="space-y-4">
+							<Card
+								title="Chamber Control"
+								className="h-full"
+								isDark={darkMode}>
+								<div className="flex flex-col justify-between h-full gap-4">
 									<ControlButton
 										onClick={setAuto}
 										variant={autoMode ? 'danger' : 'success'}>
@@ -596,14 +677,20 @@ export default function HomePage() {
 
 						{/* Auxiliary Output - Middle Column */}
 						<div className="col-span-4">
-							<Card title="Auxiliary Output" className="h-full">
-								<div className="space-y-6">
+							<Card
+								title="Auxiliary Output"
+								className="h-full"
+								isDark={darkMode}>
+								<div className="flex flex-col justify-center h-full space-y-6">
 									{/* Main Chamber */}
 									<div className="space-y-3">
-										<div className="flex items-center gap-3">
+										<div className="flex items-center justify-center gap-3">
 											<div className="w-3 h-3 rounded-full bg-indigo-500" />
-											<h3 className="text-lg font-semibold text-indigo-300">
-												Main Chamber
+											<h3
+												className={`text-lg font-semibold transition-colors duration-500 ${
+													darkMode ? 'text-indigo-300' : 'text-indigo-600'
+												}`}>
+												Main
 											</h3>
 										</div>
 										<ControlButton
@@ -614,14 +701,21 @@ export default function HomePage() {
 									</div>
 
 									{/* Divider */}
-									<div className="border-t border-white/10" />
+									<div
+										className={`border-t transition-colors duration-500 ${
+											darkMode ? 'border-white/10' : 'border-slate-200'
+										}`}
+									/>
 
 									{/* Ante Chamber */}
 									<div className="space-y-3">
-										<div className="flex items-center gap-3">
+										<div className="flex items-center justify-center gap-3">
 											<div className="w-3 h-3 rounded-full bg-violet-500" />
-											<h3 className="text-lg font-semibold text-violet-300">
-												Ante Chamber
+											<h3
+												className={`text-lg font-semibold transition-colors duration-500 ${
+													darkMode ? 'text-violet-300' : 'text-violet-600'
+												}`}>
+												Ante
 											</h3>
 										</div>
 										<ControlButton
@@ -637,12 +731,15 @@ export default function HomePage() {
 						{/* Right Column - Lighting & Fan */}
 						<div className="col-span-5 flex flex-col gap-6">
 							{/* Lighting Card */}
-							<Card title="Lighting" className="flex-1">
+							<Card title="Lighting" className="flex-1" isDark={darkMode}>
 								<div className="flex gap-8">
 									{/* Main Light */}
 									<div className="flex-1 space-y-3">
 										<div className="text-center">
-											<span className="text-sm font-medium text-white/60 uppercase tracking-wider">
+											<span
+												className={`text-xl font-semibold uppercase tracking-wider transition-colors duration-500 ${
+													darkMode ? 'text-white/80' : 'text-slate-600'
+												}`}>
 												Main
 											</span>
 										</div>
@@ -656,7 +753,10 @@ export default function HomePage() {
 									{/* Ante Light */}
 									<div className="flex-1 space-y-3">
 										<div className="text-center">
-											<span className="text-sm font-medium text-white/60 uppercase tracking-wider">
+											<span
+												className={`text-xl font-semibold uppercase tracking-wider transition-colors duration-500 ${
+													darkMode ? 'text-white/80' : 'text-slate-600'
+												}`}>
 												Ante
 											</span>
 										</div>
@@ -670,11 +770,14 @@ export default function HomePage() {
 							</Card>
 
 							{/* Fan Card */}
-							<Card title="Fan" className="flex-1">
+							<Card title="Fan" className="flex-1" isDark={darkMode}>
 								<div className="space-y-3">
 									<div className="text-center">
-										<span className="text-sm font-medium text-white/60 uppercase tracking-wider">
-											Main Chamber
+										<span
+											className={`text-xl font-semibold uppercase tracking-wider transition-colors duration-500 ${
+												darkMode ? 'text-white/80' : 'text-slate-600'
+											}`}>
+											Main
 										</span>
 									</div>
 									<ControlButton
