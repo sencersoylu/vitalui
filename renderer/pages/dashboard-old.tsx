@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import Head from 'next/head';
 import io from 'socket.io-client';
 import { useDashboardStore } from '../store';
@@ -22,6 +22,8 @@ export default function HomePage() {
 		showErrorModal,
 		showSeatAlarmModal,
 		showChillerModal,
+		calibrationProgress,
+		calibrationStatus,
 		errorMessage,
 		lightStatus,
 		fan1Status,
@@ -32,6 +34,8 @@ export default function HomePage() {
 		light2Status,
 		valve1Status,
 		valve2Status,
+		playing,
+		activeSeatAlarm,
 		chillerRunning,
 		chillerCurrentTemp,
 		setConnected,
@@ -475,7 +479,10 @@ export default function HomePage() {
 								onMainLightToggle={setLight}
 								onAnteLightToggle={setLight2}
 							/>
-							<FanPanel isDark={darkMode} onFanToggle={setFan1} />
+							<FanPanel
+								isDark={darkMode}
+								onFanToggle={setFan1}
+							/>
 						</div>
 					</div>
 				</div>

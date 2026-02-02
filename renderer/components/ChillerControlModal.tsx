@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Snowflake, Thermometer, Power } from 'lucide-react';
+import { Snowflake, Thermometer, Power } from 'lucide-react';
 import { useDashboardStore } from '../store';
+import { Button } from './ui/Button';
+import { Slider } from './ui/Slider';
+import { Modal } from './ui/Modal';
 
 interface ChillerControlModalProps {
 	isOpen: boolean;
@@ -76,124 +79,92 @@ export function ChillerControlModal({
 		}
 	};
 
-	if (!isOpen) return null;
-
 	return (
-		<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-			<div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl">
-				{/* Header */}
-				<div className="flex justify-between items-center mb-6">
-					<div className="flex items-center gap-3">
-						<div className="w-12 h-12 rounded-full bg-cyan-100 flex items-center justify-center">
-							<Snowflake className="w-7 h-7 text-cyan-600" />
+		<Modal isOpen={isOpen} onClose={onClose} size="md">
+			{/* Current Temperature Display */}
+			<div className="space-y-6">
+				{/* Status indicator */}
+				<div className="flex items-center justify-center mb-4">
+					<div className="flex items-center justify-between w-full gap-3">
+						<div className="flex items-center gap-3">
+							<Snowflake className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+							<span className="text-lg font-semibold text-slate-700 dark:text-slate-200">
+								Chiller Status
+							</span>
 						</div>
-						<h2 className="text-2xl font-bold text-gray-800">
-							Chiller Control
-						</h2>
+						<span
+							className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 transition-all ${
+								chillerRunning
+									? 'bg-emerald-500 text-white shadow-emerald-500/25'
+									: 'bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
+							}`}>
+							{chillerRunning ? (
+								<>
+									<span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+									Running
+								</>
+							) : (
+								<span className="font-medium">Stopped</span>
+							)}
+						</span>
 					</div>
-					<button
-						onClick={onClose}
-						className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-						<X className="w-6 h-6 text-gray-500" />
-					</button>
 				</div>
 
-				{/* Current Temperature Display */}
-				<div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl p-6 mb-6">
-					<div className="flex items-center justify-between mb-4">
-						<div className="flex items-center gap-2">
-							<Thermometer className="w-5 h-5 text-cyan-600" />
-							<span className="text-gray-600 font-medium">
+				{/* Temperature Display */}
+				<div className="bg-gradient-to-br from-cyan-50 dark:from-cyan-950/30 to-blue-50 dark:to-blue-950/30 rounded-2xl p-8 border border-cyan-100 dark:border-cyan-900/30 shadow-lg">
+					<div className="text-center">
+						<div className="mb-2">
+							<span className="text-base text-slate-600 dark:text-slate-300 font-medium">
 								Current Temperature
 							</span>
 						</div>
-						<div
-							className={`px-3 py-1 rounded-full text-sm font-medium ${chillerRunning
-								? 'bg-green-500 text-white'
-								: 'bg-gray-300 text-gray-600'
-								}`}>
-							{chillerRunning ? 'Running' : 'Stopped'}
+						<div className="flex items-center justify-center gap-1">
+							<span className="text-7xl font-bold text-slate-600 dark:text-slate-300 tabular-nums">
+								{chillerCurrentTemp.toFixed(1)}
+							</span>
+							<span className="text-4xl text-slate-600 dark:text-slate-300">
+								°C
+							</span>
 						</div>
-					</div>
-					<div className="text-center">
-						<span className="text-6xl font-bold text-gray-600">
-							{chillerCurrentTemp.toFixed(1)}
-						</span>
-						<span className="text-3xl text-gray-600 ml-1">°C</span>
 					</div>
 				</div>
 
 				{/* Target Temperature Setting */}
-				<div className="bg-gray-50 rounded-2xl p-6 mb-6">
-					<div className="flex justify-between items-center mb-4">
-						<span className="text-gray-700 font-medium">
-							Target Temperature
-						</span>
-						<span className="text-2xl font-bold text-blue-600">
-							{localSetTemp.toFixed(1)}°C
-						</span>
-					</div>
-					<input
-						type="range"
-						min="5"
-						max="35"
-						step="0.5"
+				<div className="space-y-4">
+					<Slider
+						label="Target Temperature"
+						min={5}
+						max={35}
+						step={0.5}
 						value={localSetTemp}
-						onChange={(e) => handleSetTempChange(Number(e.target.value))}
-						className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-cyan"
+						onChange={handleSetTempChange}
+						color="cyan"
+						leftLabel="5°C"
+						centerLabel="20°C"
+						rightLabel="35°C"
+						size="md"
 					/>
-					<div className="flex justify-between text-sm text-gray-500 mt-2">
-						<span>5°C</span>
-						<span>20°C</span>
-						<span>35°C</span>
-					</div>
 				</div>
 
-				{/* Run/Stop Toggle */}
-				<button
-					onClick={handleToggleChiller}
-					className={`w-full py-4 rounded-xl font-medium text-lg flex items-center justify-center gap-3 transition-all ${chillerRunning
-						? 'bg-red-500 hover:bg-red-600 text-white'
-						: 'bg-green-500 hover:bg-green-600 text-white'
-						}`}>
-					<Power className="w-6 h-6" />
-					{chillerRunning ? 'Stop Chiller' : 'Start Chiller'}
-				</button>
-
-				{/* Close Button */}
-				<button
-					onClick={onClose}
-					className="w-full mt-4 bg-gray-200 text-gray-700 py-3 rounded-xl hover:bg-gray-300 transition-colors font-medium">
-					Close
-				</button>
+				{/* Actions */}
+				<div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+					<Button
+						variant={chillerRunning ? 'danger' : 'success'}
+						size="lg"
+						fullWidth
+						leftIcon={<Power className="w-6 h-6" />}
+						onClick={handleToggleChiller}>
+						{chillerRunning ? 'Stop Chiller' : 'Start Chiller'}
+					</Button>
+					<Button
+						variant="muted"
+						size="md"
+						fullWidth
+						onClick={onClose}>
+						Close
+					</Button>
+				</div>
 			</div>
-
-			{/* Custom CSS for slider */}
-			<style jsx>{`
-				.slider-cyan::-webkit-slider-thumb {
-					appearance: none;
-					height: 28px;
-					width: 28px;
-					border-radius: 50%;
-					background: linear-gradient(135deg, #06b6d4, #0891b2);
-					cursor: pointer;
-					box-shadow: 0 4px 10px rgba(6, 182, 212, 0.4);
-					border: 3px solid white;
-					transition: transform 0.2s ease;
-				}
-				.slider-cyan::-webkit-slider-thumb:hover {
-					transform: scale(1.1);
-				}
-				.slider-cyan::-moz-range-thumb {
-					height: 28px;
-					width: 28px;
-					border-radius: 50%;
-					background: linear-gradient(135deg, #06b6d4, #0891b2);
-					cursor: pointer;
-					box-shadow: 0 4px 10px rgba(6, 182, 212, 0.4);
-					border: 3px solid white;
-				}
-			`}</style>
-		</div>
+		</Modal>
 	);
 }

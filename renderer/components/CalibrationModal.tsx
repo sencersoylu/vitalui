@@ -1,4 +1,7 @@
 import React from 'react';
+import { X, Loader2 } from 'lucide-react';
+import { Button } from './ui/Button';
+import { Modal } from './ui/Modal';
 
 interface CalibrationModalProps {
 	isOpen: boolean;
@@ -8,7 +11,10 @@ interface CalibrationModalProps {
 	onCancel: () => void;
 }
 
-const CalibrationModal: React.FC<CalibrationModalProps> = ({
+/**
+ * CalibrationModal - Displays calibration progress with cancel option
+ */
+export const CalibrationModal: React.FC<CalibrationModalProps> = ({
 	isOpen,
 	onClose,
 	progress,
@@ -18,98 +24,51 @@ const CalibrationModal: React.FC<CalibrationModalProps> = ({
 	if (!isOpen) return null;
 
 	return (
-		<div className="modal-overlay">
-			<div className="calibration-modal">
-				<h2>Calibration in Progress</h2>
-				<p className="calibration-status">{status}</p>
-				<div className="progress-container">
-					<div className="progress-bar" style={{ width: `${progress}%` }}></div>
+		<Modal isOpen={isOpen} onClose={onClose} size="md">
+			<div className="flex flex-col items-center text-center space-y-6">
+				{/* Icon */}
+				<div className="w-20 h-20 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center animate-pulse">
+					<Loader2 className="w-12 h-12 text-blue-600 dark:text-blue-400 animate-spin" />
 				</div>
-				<p className="progress-percentage">{progress}%</p>
-				<button className="cancel-button" onClick={onCancel}>
+
+				{/* Title */}
+				<h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+					Calibration in Progress
+				</h2>
+
+				{/* Status */}
+				<p className="text-xl text-slate-600 dark:text-slate-300">
+					{status}
+				</p>
+
+				{/* Progress Bar */}
+				<div className="w-full">
+					<div className="flex justify-between mb-2">
+						<span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+							Progress
+						</span>
+						<span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+							{progress}%
+						</span>
+					</div>
+					<div className="w-full h-6 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+						<div
+							className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300 ease-out"
+							style={{ width: `${progress}%` }}
+						/>
+					</div>
+				</div>
+
+				{/* Cancel Button */}
+				<Button
+					variant="muted"
+					size="lg"
+					fullWidth
+					onClick={onCancel}>
 					Cancel
-				</button>
-
-				<style jsx>{`
-					.modal-overlay {
-						position: fixed;
-						top: 0;
-						left: 0;
-						right: 0;
-						bottom: 0;
-						background-color: rgba(0, 0, 0, 0.6);
-						display: flex;
-						justify-content: center;
-						align-items: center;
-						z-index: 10;
-					}
-
-					.calibration-modal {
-						background-color: white;
-						border-radius: 16px;
-						padding: 40px;
-						width: 500px;
-						box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-						text-align: center;
-					}
-
-					.calibration-modal h2 {
-						font-family: 'Poppins';
-						font-weight: 700;
-						font-size: 28px;
-						color: rgb(26, 32, 39);
-						margin-bottom: 20px;
-					}
-
-					.calibration-status {
-						font-family: 'Poppins';
-						font-size: 18px;
-						color: rgb(74, 74, 74);
-						margin-bottom: 30px;
-					}
-
-					.progress-container {
-						width: 100%;
-						height: 20px;
-						background-color: rgba(36, 78, 126, 0.1);
-						border-radius: 10px;
-						margin-bottom: 10px;
-						overflow: hidden;
-					}
-
-					.progress-bar {
-						height: 100%;
-						background-color: rgb(33, 116, 212);
-						transition: width 0.3s ease;
-					}
-
-					.progress-percentage {
-						font-family: 'Poppins';
-						font-size: 18px;
-						font-weight: 600;
-						color: rgb(33, 116, 212);
-						margin-bottom: 30px;
-					}
-
-					.cancel-button {
-						padding: 12px 24px;
-						font-size: 16px;
-						font-weight: 600;
-						background-color: rgb(240, 240, 240);
-						color: rgb(74, 74, 74);
-						border: none;
-						border-radius: 8px;
-						cursor: pointer;
-						font-family: 'Poppins';
-						transition: background-color 0.3s;
-					}
-
-					.cancel-button:hover {
-						background-color: rgb(220, 220, 220);
-					}
-				`}</style>
+				</Button>
 			</div>
-		</div>
+		</Modal>
 	);
 };
 

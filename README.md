@@ -1,6 +1,6 @@
-<p align="center"><img src="https://i.imgur.com/a9QWW0v.png"></p>
+# My-Nextron App - Modern Dashboard
 
-## Usage
+## Overview
 
 ### Create an App
 
