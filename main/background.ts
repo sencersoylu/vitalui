@@ -66,11 +66,16 @@ function loadWindowsConfig(): WindowsConfig | null {
 				y,
 				width,
 				height,
-				fullscreen,
+				fullscreen: false,
 				webPreferences: {
 					preload: path.join(__dirname, 'preload.js'),
 				},
 			});
+
+			if (fullscreen) {
+				win.setBounds({ x, y, width, height });
+				win.setFullScreen(true);
+			}
 
 			win.webContents.on('render-process-gone', (_event, detailed) => {
 				if (detailed.reason === 'crashed') {
