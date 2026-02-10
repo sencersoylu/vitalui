@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useMemo } from 'react';
 import Head from 'next/head';
-import io from 'socket.io-client';
+import io, { Socket } from 'socket.io-client';
 import { useDashboardStore } from '../store';
 import { ChillerControlModal } from '../components/ChillerControlModal';
 import { Header } from '../components/dashboard/Header';
