@@ -1,6 +1,10 @@
 import path from 'path';
 import fs from 'fs';
 import { app, ipcMain, screen } from 'electron';
+
+if (process.env.ELECTRON_DISABLE_SANDBOX) {
+	app.commandLine.appendSwitch('no-sandbox');
+}
 import serve from 'electron-serve';
 import { createWindow } from './helpers';
 
