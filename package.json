@@ -7,6 +7,7 @@
   "main": "app/background.js",
   "scripts": {
     "dev": "nextron",
+    "dev:root": "ELECTRON_DISABLE_SANDBOX=1 nextron",
     "build": "nextron build",
     "build:linux": "nextron build --linux",
     "postinstall": "electron-builder install-app-deps"
