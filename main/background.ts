@@ -55,11 +55,18 @@ function loadWindowsConfig(): WindowsConfig | null {
 	if (config) {
 		const displays = screen.getAllDisplays();
 
+		console.log('[multi-window] Available displays:');
+		displays.forEach((d, i) => {
+			console.log(`  [${i}] id=${d.id} bounds=${JSON.stringify(d.bounds)}`);
+		});
+
 		for (const winConfig of config.windows) {
 			const displayIndex = winConfig.display < displays.length ? winConfig.display : 0;
 			const display = displays[displayIndex];
 			const { x, y, width, height } = display.bounds;
 			const fullscreen = winConfig.fullscreen !== false;
+
+			console.log(`[multi-window] Creating "${winConfig.id}" on display ${displayIndex} at x=${x} y=${y} ${width}x${height} fullscreen=${fullscreen}`);
 
 			const win = createWindow(winConfig.id, {
 				x,
@@ -72,10 +79,23 @@ function loadWindowsConfig(): WindowsConfig | null {
 				},
 			});
 
-			if (fullscreen) {
-				win.setBounds({ x, y, width, height });
-				win.setFullScreen(true);
-			}
+			// Force position onto correct display, then fullscreen
+			win.setPosition(x, y);
+			win.setSize(width, height);
+
+			win.once('ready-to-show', () => {
+				win.setPosition(x, y);
+				if (fullscreen) {
+					win.setFullScreen(true);
+				}
+			});
+
+			win.once('show', () => {
+				win.setPosition(x, y);
+				if (fullscreen) {
+					win.setFullScreen(true);
+				}
+			});
 
 			win.webContents.on('render-process-gone', (_event, detailed) => {
 				if (detailed.reason === 'crashed') {
