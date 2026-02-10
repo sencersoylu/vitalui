@@ -1,6 +1,25 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+function getWindowId(): string {
+  if (typeof window === 'undefined') return 'main'
+  const params = new URLSearchParams(window.location.search)
+  return params.get('windowId') || 'main'
+}
+
+function migrateOldStorage() {
+  if (typeof window === 'undefined') return
+  const windowId = getWindowId()
+  if (windowId === 'main') return
+  const oldData = localStorage.getItem('dashboard-storage')
+  const newKey = `dashboard-storage-${windowId}`
+  if (oldData && !localStorage.getItem(newKey)) {
+    localStorage.setItem(newKey, oldData)
+  }
+}
+
+migrateOldStorage()
+
 interface DashboardState {
   // Theme state
   darkMode: boolean
@@ -259,7 +278,7 @@ export const useDashboardStore = create<DashboardState>()(
       setAnteHighO2: (high) => set({ anteHighO2: high }),
     }),
     {
-      name: 'dashboard-storage', // unique name for localStorage
+      name: `dashboard-storage-${getWindowId()}`,
     }
   )
 ) 

@@ -1,5 +1,6 @@
 import path from 'path';
-import { app, ipcMain } from 'electron';
+import fs from 'fs';
+import { app, ipcMain, screen } from 'electron';
 import serve from 'electron-serve';
 import { createWindow } from './helpers';
 
@@ -19,30 +20,97 @@ if (isProd) {
 	app.setPath('userData', `${app.getPath('userData')} (development)`);
 }
 
+interface WindowConfig {
+	id: string;
+	page: string;
+	display: number;
+	fullscreen?: boolean;
+}
+
+interface WindowsConfig {
+	windows: WindowConfig[];
+}
+
+function loadWindowsConfig(): WindowsConfig | null {
+	try {
+		const configPath = path.join(app.getPath('userData'), 'windows-config.json');
+		if (!fs.existsSync(configPath)) return null;
+		const raw = fs.readFileSync(configPath, 'utf-8');
+		const config = JSON.parse(raw) as WindowsConfig;
+		if (!config.windows || !Array.isArray(config.windows) || config.windows.length === 0) return null;
+		for (const w of config.windows) {
+			if (!w.id || !w.page || typeof w.display !== 'number') return null;
+		}
+		return config;
+	} catch {
+		return null;
+	}
+}
+
 (async () => {
 	await app.whenReady();
 
-	const mainWindow = createWindow('main', {
-		width: 1280,
-		height: 720,
-		fullscreen: true,
-		webPreferences: {
-			preload: path.join(__dirname, 'preload.js'),
-		},
-	});
+	const config = loadWindowsConfig();
 
-	mainWindow.webContents.on('render-process-gone', (event, detailed) => {
-		if (detailed.reason === 'crashed') {
-			mainWindow.webContents.reload();
+	if (config) {
+		const displays = screen.getAllDisplays();
+
+		for (const winConfig of config.windows) {
+			const displayIndex = winConfig.display < displays.length ? winConfig.display : 0;
+			const display = displays[displayIndex];
+			const { x, y, width, height } = display.bounds;
+			const fullscreen = winConfig.fullscreen !== false;
+
+			const win = createWindow(winConfig.id, {
+				x,
+				y,
+				width,
+				height,
+				fullscreen,
+				webPreferences: {
+					preload: path.join(__dirname, 'preload.js'),
+				},
+			});
+
+			win.webContents.on('render-process-gone', (_event, detailed) => {
+				if (detailed.reason === 'crashed') {
+					win.webContents.reload();
+				}
+			});
+
+			const pageUrl = winConfig.page.startsWith('/') ? winConfig.page.slice(1) : winConfig.page;
+
+			if (isProd) {
+				await win.loadURL(`app://./${pageUrl}?windowId=${winConfig.id}`);
+			} else {
+				const port = process.argv[2];
+				await win.loadURL(`http://localhost:${port}/${pageUrl}?windowId=${winConfig.id}`);
+				win.webContents.openDevTools();
+			}
 		}
-	});
-
-	if (isProd) {
-		await mainWindow.loadURL('app://./dashboard');
 	} else {
-		const port = process.argv[2];
-		await mainWindow.loadURL(`http://localhost:${port}/dashboard`);
-		mainWindow.webContents.openDevTools();
+		const mainWindow = createWindow('main', {
+			width: 1280,
+			height: 720,
+			fullscreen: true,
+			webPreferences: {
+				preload: path.join(__dirname, 'preload.js'),
+			},
+		});
+
+		mainWindow.webContents.on('render-process-gone', (_event, detailed) => {
+			if (detailed.reason === 'crashed') {
+				mainWindow.webContents.reload();
+			}
+		});
+
+		if (isProd) {
+			await mainWindow.loadURL('app://./dashboard');
+		} else {
+			const port = process.argv[2];
+			await mainWindow.loadURL(`http://localhost:${port}/dashboard`);
+			mainWindow.webContents.openDevTools();
+		}
 	}
 })();
 
