@@ -88,7 +88,7 @@ export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 		};
 
 		// Focus trap
-		const handleTabKeyDown = (e: KeyboardEvent) => {
+		const handleTabKeyDown = (e: React.KeyboardEvent) => {
 			if (e.key !== 'Tab') return;
 
 			const focusableElements = modalRef.current?.querySelectorAll(
