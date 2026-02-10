@@ -86,10 +86,10 @@ export const createWindow = (
 
   win.on('close', saveState)
 
-  win.webContents.on('dom-ready', (event)=> {
-    let css = '* { cursor: none !important; }';
+  win.webContents.on('dom-ready' as any, () => {
+    const css = '* { cursor: none !important; }';
     win.webContents.insertCSS(css);
-});
+  });
 
 
   // Handle GBM wrapper errors

@@ -32,6 +32,7 @@ export default function HomePage() {
 		light2Status,
 		valve1Status,
 		valve2Status,
+		playing,
 		chillerRunning,
 		chillerCurrentTemp,
 		setConnected,
