@@ -1,39 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
-import Image from 'next/image';
 import io from 'socket.io-client';
 
 export default function HomePage() {
-	// State to store vital signs data
 	const [vitalSigns, setVitalSigns] = useState({
 		heartRate: '',
 		oxygenSaturation: '',
 		bloodPressure: '',
 	});
 
-	// State to track connection status
 	const [connected, setConnected] = useState(false);
-	// State to store current time
 	const [currentTime, setCurrentTime] = useState('');
 	const [currentTime2, setCurrentTime2] = useState('');
-	// State for calibration modal
 	const [showCalibrationModal, setShowCalibrationModal] = useState(false);
-	// State for calibration progress
 	const [calibrationProgress, setCalibrationProgress] = useState(0);
-	// State for calibration status message
-	const [calibrationStatus, setCalibrationStatus] = useState('');
-	// State for error modal
+	const [calibrationStatus, setCalibrationStatus] = useState('waiting'); // 'waiting' | 'no_finger' | 'measuring' | 'success' | 'error'
 	const [showErrorModal, setShowErrorModal] = useState(false);
 	const [errorMessage, setErrorMessage] = useState('');
-	// Seat alarm state
 	const [showSeatAlarm, setShowSeatAlarm] = useState(false);
 	const [seatNumber, setSeatNumber] = useState('');
-	// Socket reference
 	const [socketRef, setSocketRef] = useState(null);
+	const timeInterval = useRef(null);
+	const noFingerTimer = useRef(null);
 
 	useEffect(() => {
-		// Initialize socket connection
 		const socket = io('http://localhost:4000', {
 			transports: ['websocket', 'polling'],
 			extraHeaders: {
@@ -41,19 +31,10 @@ export default function HomePage() {
 			},
 		});
 
-		// Store socket reference
 		setSocketRef(socket);
 
-		// Handle connection event
 		socket.on('connect', () => {
-			console.log('Connected to socket server');
 			setConnected(true);
-
-			// setTimeout(() => {
-			//   socket.emit('serialSend', 'R');
-			// }, 1000);
-
-			// Set current time on connection
 			updateCurrentTime();
 		});
 
@@ -63,67 +44,124 @@ export default function HomePage() {
 		});
 
 		socket.on('serialData', (data) => {
-			// console.log('Received serial data:', data);
-			if (data.data.includes('PRO:')) {
+			const msg = data.data;
+
+			// --- Calibration progress ---
+			// New format: PRO:status,progress (e.g. PRO:1,45)
+			if (msg.includes('PRO:')) {
 				setShowCalibrationModal(true);
-				const progress = parseInt(data.data.split(':')[1]);
+				const parts = msg.split(':')[1].split(',');
+				const bpStatus = parseInt(parts[0]);
+				const progress = parseInt(parts.length > 1 ? parts[1] : parts[0]);
 				setCalibrationProgress(progress);
-				setCalibrationStatus(`Calibration in progress: ${progress}%`);
-			} else if (data.data.includes('OK:CAL')) {
-				socket.emit('serialSend', 'M');
-				setShowCalibrationModal(false);
-			} else if (data.data.includes('ERR:CAL')) {
+				if (bpStatus === 0) setCalibrationStatus('no_finger');
+				else if (bpStatus === 1) setCalibrationStatus('measuring');
+				else if (bpStatus === 2) setCalibrationStatus('success');
+				else if (bpStatus === 5) setCalibrationStatus('error');
+				else setCalibrationStatus('measuring');
+			}
+			// Old format: [PARMAK YOK] progress = %0
+			else if (msg.includes('progress = %')) {
+				setShowCalibrationModal(true);
+				const progMatch = msg.match(/progress\s*=\s*%(\d+)/);
+				const progress = progMatch ? parseInt(progMatch[1]) : 0;
+				setCalibrationProgress(progress);
+				if (msg.includes('PARMAK YOK')) setCalibrationStatus('no_finger');
+				else if (msg.includes('OLCULUYOR')) setCalibrationStatus('measuring');
+				else if (msg.includes('BASARILI')) setCalibrationStatus('success');
+				else if (msg.includes('HATA')) setCalibrationStatus('error');
+				else setCalibrationStatus('measuring');
+			}
+			// --- Calibration result ---
+			else if (msg.includes('OK:CAL') || msg.includes('Calibration success')) {
+				setCalibrationStatus('success');
+				setCalibrationProgress(100);
+				setTimeout(() => {
+					setShowCalibrationModal(false);
+				}, 1500);
+			}
+			else if (msg.includes('ERR:CAL') || msg.includes('Calibration failed')) {
 				setShowCalibrationModal(false);
 				setErrorMessage('Calibration failed. Please try again.');
 				setShowErrorModal(true);
 				setTimeout(() => {
 					setShowErrorModal(false);
 				}, 3000);
-			} else if (data.data.includes('SEAT_ALARM')) {
+			}
+			// --- Seat alarm ---
+			else if (msg.includes('SEAT_ALARM')) {
 				setShowSeatAlarm(true);
-				const seatNum = data.data.split(':')[1];
+				const seatNum = msg.split(':')[1];
 				setSeatNumber(seatNum);
-			} else if (data.data.includes('DATA:')) {
-				const dataArray = data.data.split(':')[1].split(',');
-
-				if (
-					dataArray[0] == '1' ||
-					dataArray[0] == '2' ||
-					dataArray[0] == '3' ||
-					dataArray[0] == '6' ||
-					dataArray[0] == '4' ||
-					dataArray[0] == '5'
-				) {
+			}
+			// --- Vital signs data ---
+			// New format: DATA:status,sys,dia,hr,spo2
+			else if (msg.includes('DATA:')) {
+				const dataArray = msg.split(':')[1].split(',');
+				const st = parseInt(dataArray[0]);
+				if (st >= 1 && st <= 6) {
+					// Valid data - clear no-finger timer
+					if (noFingerTimer.current) {
+						clearTimeout(noFingerTimer.current);
+						noFingerTimer.current = null;
+					}
 					setVitalSigns({
 						heartRate: dataArray[3],
 						oxygenSaturation: dataArray[4],
 						bloodPressure: dataArray[1] + '/' + dataArray[2],
 					});
+				} else if (st === 0) {
+					// No finger - start 60s timer to clear display
+					if (!noFingerTimer.current) {
+						noFingerTimer.current = setTimeout(() => {
+							setVitalSigns({ heartRate: '', oxygenSaturation: '', bloodPressure: '' });
+							noFingerTimer.current = null;
+						}, 60000);
+					}
 				}
 				lastStatus = dataArray[0];
 			}
+			// Old format: st = 2, sys = 115, dia = 73, hr = 66 spo2 = 99.10
+			else if (msg.includes('st = ')) {
+				const match = msg.match(/st\s*=\s*(\d+).*sys\s*=\s*(\d+).*dia\s*=\s*(\d+).*hr\s*=\s*(\d+).*spo2\s*=\s*([\d.]+)/);
+				if (match) {
+					const st = parseInt(match[1]);
+					if (st >= 1 && st <= 6) {
+						if (noFingerTimer.current) {
+							clearTimeout(noFingerTimer.current);
+							noFingerTimer.current = null;
+						}
+						setVitalSigns({
+							heartRate: match[4],
+							oxygenSaturation: match[5],
+							bloodPressure: match[2] + '/' + match[3],
+						});
+					} else if (st === 0) {
+						if (!noFingerTimer.current) {
+							noFingerTimer.current = setTimeout(() => {
+								setVitalSigns({ heartRate: '', oxygenSaturation: '', bloodPressure: '' });
+								noFingerTimer.current = null;
+							}, 60000);
+						}
+					}
+					lastStatus = match[1];
+				}
+			}
 		});
 
-		// Handle disconnection event
 		socket.on('disconnect', () => {
-			console.log('Disconnected from socket server');
 			setConnected(false);
 		});
 
-		// Listen for vital signs updates
 		socket.on('vitalSigns', (data) => {
-			// console.log('Received vital signs data:', data);
 			setVitalSigns(data);
 			updateCurrentTime();
 		});
 
-		// Listen for calibration progress updates
 		socket.on('calibrationProgress', (data) => {
-			//console.log('Calibration progress:', data);
 			setCalibrationProgress(data.progress);
 			setCalibrationStatus(data.status);
 
-			// Close modal when calibration is complete
 			if (data.progress === 100) {
 				setTimeout(() => {
 					setShowCalibrationModal(false);
@@ -131,7 +169,6 @@ export default function HomePage() {
 			}
 		});
 
-		// Function to update current time
 		const updateCurrentTime = () => {
 			const now = new Date();
 			const formattedDate = `${now.getDate().toString().padStart(2, '0')}.${(
@@ -147,24 +184,37 @@ export default function HomePage() {
 			setCurrentTime2(formattedTime);
 		};
 
-		// Clean up socket connection on component unmount
+		// Update time every second
+		timeInterval.current = setInterval(updateCurrentTime, 1000);
+
 		return () => {
 			socket.disconnect();
+			if (timeInterval.current) clearInterval(timeInterval.current);
+			if (noFingerTimer.current) clearTimeout(noFingerTimer.current);
 		};
 	}, []);
 
-	// Function to start calibration
 	const startCalibration = () => {
 		setShowCalibrationModal(true);
 		setCalibrationProgress(0);
-		setCalibrationStatus('Starting calibration...');
+		setCalibrationStatus('waiting');
 
 		if (socketRef) {
 			socketRef.emit('serialSend', 'C');
 		}
 	};
 
-	// Function to reset all data
+	const getCalibrationMessage = () => {
+		switch (calibrationStatus) {
+			case 'waiting': return 'Preparing sensor...';
+			case 'no_finger': return 'Place your finger on the sensor';
+			case 'measuring': return 'Keep your finger steady';
+			case 'success': return 'Calibration complete!';
+			case 'error': return 'Calibration error';
+			default: return 'Calibrating...';
+		}
+	};
+
 	const resetData = () => {
 		setVitalSigns({
 			heartRate: '',
@@ -173,158 +223,220 @@ export default function HomePage() {
 		});
 	};
 
+	const hasHR = vitalSigns.heartRate && vitalSigns.heartRate !== '0';
+	const hasSpO2 = vitalSigns.oxygenSaturation && vitalSigns.oxygenSaturation !== '0';
+	const hasBP = vitalSigns.bloodPressure && vitalSigns.bloodPressure !== '0/0' && vitalSigns.bloodPressure !== '';
+
 	return (
 		<>
-			<div className="page1-container">
-				<Head>
-					<title>Page1 - exported project</title>
-					<meta property="og:title" content="Page1 - exported project" />
-					<link
-						href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-						rel="stylesheet"
-					/>
-				</Head>
-				<div className="page1-vital-sign-home">
-					<div className="page1-basic-header">
+			<Head>
+				<title>Vital Signs Monitor</title>
+				<meta property="og:title" content="Vital Signs Monitor" />
+				<link
+					href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+					rel="stylesheet"
+				/>
+			</Head>
+
+			<div className="monitor-root">
+				{/* Status Bar */}
+				<div className="status-bar">
+					<div className="status-left">
+						<div className={`conn-indicator ${connected ? 'conn-on' : 'conn-off'}`} />
+						<span className="conn-text">{connected ? 'Connected' : 'Disconnected'}</span>
+					</div>
+					<div className="status-center">
 						<img
-							alt="HipertechLogo2501"
-							src="/external/hipertechlogo2501-ygje.svg"
-							className="page1-hipertech-logo"
+							alt="Logo"
+							src="/external/logomark2501-ohe8.svg"
+							className="status-logo"
 						/>
-						<div className="page1-logo">
-							<img
-								alt="logomark2501"
-								src="/external/logomark2501-ohe8.svg"
-								className="page1-logomark"
-							/>
-							<span className="page1-text10">VitalMonitor</span>
-						</div>
+						<span className="status-title">VitalMonitor</span>
 					</div>
-					<div className="page1-card-container1">
-						<div className="page1-number-card1">
-							<div className="page1-frame1">
-								<span className="page1-text11">Heart Rate</span>
-							</div>
-							<div className="page1-frame21">
-								<div className="page1-numberdetail1">
-									{vitalSigns.heartRate && vitalSigns.heartRate !== '0' ? (
-										<span className="page1-text12">
-											<span>
-												{vitalSigns.heartRate}
-												<span
-													dangerouslySetInnerHTML={{
-														__html: ' ',
-													}}
-												/>
-											</span>
-											<span className="page1-text14">bpm</span>
-										</span>
-									) : (
-										<div className="loading-animation">
-											<div className="loading-dots">
-												<span></span>
-												<span></span>
-												<span></span>
-											</div>
-										</div>
-									)}
-								</div>
-							</div>
-						</div>
-						<div className="page1-number-card2">
-							<div className="page1-frame3">
-								<span className="page1-text15">Oxygen Saturation (SpO2)</span>
-							</div>
-							<div className="page1-frame22">
-								<div className="page1-numberdetail1">
-									{vitalSigns.oxygenSaturation &&
-									vitalSigns.oxygenSaturation !== '0' ? (
-										<span className="page1-text16">
-											<span>
-												{vitalSigns.oxygenSaturation}
-												<span
-													dangerouslySetInnerHTML={{
-														__html: ' ',
-													}}
-												/>
-											</span>
-											<span className="page1-text18">%</span>
-										</span>
-									) : (
-										<div className="loading-animation">
-											<div className="loading-dots">
-												<span></span>
-												<span></span>
-												<span></span>
-											</div>
-										</div>
-									)}
-								</div>
-							</div>
-						</div>
-					</div>
-					<div className="page1-card-container2">
-						<div className="page1-number-card3">
-							<div className="page1-frame4">
-								<span className="page1-text19">Blood Pressure</span>
-							</div>
-							<div className="page1-frame23">
-								<div className="page1-numberdetail2">
-									<div className="button-container">
-										<button className="reset-button" onClick={resetData}>
-											Reset
-										</button>
-									</div>
-									{vitalSigns.bloodPressure &&
-									vitalSigns.bloodPressure !== '0' ? (
-										<span className="page1-text16">
-											<span>
-												{vitalSigns.bloodPressure}
-												<span
-													dangerouslySetInnerHTML={{
-														__html: ' ',
-													}}
-												/>
-											</span>
-											<span className="page1-text18">mmHg</span>
-										</span>
-									) : (
-										<div className="loading-animation">
-											<div className="loading-dots">
-												<span></span>
-												<span></span>
-												<span></span>
-											</div>
-										</div>
-									)}
-								</div>
-							</div>
-						</div>
+					<div className="status-right">
+						<span className="status-time">{currentTime2 || '--:--'}</span>
+						<span className="status-date">{currentTime || '--.--.----'}</span>
 					</div>
 				</div>
-				<div className="page1-frame24">
-					<span className="page1-text24">{currentTime || '10.03.2025'}</span>
-					<span className="page1-text24">{currentTime2 || '14:27'}</span>
-					<button className="calibration-button" onClick={startCalibration}>
+
+				{/* Vital Signs Grid */}
+				<div className="vitals-container">
+					{/* Heart Rate */}
+					<div className="vital-card hr-card">
+						<div className="vital-header">
+							<div className="vital-label-row">
+								<svg className="vital-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+									<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+								</svg>
+								<span className="vital-label">HR</span>
+							</div>
+							<span className="vital-unit">bpm</span>
+						</div>
+						<div className="vital-value-container">
+							{hasHR ? (
+								<span className="vital-value hr-value">
+									{vitalSigns.heartRate}
+								</span>
+							) : (
+								<div className="vital-waiting">
+									<div className="pulse-ring" />
+									<span className="waiting-text">---</span>
+								</div>
+							)}
+						</div>
+						{hasHR && (
+							<div className="vital-range">
+								<span>Normal: 60-100</span>
+							</div>
+						)}
+					</div>
+
+					{/* SpO2 */}
+					<div className="vital-card spo2-card">
+						<div className="vital-header">
+							<div className="vital-label-row">
+								<svg className="vital-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+									<circle cx="12" cy="12" r="10" />
+									<path d="M12 6v6l4 2" />
+								</svg>
+								<span className="vital-label">SpO2</span>
+							</div>
+							<span className="vital-unit">%</span>
+						</div>
+						<div className="vital-value-container">
+							{hasSpO2 ? (
+								<span className="vital-value spo2-value">
+									{vitalSigns.oxygenSaturation}
+								</span>
+							) : (
+								<div className="vital-waiting">
+									<div className="pulse-ring spo2-ring" />
+									<span className="waiting-text">---</span>
+								</div>
+							)}
+						</div>
+						{hasSpO2 && (
+							<div className="vital-range spo2-range">
+								<span>Normal: 95-100</span>
+							</div>
+						)}
+					</div>
+
+					{/* Blood Pressure */}
+					<div className="vital-card bp-card">
+						<div className="vital-header">
+							<div className="vital-label-row">
+								<svg className="vital-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+									<path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+								</svg>
+								<span className="vital-label">NIBP</span>
+							</div>
+							<span className="vital-unit">mmHg</span>
+						</div>
+						<div className="vital-value-container">
+							{hasBP ? (
+								<div className="bp-display">
+									<span className="vital-value bp-value">
+										{vitalSigns.bloodPressure.split('/')[0]}
+									</span>
+									<span className="bp-separator">/</span>
+									<span className="bp-dia-value">
+										{vitalSigns.bloodPressure.split('/')[1]}
+									</span>
+									<div className="bp-labels">
+										<span className="bp-sys-label">SYS</span>
+										<span className="bp-dia-label">DIA</span>
+									</div>
+								</div>
+							) : (
+								<div className="vital-waiting">
+									<div className="pulse-ring bp-ring" />
+									<span className="waiting-text">---/---</span>
+								</div>
+							)}
+						</div>
+						{hasBP && (
+							<div className="vital-range bp-range">
+								<span>Normal: 120/80</span>
+							</div>
+						)}
+					</div>
+				</div>
+
+				{/* Action Bar */}
+				<div className="action-bar">
+					<button className="action-btn calibrate-btn" onClick={startCalibration}>
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="btn-icon">
+							<path d="M12 20V10" />
+							<path d="M18 20V4" />
+							<path d="M6 20v-4" />
+						</svg>
 						Calibrate
+					</button>
+					<button className="action-btn reset-btn" onClick={resetData}>
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="btn-icon">
+							<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+							<path d="M3 3v5h5" />
+						</svg>
+						Reset
 					</button>
 				</div>
 
 				{/* Calibration Modal */}
 				{showCalibrationModal && (
 					<div className="modal-overlay">
-						<div className="calibration-modal">
-							<h2>
-								Please keep your finger on sensor untill progress reach 100%
-							</h2>
-							<div className="progress-container">
-								<div
-									className="progress-bar"
-									style={{ width: `${calibrationProgress}%` }}></div>
+						<div className="modal-card calib-modal">
+							{/* Status Icon */}
+							<div className={`modal-icon-container ${
+								calibrationStatus === 'no_finger' ? 'icon-warning' :
+								calibrationStatus === 'success' ? 'icon-success' :
+								calibrationStatus === 'error' ? 'error-icon-bg' :
+								''
+							}`}>
+								{calibrationStatus === 'no_finger' ? (
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="modal-icon" style={{color: '#fbbf24'}}>
+										<path d="M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8" />
+										<path d="M10 19v-3.96 3.15" />
+										<path d="M7 19h5" />
+										<circle cx="18" cy="16" r="3" />
+										<path d="M18 13v2" />
+										<path d="M18 19v.01" />
+									</svg>
+								) : calibrationStatus === 'success' ? (
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="modal-icon" style={{color: '#22c55e'}}>
+										<path d="M20 6L9 17l-5-5" />
+									</svg>
+								) : (
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="modal-icon calib-icon">
+										<path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+									</svg>
+								)}
 							</div>
-							<p className="progress-percentage">{calibrationProgress}%</p>
+
+							<h2 className="modal-title">Calibration</h2>
+							<p className={`modal-status-text ${
+								calibrationStatus === 'no_finger' ? 'status-warning' :
+								calibrationStatus === 'measuring' ? 'status-active' :
+								calibrationStatus === 'success' ? 'status-success' :
+								calibrationStatus === 'error' ? 'status-error' : ''
+							}`}>
+								{getCalibrationMessage()}
+							</p>
+
+							{/* Progress Bar */}
+							<div className="progress-track">
+								<div
+									className={`progress-fill ${
+										calibrationStatus === 'success' ? 'progress-success' :
+										calibrationStatus === 'no_finger' ? 'progress-waiting' : ''
+									}`}
+									style={{ width: `${calibrationProgress}%` }}
+								/>
+							</div>
+							<span className="progress-text">{calibrationProgress}%</span>
+
 							<button
-								className="cancel-button"
+								className="modal-btn cancel-btn"
 								onClick={() => {
 									if (socketRef) {
 										socketRef.emit('cancelCalibration');
@@ -340,12 +452,18 @@ export default function HomePage() {
 				{/* Error Modal */}
 				{showErrorModal && (
 					<div className="modal-overlay">
-						<div className="error-modal">
-							<div className="error-icon">⚠️</div>
-							<h2>Error</h2>
-							<p>{errorMessage}</p>
+						<div className="modal-card error-modal">
+							<div className="modal-icon-container error-icon-bg">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="modal-icon error-icon">
+									<circle cx="12" cy="12" r="10" />
+									<line x1="15" y1="9" x2="9" y2="15" />
+									<line x1="9" y1="9" x2="15" y2="15" />
+								</svg>
+							</div>
+							<h2 className="modal-title error-title">Error</h2>
+							<p className="modal-desc">{errorMessage}</p>
 							<button
-								className="error-button"
+								className="modal-btn error-btn"
 								onClick={() => setShowErrorModal(false)}>
 								OK
 							</button>
@@ -356,12 +474,18 @@ export default function HomePage() {
 				{/* Seat Alarm Modal */}
 				{showSeatAlarm && (
 					<div className="modal-overlay">
-						<div className="seat-alarm-modal">
-							<div className="alarm-icon">🚨</div>
-							<h2>Seat Alarm</h2>
-							<p>Seat {seatNumber} </p>
+						<div className="modal-card alarm-modal">
+							<div className="modal-icon-container alarm-icon-bg">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="modal-icon alarm-icon">
+									<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+									<line x1="12" y1="9" x2="12" y2="13" />
+									<line x1="12" y1="17" x2="12.01" y2="17" />
+								</svg>
+							</div>
+							<h2 className="modal-title alarm-title">Seat Alarm</h2>
+							<p className="modal-desc">Seat {seatNumber} requires attention</p>
 							<button
-								className="alarm-button"
+								className="modal-btn alarm-btn"
 								onClick={() => {
 									setShowSeatAlarm(false);
 									setSeatNumber('');
@@ -372,722 +496,543 @@ export default function HomePage() {
 					</div>
 				)}
 			</div>
+
 			<style jsx global>{`
 				* {
-					font-family: 'Poppins', sans-serif;
+					margin: 0;
+					padding: 0;
+					box-sizing: border-box;
 				}
 
-				.page1-text10 {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 700;
+				html, body {
+					background-color: #0b1120;
+					overflow: hidden;
+				}
+			`}</style>
+			<style jsx>{`
+				.monitor-root {
+					width: 100%;
+					height: 100vh;
+					max-width: 540px;
+					margin: 0 auto;
+					display: flex;
+					flex-direction: column;
+					background-color: #0b1120;
+					font-family: 'Inter', -apple-system, sans-serif;
+					color: #e2e8f0;
+					padding: 0 4px;
+					overflow: hidden;
 				}
 
-				.page1-text11 {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 700;
+				/* ─── Status Bar ─── */
+				.status-bar {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					padding: 28px 12px;
+					border-bottom: 1px solid rgba(255,255,255,0.08);
+					flex-shrink: 0;
 				}
 
-				.page1-text12 {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 700;
+				.status-left {
+					display: flex;
+					align-items: center;
+					gap: 12px;
 				}
 
-				.page1-text14 {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 700;
+				.conn-indicator {
+					width: 14px;
+					height: 14px;
+					border-radius: 50%;
 				}
 
-				.page1-text15 {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 700;
+				.conn-on {
+					background: #22c55e;
+					box-shadow: 0 0 6px rgba(34,197,94,0.6);
 				}
 
-				.page1-text16 {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 700;
+				.conn-off {
+					background: #ef4444;
+					box-shadow: 0 0 6px rgba(239,68,68,0.6);
+					animation: blink 1.5s infinite;
 				}
 
-				.page1-text18 {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 700;
-				}
-
-				.page1-text19 {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 700;
-				}
-
-				.page1-text24 {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 700;
-				}
-
-				.calibration-modal h2 {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 700;
-				}
-
-				.calibration-modal p {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 500;
-				}
-
-				.cancel-button {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 600;
-				}
-
-				.error-modal h2 {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 700;
-				}
-
-				.error-modal p {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 500;
-				}
-
-				.error-button {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 600;
-				}
-
-				/* Seat Alarm Modal Styles */
-				.seat-alarm-modal {
-					background-color: white;
-					border-radius: 16px;
-					padding: 40px;
-					width: 400px;
-					box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-					text-align: center;
-				}
-
-				.alarm-icon {
-					font-size: 48px;
-					margin-bottom: 20px;
-				}
-
-				.seat-alarm-modal h2 {
-					font-family: 'Poppins', sans-serif;
-					font-weight: 700;
-					font-size: 28px;
-					color: rgb(255, 193, 7);
-					margin-bottom: 16px;
-				}
-
-				.seat-alarm-modal p {
-					font-family: 'Poppins', sans-serif;
-					font-size: 18px;
-					color: rgb(74, 74, 74);
-					margin-bottom: 30px;
-				}
-
-				.alarm-button {
-					padding: 12px 32px;
+				.conn-text {
 					font-size: 16px;
+					font-weight: 500;
+					color: #94a3b8;
+					letter-spacing: 0.02em;
+				}
+
+				.status-center {
+					display: flex;
+					align-items: center;
+					gap: 10px;
+				}
+
+				.status-logo {
+					width: 44px;
+					height: 44px;
+					opacity: 0.9;
+				}
+
+				.status-title {
+					font-size: 24px;
+					font-weight: 700;
+					color: #cbd5e1;
+					letter-spacing: 0.02em;
+				}
+
+				.status-right {
+					display: flex;
+					flex-direction: column;
+					align-items: flex-end;
+				}
+
+				.status-time {
+					font-size: 28px;
+					font-weight: 700;
+					color: #e2e8f0;
+					font-variant-numeric: tabular-nums;
+				}
+
+				.status-date {
+					font-size: 16px;
+					font-weight: 400;
+					color: #64748b;
+					font-variant-numeric: tabular-nums;
+				}
+
+				/* ─── Vitals Container ─── */
+				.vitals-container {
+					flex: 1;
+					display: flex;
+					flex-direction: column;
+					gap: 12px;
+					padding: 16px 0;
+					overflow: hidden;
+				}
+
+				/* ─── Vital Card ─── */
+				.vital-card {
+					flex: 1;
+					display: flex;
+					flex-direction: column;
+					border-radius: 12px;
+					padding: 14px 20px;
+					position: relative;
+					overflow: hidden;
+					min-height: 0;
+				}
+
+				.vital-card::before {
+					content: '';
+					position: absolute;
+					left: 0;
+					top: 0;
+					bottom: 0;
+					width: 4px;
+					border-radius: 4px 0 0 4px;
+				}
+
+				/* HR Card */
+				.hr-card {
+					background: linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(34,197,94,0.02) 100%);
+					border: 1px solid rgba(34,197,94,0.15);
+				}
+				.hr-card::before { background: #22c55e; }
+				.hr-card .vital-label,
+				.hr-card .vital-icon { color: #22c55e; }
+				.hr-card .vital-unit { color: rgba(34,197,94,0.5); }
+				.hr-value { color: #4ade80; }
+				.hr-card .vital-range { color: rgba(34,197,94,0.4); }
+
+				/* SpO2 Card */
+				.spo2-card {
+					background: linear-gradient(135deg, rgba(56,189,248,0.08) 0%, rgba(56,189,248,0.02) 100%);
+					border: 1px solid rgba(56,189,248,0.15);
+				}
+				.spo2-card::before { background: #38bdf8; }
+				.spo2-card .vital-label,
+				.spo2-card .vital-icon { color: #38bdf8; }
+				.spo2-card .vital-unit { color: rgba(56,189,248,0.5); }
+				.spo2-value { color: #7dd3fc; }
+				.spo2-card .vital-range { color: rgba(56,189,248,0.4); }
+
+				/* BP Card */
+				.bp-card {
+					background: linear-gradient(135deg, rgba(251,146,60,0.08) 0%, rgba(251,146,60,0.02) 100%);
+					border: 1px solid rgba(251,146,60,0.15);
+				}
+				.bp-card::before { background: #fb923c; }
+				.bp-card .vital-label,
+				.bp-card .vital-icon { color: #fb923c; }
+				.bp-card .vital-unit { color: rgba(251,146,60,0.5); }
+				.bp-value, .bp-dia-value { color: #fdba74; }
+				.bp-card .vital-range { color: rgba(251,146,60,0.4); }
+
+				/* ─── Vital Header ─── */
+				.vital-header {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					flex-shrink: 0;
+				}
+
+				.vital-label-row {
+					display: flex;
+					align-items: center;
+					gap: 8px;
+				}
+
+				.vital-icon {
+					width: 27px;
+					height: 27px;
+				}
+
+				.vital-label {
+					font-size: 21px;
+					font-weight: 700;
+					letter-spacing: 0.08em;
+					text-transform: uppercase;
+				}
+
+				.vital-unit {
+					font-size: 18px;
+					font-weight: 500;
+					letter-spacing: 0.04em;
+				}
+
+				/* ─── Vital Value ─── */
+				.vital-value-container {
+					flex: 1;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					min-height: 0;
+				}
+
+				.vital-value {
+					font-size: 108px;
+					font-weight: 800;
+					line-height: 1;
+					font-variant-numeric: tabular-nums;
+					letter-spacing: -0.02em;
+				}
+
+				.vital-range {
+					font-size: 15px;
+					font-weight: 400;
+					text-align: right;
+					flex-shrink: 0;
+					padding-top: 2px;
+				}
+
+				/* ─── BP Display ─── */
+				.bp-display {
+					display: flex;
+					align-items: baseline;
+					gap: 2px;
+					position: relative;
+				}
+
+				.bp-separator {
+					font-size: 72px;
+					font-weight: 300;
+					color: rgba(251,146,60,0.3);
+					line-height: 1;
+				}
+
+				.bp-dia-value {
+					font-size: 78px;
+					font-weight: 700;
+					line-height: 1;
+					font-variant-numeric: tabular-nums;
+				}
+
+				.bp-labels {
+					display: flex;
+					flex-direction: column;
+					margin-left: 10px;
+					gap: 8px;
+				}
+
+				.bp-sys-label, .bp-dia-label {
+					font-size: 14px;
 					font-weight: 600;
-					background-color: rgb(255, 193, 7);
-					color: white;
+					color: rgba(251,146,60,0.4);
+					letter-spacing: 0.1em;
+				}
+
+				/* ─── Waiting State ─── */
+				.vital-waiting {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					position: relative;
+				}
+
+				.waiting-text {
+					font-size: 72px;
+					font-weight: 300;
+					color: #334155;
+					letter-spacing: 4px;
+				}
+
+				.pulse-ring {
+					position: absolute;
+					width: 60px;
+					height: 60px;
+					border-radius: 50%;
+					border: 2px solid rgba(34,197,94,0.2);
+					animation: pulse-expand 2s ease-out infinite;
+				}
+
+				.spo2-ring {
+					border-color: rgba(56,189,248,0.2);
+				}
+
+				.bp-ring {
+					border-color: rgba(251,146,60,0.2);
+				}
+
+				/* ─── Action Bar ─── */
+				.action-bar {
+					display: flex;
+					gap: 10px;
+					padding: 12px 0 20px;
+					flex-shrink: 0;
+				}
+
+				.action-btn {
+					flex: 1;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					gap: 10px;
+					padding: 18px;
+					border: none;
+					border-radius: 10px;
+					font-family: 'Inter', sans-serif;
+					font-size: 21px;
+					font-weight: 600;
+					cursor: pointer;
+					transition: all 0.2s ease;
+					letter-spacing: 0.02em;
+				}
+
+				.btn-icon {
+					width: 27px;
+					height: 27px;
+				}
+
+				.calibrate-btn {
+					background: rgba(56,189,248,0.12);
+					color: #38bdf8;
+					border: 1px solid rgba(56,189,248,0.2);
+				}
+
+				.calibrate-btn:hover {
+					background: rgba(56,189,248,0.2);
+				}
+
+				.calibrate-btn:active {
+					transform: scale(0.98);
+				}
+
+				.reset-btn {
+					background: rgba(239,68,68,0.1);
+					color: #f87171;
+					border: 1px solid rgba(239,68,68,0.2);
+				}
+
+				.reset-btn:hover {
+					background: rgba(239,68,68,0.18);
+				}
+
+				.reset-btn:active {
+					transform: scale(0.98);
+				}
+
+				/* ─── Modal Overlay ─── */
+				.modal-overlay {
+					position: fixed;
+					inset: 0;
+					background: rgba(0,0,0,0.75);
+					backdrop-filter: blur(8px);
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					z-index: 100;
+					padding: 20px;
+				}
+
+				.modal-card {
+					background: #1e293b;
+					border-radius: 16px;
+					padding: 32px;
+					width: 100%;
+					max-width: 400px;
+					text-align: center;
+					border: 1px solid rgba(255,255,255,0.06);
+					box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+				}
+
+				.modal-icon-container {
+					width: 56px;
+					height: 56px;
+					border-radius: 14px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					margin: 0 auto 16px;
+					background: rgba(56,189,248,0.12);
+				}
+
+				.modal-icon {
+					width: 28px;
+					height: 28px;
+				}
+
+				.calib-icon {
+					color: #38bdf8;
+				}
+
+				.error-icon-bg {
+					background: rgba(239,68,68,0.12);
+				}
+				.error-icon {
+					color: #ef4444;
+				}
+
+				.alarm-icon-bg {
+					background: rgba(251,191,36,0.12);
+				}
+				.alarm-icon {
+					color: #fbbf24;
+				}
+
+				.modal-title {
+					font-size: 20px;
+					font-weight: 700;
+					color: #f1f5f9;
+					margin-bottom: 8px;
+				}
+
+				.error-title { color: #f87171; }
+				.alarm-title { color: #fbbf24; }
+
+				.modal-desc {
+					font-size: 14px;
+					color: #94a3b8;
+					line-height: 1.5;
+					margin-bottom: 24px;
+				}
+
+				.modal-btn {
+					padding: 12px 28px;
+					font-family: 'Inter', sans-serif;
+					font-size: 14px;
+					font-weight: 600;
 					border: none;
 					border-radius: 8px;
 					cursor: pointer;
-					font-family: 'Poppins', sans-serif;
-					transition: background-color 0.3s;
+					transition: all 0.2s ease;
 				}
 
-				.alarm-button:hover {
-					background-color: rgb(255, 179, 0);
+				.cancel-btn {
+					background: rgba(255,255,255,0.06);
+					color: #94a3b8;
+					border: 1px solid rgba(255,255,255,0.08);
+				}
+				.cancel-btn:hover {
+					background: rgba(255,255,255,0.1);
+				}
+
+				.error-btn {
+					background: rgba(239,68,68,0.15);
+					color: #f87171;
+					border: 1px solid rgba(239,68,68,0.2);
+				}
+				.error-btn:hover {
+					background: rgba(239,68,68,0.25);
+				}
+
+				.alarm-btn {
+					background: rgba(251,191,36,0.15);
+					color: #fbbf24;
+					border: 1px solid rgba(251,191,36,0.2);
+				}
+				.alarm-btn:hover {
+					background: rgba(251,191,36,0.25);
+				}
+
+				/* ─── Progress Bar ─── */
+				.progress-track {
+					width: 100%;
+					height: 6px;
+					background: rgba(255,255,255,0.06);
+					border-radius: 3px;
+					overflow: hidden;
+					margin-bottom: 8px;
+				}
+
+				.progress-fill {
+					height: 100%;
+					background: linear-gradient(90deg, #38bdf8, #22d3ee);
+					border-radius: 3px;
+					transition: width 0.4s ease;
+				}
+
+				.progress-success {
+					background: linear-gradient(90deg, #22c55e, #4ade80);
+				}
+
+				.progress-waiting {
+					background: linear-gradient(90deg, #fbbf24, #f59e0b);
+				}
+
+				.modal-status-text {
+					font-size: 15px;
+					font-weight: 600;
+					margin-bottom: 20px;
+					letter-spacing: 0.02em;
+				}
+
+				.status-warning { color: #fbbf24; }
+				.status-active { color: #38bdf8; }
+				.status-success { color: #22c55e; }
+				.status-error { color: #ef4444; }
+
+				.icon-warning { background: rgba(251,191,36,0.12); }
+				.icon-success { background: rgba(34,197,94,0.12); }
+
+				.progress-text {
+					font-size: 28px;
+					font-weight: 800;
+					color: #38bdf8;
+					font-variant-numeric: tabular-nums;
+					margin-bottom: 20px;
+					display: block;
+				}
+
+				/* ─── Animations ─── */
+				@keyframes pulse-expand {
+					0% {
+						transform: scale(0.8);
+						opacity: 0.6;
+					}
+					100% {
+						transform: scale(1.6);
+						opacity: 0;
+					}
+				}
+
+				@keyframes blink {
+					0%, 100% { opacity: 1; }
+					50% { opacity: 0.3; }
 				}
 			`}</style>
-			<style jsx>
-				{`
-					.page1-container {
-						width: 100%;
-						height: 100vh;
-						max-width: 600px;
-						margin: 0 auto;
-						display: flex;
-						align-items: center;
-						flex-direction: column;
-						position: relative;
-						padding: 20px;
-					}
-					.page1-vital-sign-home {
-						gap: 20px;
-						width: 100%;
-						height: auto;
-						display: flex;
-						padding: 0 20px;
-						overflow: hidden;
-						align-items: center;
-						flex-shrink: 0;
-						flex-direction: column;
-						background-color: rgba(250, 252, 254, 1);
-					}
-					.page1-basic-header {
-						gap: 20px;
-						display: flex;
-						padding: 20px 0;
-						align-self: stretch;
-						align-items: center;
-						flex-shrink: 0;
-						flex-direction: column;
-						justify-content: center;
-						background-color: rgba(250, 252, 254, 1);
-					}
-					.page1-hipertech-logo {
-						width: 280px;
-						height: auto;
-						max-width: 100%;
-					}
-					.page1-logo {
-						gap: 4px;
-						width: 280px;
-						height: auto;
-						display: flex;
-						align-items: center;
-						flex-shrink: 0;
-						justify-content: center;
-					}
-					.page1-logomark {
-						width: 50px;
-						height: 50px;
-					}
-					.page1-text10 {
-						color: rgb(33, 116, 212);
-						width: auto;
-						font-size: 28px;
-						align-self: center;
-						font-style: Bold;
-						text-align: center;
-						font-family: 'Poppins';
-						font-weight: 700;
-						line-height: 100%;
-						font-stretch: normal;
-						text-decoration: none;
-					}
-					.page1-card-container1 {
-						gap: 20px;
-						width: 100%;
-						display: flex;
-						z-index: 1;
-						align-items: center;
-						flex-shrink: 0;
-						flex-direction: column;
-						justify-content: center;
-					}
-					.page1-number-card1 {
-						gap: 20px;
-						width: 100%;
-						height: 200px;
-						max-width: 500px;
-						display: flex;
-						padding: 20px;
-						overflow: hidden;
-						flex-wrap: wrap;
-						align-items: flex-start;
-						flex-shrink: 0;
-						border-color: rgba(0, 0, 0, 0);
-						border-style: solid;
-						border-width: 1.5px;
-						border-radius: 16px;
-						justify-content: flex-end;
-						background-color: rgba(36, 78, 126, 0.09000000357627869);
-					}
-					.page1-frame1 {
-						gap: 20px;
-						width: 100%;
-						height: auto;
-						display: flex;
-						align-items: center;
-						flex-shrink: 0;
-						justify-content: flex-start;
-					}
-					.page1-text11 {
-						color: rgb(26, 32, 39);
-						width: 100%;
-						height: auto;
-						font-size: 24px;
-						font-style: Bold;
-						text-align: left;
-						font-family: 'Poppins';
-						font-weight: 700;
-						line-height: normal;
-						font-stretch: normal;
-						text-decoration: none;
-					}
-					.page1-frame21 {
-						gap: 20px;
-						width: 100%;
-						display: flex;
-						padding: 0;
-						align-items: center;
-						flex-shrink: 0;
-						justify-content: center;
-					}
-					.page1-numberdetail1 {
-						gap: 10px;
-						width: 100%;
-						height: auto;
-						min-height: 80px;
-						display: flex;
-						position: relative;
-						align-items: center;
-						flex-shrink: 0;
-						justify-content: center;
-					}
-					.page1-text12 {
-						color: rgb(26, 32, 39);
-						width: 100%;
-						height: auto;
-						position: relative;
-						font-size: 60px;
-						align-self: center;
-						font-style: Bold;
-						text-align: center;
-						font-family: 'Poppins';
-						font-weight: 700;
-						line-height: normal;
-						font-stretch: normal;
-						text-decoration: none;
-					}
-					.page1-text14 {
-						font-size: 24px;
-					}
-					.page1-number-card2 {
-						gap: 20px;
-						width: 100%;
-						height: 200px;
-						max-width: 500px;
-						display: flex;
-						padding: 20px;
-						overflow: hidden;
-						flex-wrap: wrap;
-						align-items: flex-start;
-						flex-shrink: 0;
-						border-color: rgba(0, 0, 0, 0);
-						border-style: solid;
-						border-width: 1.5px;
-						border-radius: 16px;
-						justify-content: flex-end;
-						background-color: rgba(36, 78, 126, 0.09000000357627869);
-					}
-					.page1-frame3 {
-						gap: 20px;
-						width: 100%;
-						height: auto;
-						display: flex;
-						align-items: center;
-						flex-shrink: 0;
-						justify-content: flex-start;
-					}
-					.page1-text15 {
-						color: rgb(26, 32, 39);
-						width: 100%;
-						height: auto;
-						font-size: 24px;
-						font-style: Bold;
-						text-align: left;
-						font-family: 'Poppins';
-						font-weight: 700;
-						line-height: normal;
-						font-stretch: normal;
-						text-decoration: none;
-					}
-					.page1-frame22 {
-						gap: 20px;
-						width: 100%;
-						display: flex;
-						padding: 0;
-						align-items: center;
-						flex-shrink: 0;
-						justify-content: center;
-					}
-					.page1-numberdetail2 {
-						gap: 10px;
-						width: 100%;
-						height: auto;
-						min-height: 80px;
-						display: flex;
-						position: relative;
-						align-items: center;
-						flex-shrink: 0;
-						justify-content: space-between;
-					}
-					.page1-text16 {
-						color: rgb(26, 32, 39);
-						width: auto;
-						height: auto;
-						position: relative;
-						font-size: 60px;
-						align-self: center;
-						font-style: Bold;
-						text-align: center;
-						font-family: 'Poppins';
-						font-weight: 700;
-						line-height: normal;
-						font-stretch: normal;
-						text-decoration: none;
-					}
-					.page1-text18 {
-						font-size: 24px;
-					}
-					.page1-card-container2 {
-						gap: 20px;
-						height: auto;
-						width: 100%;
-						display: flex;
-						z-index: 2;
-						align-items: center;
-						flex-shrink: 0;
-						justify-content: center;
-					}
-					.page1-number-card3 {
-						width: 100%;
-						height: 200px;
-						max-width: 500px;
-						display: flex;
-						padding: 20px;
-						overflow: hidden;
-						flex-wrap: wrap;
-						align-items: flex-start;
-						flex-shrink: 0;
-						border-color: rgba(0, 0, 0, 0);
-						border-style: solid;
-						border-width: 1.5px;
-						border-radius: 16px;
-						justify-content: flex-end;
-						background-color: rgba(36, 78, 126, 0.09000000357627869);
-					}
-					.page1-frame4 {
-						gap: 20px;
-						width: 100%;
-						height: auto;
-						display: flex;
-						align-items: center;
-						flex-shrink: 0;
-						justify-content: flex-start;
-					}
-					.page1-text19 {
-						color: rgb(26, 32, 39);
-						width: 100%;
-						height: auto;
-						font-size: 24px;
-						font-style: Bold;
-						text-align: left;
-						font-family: 'Poppins';
-						font-weight: 700;
-						line-height: normal;
-						font-stretch: normal;
-						text-decoration: none;
-					}
-					.page1-frame23 {
-						gap: 20px;
-						width: 100%;
-						display: flex;
-						align-items: center;
-						flex-shrink: 0;
-						justify-content: space-between;
-					}
-					.page1-numberdetail3 {
-						gap: 10px;
-						width: 472px;
-						height: 103px;
-						display: flex;
-						position: relative;
-						align-items: center;
-						flex-shrink: 0;
-						justify-content: center;
-					}
-					.page1-text20 {
-						left: 22px;
-						color: rgb(26, 32, 39);
-						width: 100%;
-						height: auto;
-						position: relative;
-						font-size: 96px;
-						align-self: flex-end;
-						font-style: Bold;
-						text-align: left;
-						font-family: 'Poppins';
-						font-weight: 700;
-						line-height: 40px;
-						font-stretch: normal;
-						text-decoration: none;
-					}
-					.page1-text21 {
-						font-size: 80px;
-					}
-					.page1-text23 {
-						font-size: 40px;
-					}
-					.page1-frame24 {
-						gap: 20px;
-						width: 100%;
-						height: auto;
-						max-width: 500px;
-						display: flex;
-						z-index: 3;
-						position: relative;
-						align-items: center;
-						flex-shrink: 0;
-						flex-direction: row;
-						justify-content: space-between;
-						padding: 20px;
-						margin-top: 20px;
-					}
-					.page1-text24 {
-						color: rgb(74, 144, 226);
-						font-size: 18px;
-						font-style: Bold;
-						text-align: center;
-						font-family: 'Poppins';
-						font-weight: 700;
-						line-height: 100%;
-						font-stretch: normal;
-						text-decoration: none;
-					}
-
-					/* Loading Animation Styles */
-					.loading-animation {
-						display: flex;
-						justify-content: center;
-						align-items: center;
-						height: 100%;
-						width: 100%;
-					}
-
-					.loading-dots {
-						display: flex;
-						gap: 8px;
-						align-items: center;
-						justify-content: center;
-					}
-
-					.loading-dots span {
-						width: 12px;
-						height: 12px;
-						background-color: rgb(33, 116, 212);
-						border-radius: 50%;
-						display: inline-block;
-						animation: bounce 1.4s infinite ease-in-out both;
-					}
-
-					.loading-dots span:nth-child(1) {
-						animation-delay: -0.32s;
-					}
-
-					.loading-dots span:nth-child(2) {
-						animation-delay: -0.16s;
-					}
-
-					@keyframes bounce {
-						0%,
-						80%,
-						100% {
-							transform: scale(0);
-							opacity: 0.3;
-						}
-						40% {
-							transform: scale(1);
-							opacity: 1;
-						}
-					}
-
-					/* Calibration button styles */
-					.calibration-button-container {
-						display: flex;
-						justify-content: center;
-						align-items: center;
-						margin-top: 0px;
-						width: 20%;
-						padding: 0 24px;
-						margin-left: -20px;
-						margin-bottom: 40px;
-					}
-
-					.calibration-button {
-						padding: 12px 24px;
-						font-size: 16px;
-						font-weight: 600;
-						background-color: rgb(33, 116, 212);
-						color: white;
-						border: none;
-						border-radius: 8px;
-						cursor: pointer;
-						font-family: 'Poppins';
-						transition: all 0.3s ease;
-						box-shadow: 0 2px 4px rgba(33, 116, 212, 0.2);
-					}
-
-					.calibration-button:hover {
-						background-color: rgb(26, 90, 165);
-						transform: translateY(-1px);
-						box-shadow: 0 4px 6px rgba(33, 116, 212, 0.3);
-					}
-
-					.calibration-button:disabled {
-						background-color: #cccccc;
-						cursor: not-allowed;
-						box-shadow: none;
-					}
-
-					/* Modal styles */
-					.modal-overlay {
-						position: fixed;
-						top: 0;
-						left: 0;
-						right: 0;
-						bottom: 0;
-						background-color: rgba(0, 0, 0, 0.6);
-						display: flex;
-						justify-content: center;
-						align-items: center;
-						z-index: 10;
-					}
-
-					.calibration-modal {
-						background-color: white;
-						border-radius: 16px;
-						padding: 40px;
-						width: 500px;
-						box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-						text-align: center;
-					}
-
-					.calibration-modal h2 {
-						font-family: 'Poppins';
-						font-weight: 700;
-						font-size: 28px;
-						color: rgb(26, 32, 39);
-						margin-bottom: 20px;
-					}
-
-					.calibration-status {
-						font-family: 'Poppins';
-						font-size: 18px;
-						color: rgb(74, 74, 74);
-						margin-bottom: 30px;
-					}
-
-					.progress-container {
-						width: 100%;
-						height: 20px;
-						background-color: rgba(36, 78, 126, 0.1);
-						border-radius: 10px;
-						margin-bottom: 10px;
-						overflow: hidden;
-					}
-
-					.progress-bar {
-						height: 100%;
-						background-color: rgb(33, 116, 212);
-						transition: width 0.3s ease;
-					}
-
-					.progress-percentage {
-						font-family: 'Poppins';
-						font-size: 18px;
-						font-weight: 600;
-						color: rgb(33, 116, 212);
-						margin-bottom: 30px;
-					}
-
-					.cancel-button {
-						padding: 12px 24px;
-						font-size: 16px;
-						font-weight: 600;
-						background-color: rgb(240, 240, 240);
-						color: rgb(74, 74, 74);
-						border: none;
-						border-radius: 8px;
-						cursor: pointer;
-						font-family: 'Poppins';
-						transition: background-color 0.3s;
-					}
-
-					.cancel-button:hover {
-						background-color: rgb(220, 220, 220);
-					}
-
-					/* Error Modal Styles */
-					.error-modal {
-						background-color: white;
-						border-radius: 16px;
-						padding: 40px;
-						width: 400px;
-						box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-						text-align: center;
-					}
-
-					.error-icon {
-						font-size: 48px;
-						margin-bottom: 20px;
-					}
-
-					.error-modal h2 {
-						font-family: 'Poppins';
-						font-weight: 700;
-						font-size: 28px;
-						color: rgb(220, 53, 69);
-						margin-bottom: 16px;
-					}
-
-					.error-modal p {
-						font-family: 'Poppins';
-						font-size: 18px;
-						color: rgb(74, 74, 74);
-						margin-bottom: 30px;
-					}
-
-					.error-button {
-						padding: 12px 32px;
-						font-size: 16px;
-						font-weight: 600;
-						background-color: rgb(220, 53, 69);
-						color: white;
-						border: none;
-						border-radius: 8px;
-						cursor: pointer;
-						font-family: 'Poppins';
-						transition: background-color 0.3s;
-					}
-
-					.error-button:hover {
-						background-color: rgb(200, 35, 51);
-					}
-
-					/* Button styles */
-					.button-container {
-						display: flex;
-						flex-direction: column;
-						gap: 12px;
-						width: 120px;
-						margin-bottom: 0px;
-					}
-
-					.reset-button {
-						width: 100%;
-						padding: 8px 16px;
-						font-size: 14px;
-						font-weight: 600;
-						background-color: rgb(220, 53, 69);
-						color: white;
-						border: none;
-						border-radius: 8px;
-						cursor: pointer;
-						font-family: 'Poppins';
-						transition: all 0.3s ease;
-						box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
-					}
-
-					.reset-button:hover {
-						background-color: rgb(200, 35, 51);
-						transform: translateY(-1px);
-						box-shadow: 0 4px 6px rgba(220, 53, 69, 0.3);
-					}
-				`}
-			</style>
 		</>
 	);
 }
