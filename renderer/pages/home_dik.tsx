@@ -2,69 +2,93 @@ import React, { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
 import io from 'socket.io-client';
 
-export default function HomePage() {
-	const [vitalSigns, setVitalSigns] = useState({
-		heartRate: '',
-		oxygenSaturation: '',
-		bloodPressure: '',
-	});
+const EMPTY_VITALS = { heartRate: '', oxygenSaturation: '', bloodPressure: '' };
+const NO_FINGER_TIMEOUT = 60000;
 
+const CALIBRATION_MESSAGES: Record<string, string> = {
+	waiting: 'Preparing sensor...',
+	no_finger: 'Place your finger on the sensor',
+	measuring: 'Keep your finger steady',
+	success: 'Calibration complete!',
+	error: 'Calibration error',
+};
+
+export default function HomePage() {
+	const [vitalSigns, setVitalSigns] = useState(EMPTY_VITALS);
 	const [connected, setConnected] = useState(false);
-	const [currentTime, setCurrentTime] = useState('');
-	const [currentTime2, setCurrentTime2] = useState('');
+	const [date, setDate] = useState('');
+	const [time, setTime] = useState('');
 	const [showCalibrationModal, setShowCalibrationModal] = useState(false);
 	const [calibrationProgress, setCalibrationProgress] = useState(0);
-	const [calibrationStatus, setCalibrationStatus] = useState('waiting'); // 'waiting' | 'no_finger' | 'measuring' | 'success' | 'error'
+	const [calibrationStatus, setCalibrationStatus] = useState('waiting');
 	const [showErrorModal, setShowErrorModal] = useState(false);
 	const [errorMessage, setErrorMessage] = useState('');
 	const [showSeatAlarm, setShowSeatAlarm] = useState(false);
 	const [seatNumber, setSeatNumber] = useState('');
-	const [socketRef, setSocketRef] = useState(null);
+
+	const [darkMode, setDarkMode] = useState(true);
+
+	const socketRef = useRef(null);
 	const timeInterval = useRef(null);
 	const noFingerTimer = useRef(null);
+
+	const clearNoFingerTimer = () => {
+		if (noFingerTimer.current) {
+			clearTimeout(noFingerTimer.current);
+			noFingerTimer.current = null;
+		}
+	};
+
+	const startNoFingerTimer = () => {
+		if (!noFingerTimer.current) {
+			noFingerTimer.current = setTimeout(() => {
+				setVitalSigns(EMPTY_VITALS);
+				noFingerTimer.current = null;
+			}, NO_FINGER_TIMEOUT);
+		}
+	};
+
+	const handleVitalStatus = (st: number, hr: string, spo2: string, sys: string, dia: string) => {
+		if (st >= 1 && st <= 6) {
+			clearNoFingerTimer();
+			setVitalSigns({ heartRate: hr, oxygenSaturation: spo2, bloodPressure: `${sys}/${dia}` });
+		} else if (st === 0) {
+			startNoFingerTimer();
+		}
+	};
+
+	const handleCalibrationProgress = (status: number, progress: number) => {
+		setShowCalibrationModal(true);
+		setCalibrationProgress(progress);
+		if (status === 0) setCalibrationStatus('no_finger');
+		else if (status === 2) setCalibrationStatus('success');
+		else if (status === 5) setCalibrationStatus('error');
+		else setCalibrationStatus('measuring');
+	};
 
 	useEffect(() => {
 		const socket = io('http://localhost:4000', {
 			transports: ['websocket', 'polling'],
-			extraHeaders: {
-				'Access-Control-Allow-Origin': 'http://localhost:8888',
-			},
+			extraHeaders: { 'Access-Control-Allow-Origin': 'http://localhost:8888' },
 		});
+		socketRef.current = socket;
 
-		setSocketRef(socket);
-
-		socket.on('connect', () => {
-			setConnected(true);
-			updateCurrentTime();
-		});
-
-		let lastStatus;
-		socket.on('data', (data) => {
-			console.log('Received data:', data);
-		});
+		socket.on('connect', () => setConnected(true));
+		socket.on('disconnect', () => setConnected(false));
 
 		socket.on('serialData', (data) => {
 			const msg = data.data;
 
-			// --- Calibration progress ---
-			// New format: PRO:status,progress (e.g. PRO:1,45)
+			// Calibration progress - new format: PRO:status,progress
 			if (msg.includes('PRO:')) {
-				setShowCalibrationModal(true);
 				const parts = msg.split(':')[1].split(',');
-				const bpStatus = parseInt(parts[0]);
-				const progress = parseInt(parts.length > 1 ? parts[1] : parts[0]);
-				setCalibrationProgress(progress);
-				if (bpStatus === 0) setCalibrationStatus('no_finger');
-				else if (bpStatus === 1) setCalibrationStatus('measuring');
-				else if (bpStatus === 2) setCalibrationStatus('success');
-				else if (bpStatus === 5) setCalibrationStatus('error');
-				else setCalibrationStatus('measuring');
+				handleCalibrationProgress(parseInt(parts[0]), parseInt(parts.length > 1 ? parts[1] : parts[0]));
 			}
-			// Old format: [PARMAK YOK] progress = %0
+			// Calibration progress - old format: [PARMAK YOK] progress = %0
 			else if (msg.includes('progress = %')) {
-				setShowCalibrationModal(true);
 				const progMatch = msg.match(/progress\s*=\s*%(\d+)/);
 				const progress = progMatch ? parseInt(progMatch[1]) : 0;
+				setShowCalibrationModal(true);
 				setCalibrationProgress(progress);
 				if (msg.includes('PARMAK YOK')) setCalibrationStatus('no_finger');
 				else if (msg.includes('OLCULUYOR')) setCalibrationStatus('measuring');
@@ -72,125 +96,62 @@ export default function HomePage() {
 				else if (msg.includes('HATA')) setCalibrationStatus('error');
 				else setCalibrationStatus('measuring');
 			}
-			// --- Calibration result ---
+			// Calibration result
 			else if (msg.includes('OK:CAL') || msg.includes('Calibration success')) {
 				setCalibrationStatus('success');
 				setCalibrationProgress(100);
-				setTimeout(() => {
-					setShowCalibrationModal(false);
-				}, 1500);
+				setTimeout(() => setShowCalibrationModal(false), 1500);
 			}
 			else if (msg.includes('ERR:CAL') || msg.includes('Calibration failed')) {
 				setShowCalibrationModal(false);
 				setErrorMessage('Calibration failed. Please try again.');
 				setShowErrorModal(true);
-				setTimeout(() => {
-					setShowErrorModal(false);
-				}, 3000);
+				setTimeout(() => setShowErrorModal(false), 3000);
 			}
-			// --- Seat alarm ---
+			// Seat alarm
 			else if (msg.includes('SEAT_ALARM')) {
 				setShowSeatAlarm(true);
-				const seatNum = msg.split(':')[1];
-				setSeatNumber(seatNum);
+				setSeatNumber(msg.split(':')[1]);
 			}
-			// --- Vital signs data ---
-			// New format: DATA:status,sys,dia,hr,spo2
+			// Vital signs - new format: DATA:status,sys,dia,hr,spo2
 			else if (msg.includes('DATA:')) {
-				const dataArray = msg.split(':')[1].split(',');
-				const st = parseInt(dataArray[0]);
-				if (st >= 1 && st <= 6) {
-					// Valid data - clear no-finger timer
-					if (noFingerTimer.current) {
-						clearTimeout(noFingerTimer.current);
-						noFingerTimer.current = null;
-					}
-					setVitalSigns({
-						heartRate: dataArray[3],
-						oxygenSaturation: dataArray[4],
-						bloodPressure: dataArray[1] + '/' + dataArray[2],
-					});
-				} else if (st === 0) {
-					// No finger - start 60s timer to clear display
-					if (!noFingerTimer.current) {
-						noFingerTimer.current = setTimeout(() => {
-							setVitalSigns({ heartRate: '', oxygenSaturation: '', bloodPressure: '' });
-							noFingerTimer.current = null;
-						}, 60000);
-					}
-				}
-				lastStatus = dataArray[0];
+				const d = msg.split(':')[1].split(',');
+				handleVitalStatus(parseInt(d[0]), d[3], d[4], d[1], d[2]);
 			}
-			// Old format: st = 2, sys = 115, dia = 73, hr = 66 spo2 = 99.10
+			// Vital signs - old format: st = 2, sys = 115, dia = 73, hr = 66 spo2 = 99.10
 			else if (msg.includes('st = ')) {
-				const match = msg.match(/st\s*=\s*(\d+).*sys\s*=\s*(\d+).*dia\s*=\s*(\d+).*hr\s*=\s*(\d+).*spo2\s*=\s*([\d.]+)/);
-				if (match) {
-					const st = parseInt(match[1]);
-					if (st >= 1 && st <= 6) {
-						if (noFingerTimer.current) {
-							clearTimeout(noFingerTimer.current);
-							noFingerTimer.current = null;
-						}
-						setVitalSigns({
-							heartRate: match[4],
-							oxygenSaturation: match[5],
-							bloodPressure: match[2] + '/' + match[3],
-						});
-					} else if (st === 0) {
-						if (!noFingerTimer.current) {
-							noFingerTimer.current = setTimeout(() => {
-								setVitalSigns({ heartRate: '', oxygenSaturation: '', bloodPressure: '' });
-								noFingerTimer.current = null;
-							}, 60000);
-						}
-					}
-					lastStatus = match[1];
-				}
+				const m = msg.match(/st\s*=\s*(\d+).*sys\s*=\s*(\d+).*dia\s*=\s*(\d+).*hr\s*=\s*(\d+).*spo2\s*=\s*([\d.]+)/);
+				if (m) handleVitalStatus(parseInt(m[1]), m[4], m[5], m[2], m[3]);
 			}
 		});
 
-		socket.on('disconnect', () => {
-			setConnected(false);
-		});
-
-		socket.on('vitalSigns', (data) => {
-			setVitalSigns(data);
-			updateCurrentTime();
-		});
+		socket.on('vitalSigns', (data) => setVitalSigns(data));
 
 		socket.on('calibrationProgress', (data) => {
 			setCalibrationProgress(data.progress);
 			setCalibrationStatus(data.status);
-
 			if (data.progress === 100) {
-				setTimeout(() => {
-					setShowCalibrationModal(false);
-				}, 2000);
+				setTimeout(() => setShowCalibrationModal(false), 2000);
 			}
 		});
 
-		const updateCurrentTime = () => {
+		const updateClock = () => {
 			const now = new Date();
-			const formattedDate = `${now.getDate().toString().padStart(2, '0')}.${(
-				now.getMonth() + 1
-			)
-				.toString()
-				.padStart(2, '0')}.${now.getFullYear()}`;
-			setCurrentTime(formattedDate);
-			const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now
-				.getMinutes()
-				.toString()
-				.padStart(2, '0')}`;
-			setCurrentTime2(formattedTime);
+			const dd = String(now.getDate()).padStart(2, '0');
+			const mm = String(now.getMonth() + 1).padStart(2, '0');
+			const hh = String(now.getHours()).padStart(2, '0');
+			const min = String(now.getMinutes()).padStart(2, '0');
+			setDate(`${dd}.${mm}.${now.getFullYear()}`);
+			setTime(`${hh}:${min}`);
 		};
 
-		// Update time every second
-		timeInterval.current = setInterval(updateCurrentTime, 1000);
+		updateClock();
+		timeInterval.current = setInterval(updateClock, 1000);
 
 		return () => {
 			socket.disconnect();
 			if (timeInterval.current) clearInterval(timeInterval.current);
-			if (noFingerTimer.current) clearTimeout(noFingerTimer.current);
+			clearNoFingerTimer();
 		};
 	}, []);
 
@@ -198,29 +159,7 @@ export default function HomePage() {
 		setShowCalibrationModal(true);
 		setCalibrationProgress(0);
 		setCalibrationStatus('waiting');
-
-		if (socketRef) {
-			socketRef.emit('serialSend', 'C');
-		}
-	};
-
-	const getCalibrationMessage = () => {
-		switch (calibrationStatus) {
-			case 'waiting': return 'Preparing sensor...';
-			case 'no_finger': return 'Place your finger on the sensor';
-			case 'measuring': return 'Keep your finger steady';
-			case 'success': return 'Calibration complete!';
-			case 'error': return 'Calibration error';
-			default: return 'Calibrating...';
-		}
-	};
-
-	const resetData = () => {
-		setVitalSigns({
-			heartRate: '',
-			oxygenSaturation: '',
-			bloodPressure: '',
-		});
+		socketRef.current?.emit('serialSend', 'C');
 	};
 
 	const hasHR = vitalSigns.heartRate && vitalSigns.heartRate !== '0';
@@ -238,7 +177,7 @@ export default function HomePage() {
 				/>
 			</Head>
 
-			<div className="monitor-root">
+			<div className={`monitor-root ${darkMode ? '' : 'light'}`}>
 				{/* Status Bar */}
 				<div className="status-bar">
 					<div className="status-left">
@@ -254,8 +193,29 @@ export default function HomePage() {
 						<span className="status-title">VitalMonitor</span>
 					</div>
 					<div className="status-right">
-						<span className="status-time">{currentTime2 || '--:--'}</span>
-						<span className="status-date">{currentTime || '--.--.----'}</span>
+						<button className="theme-toggle" onClick={() => setDarkMode(prev => !prev)}>
+							{darkMode ? (
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="theme-icon">
+									<circle cx="12" cy="12" r="5" />
+									<line x1="12" y1="1" x2="12" y2="3" />
+									<line x1="12" y1="21" x2="12" y2="23" />
+									<line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+									<line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+									<line x1="1" y1="12" x2="3" y2="12" />
+									<line x1="21" y1="12" x2="23" y2="12" />
+									<line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+									<line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+								</svg>
+							) : (
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="theme-icon">
+									<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+								</svg>
+							)}
+						</button>
+						<div className="status-time-info">
+							<span className="status-time">{time || '--:--'}</span>
+							<span className="status-date">{date || '--.--.----'}</span>
+						</div>
 					</div>
 				</div>
 
@@ -373,7 +333,7 @@ export default function HomePage() {
 						</svg>
 						Calibrate
 					</button>
-					<button className="action-btn reset-btn" onClick={resetData}>
+					<button className="action-btn reset-btn" onClick={() => setVitalSigns(EMPTY_VITALS)}>
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="btn-icon">
 							<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
 							<path d="M3 3v5h5" />
@@ -420,7 +380,7 @@ export default function HomePage() {
 								calibrationStatus === 'success' ? 'status-success' :
 								calibrationStatus === 'error' ? 'status-error' : ''
 							}`}>
-								{getCalibrationMessage()}
+								{CALIBRATION_MESSAGES[calibrationStatus] || 'Calibrating...'}
 							</p>
 
 							{/* Progress Bar */}
@@ -438,9 +398,7 @@ export default function HomePage() {
 							<button
 								className="modal-btn cancel-btn"
 								onClick={() => {
-									if (socketRef) {
-										socketRef.emit('cancelCalibration');
-									}
+									socketRef.current?.emit('cancelCalibration');
 									setShowCalibrationModal(false);
 								}}>
 								Cancel
@@ -505,23 +463,88 @@ export default function HomePage() {
 				}
 
 				html, body {
-					background-color: #0b1120;
 					overflow: hidden;
 				}
 			`}</style>
 			<style jsx>{`
+				/* ─── Theme Variables ─── */
+				.monitor-root {
+					--bg: #0b1120;
+					--text: #e2e8f0;
+					--text-muted: #94a3b8;
+					--text-dim: #64748b;
+					--text-heading: #cbd5e1;
+					--border: rgba(255,255,255,0.08);
+					--waiting-text: #334155;
+					--card-opacity: 0.08;
+					--card-opacity-end: 0.02;
+					--card-border-opacity: 0.15;
+					--accent-opacity: 0.5;
+					--range-opacity: 0.4;
+					--modal-bg: #1e293b;
+					--modal-border: rgba(255,255,255,0.06);
+					--modal-title: #f1f5f9;
+					--modal-shadow: rgba(0,0,0,0.4);
+					--cancel-bg: rgba(255,255,255,0.06);
+					--cancel-bg-hover: rgba(255,255,255,0.1);
+					--cancel-border: rgba(255,255,255,0.08);
+					--progress-track: rgba(255,255,255,0.06);
+					--toggle-bg: rgba(255,255,255,0.06);
+					--toggle-border: rgba(255,255,255,0.1);
+					--toggle-color: #94a3b8;
+
+					/* HR */
+					--hr-value: #4ade80;
+					/* SpO2 */
+					--spo2-value: #7dd3fc;
+					/* BP */
+					--bp-value: #fdba74;
+				}
+
+				.monitor-root.light {
+					--bg: #f1f5f9;
+					--text: #1e293b;
+					--text-muted: #64748b;
+					--text-dim: #94a3b8;
+					--text-heading: #334155;
+					--border: rgba(0,0,0,0.08);
+					--waiting-text: #cbd5e1;
+					--card-opacity: 0.06;
+					--card-opacity-end: 0.02;
+					--card-border-opacity: 0.2;
+					--accent-opacity: 0.7;
+					--range-opacity: 0.5;
+					--modal-bg: #ffffff;
+					--modal-border: rgba(0,0,0,0.08);
+					--modal-title: #0f172a;
+					--modal-shadow: rgba(0,0,0,0.15);
+					--cancel-bg: rgba(0,0,0,0.04);
+					--cancel-bg-hover: rgba(0,0,0,0.08);
+					--cancel-border: rgba(0,0,0,0.1);
+					--progress-track: rgba(0,0,0,0.06);
+					--toggle-bg: rgba(0,0,0,0.04);
+					--toggle-border: rgba(0,0,0,0.1);
+					--toggle-color: #475569;
+
+					/* HR - darker for light bg */
+					--hr-value: #16a34a;
+					/* SpO2 */
+					--spo2-value: #0284c7;
+					/* BP */
+					--bp-value: #ea580c;
+				}
+
 				.monitor-root {
 					width: 100%;
 					height: 100vh;
-					max-width: 540px;
-					margin: 0 auto;
 					display: flex;
 					flex-direction: column;
-					background-color: #0b1120;
+					background-color: var(--bg);
 					font-family: 'Inter', -apple-system, sans-serif;
-					color: #e2e8f0;
-					padding: 0 4px;
+					color: var(--text);
+					padding: 0 clamp(8px, 2vw, 16px);
 					overflow: hidden;
+					transition: background-color 0.3s ease, color 0.3s ease;
 				}
 
 				/* ─── Status Bar ─── */
@@ -529,20 +552,20 @@ export default function HomePage() {
 					display: flex;
 					align-items: center;
 					justify-content: space-between;
-					padding: 28px 12px;
-					border-bottom: 1px solid rgba(255,255,255,0.08);
+					padding: clamp(10px, 3vh, 28px) clamp(6px, 1.5vw, 12px);
+					border-bottom: 1px solid var(--border);
 					flex-shrink: 0;
 				}
 
 				.status-left {
 					display: flex;
 					align-items: center;
-					gap: 12px;
+					gap: clamp(6px, 1.5vw, 12px);
 				}
 
 				.conn-indicator {
-					width: 14px;
-					height: 14px;
+					width: clamp(8px, 1.8vh, 14px);
+					height: clamp(8px, 1.8vh, 14px);
 					border-radius: 50%;
 				}
 
@@ -558,48 +581,82 @@ export default function HomePage() {
 				}
 
 				.conn-text {
-					font-size: 16px;
+					font-size: clamp(11px, 2vh, 16px);
 					font-weight: 500;
-					color: #94a3b8;
+					color: var(--text-muted);
 					letter-spacing: 0.02em;
 				}
 
 				.status-center {
 					display: flex;
 					align-items: center;
-					gap: 10px;
+					gap: clamp(6px, 1.2vw, 10px);
+				}
+
+				.theme-toggle {
+					width: clamp(36px, 5.5vh, 48px);
+					height: clamp(36px, 5.5vh, 48px);
+					border-radius: 12px;
+					border: 1px solid var(--toggle-border);
+					background: var(--toggle-bg);
+					color: var(--toggle-color);
+					cursor: pointer;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					padding: 0;
+					transition: all 0.2s ease;
+				}
+
+				.theme-toggle:hover {
+					background: var(--cancel-bg-hover);
+				}
+
+				.theme-toggle:active {
+					transform: scale(0.95);
+				}
+
+				.theme-icon {
+					width: clamp(18px, 3vh, 26px);
+					height: clamp(18px, 3vh, 26px);
 				}
 
 				.status-logo {
-					width: 44px;
-					height: 44px;
+					width: clamp(28px, 5.5vh, 44px);
+					height: clamp(28px, 5.5vh, 44px);
 					opacity: 0.9;
 				}
 
 				.status-title {
-					font-size: 24px;
+					font-size: clamp(15px, 3vh, 24px);
 					font-weight: 700;
-					color: #cbd5e1;
+					color: var(--text-heading);
 					letter-spacing: 0.02em;
 				}
 
 				.status-right {
+					display: flex;
+					align-items: center;
+					gap: clamp(8px, 1.5vw, 14px);
+				}
+
+				.status-time-info {
 					display: flex;
 					flex-direction: column;
 					align-items: flex-end;
 				}
 
 				.status-time {
-					font-size: 28px;
+					font-size: clamp(18px, 3.5vh, 28px);
 					font-weight: 700;
-					color: #e2e8f0;
+					color: var(--text);
 					font-variant-numeric: tabular-nums;
 				}
 
 				.status-date {
-					font-size: 16px;
+					font-size: clamp(11px, 2vh, 16px);
 					font-weight: 400;
-					color: #64748b;
+					color: var(--text-dim);
 					font-variant-numeric: tabular-nums;
 				}
 
@@ -608,8 +665,8 @@ export default function HomePage() {
 					flex: 1;
 					display: flex;
 					flex-direction: column;
-					gap: 12px;
-					padding: 16px 0;
+					gap: clamp(28px, 6vh, 56px);
+					padding: clamp(8px, 1.5vh, 16px) 0;
 					overflow: hidden;
 				}
 
@@ -618,11 +675,12 @@ export default function HomePage() {
 					flex: 1;
 					display: flex;
 					flex-direction: column;
-					border-radius: 12px;
-					padding: 14px 20px;
+					border-radius: clamp(8px, 1.5vh, 12px);
+					padding: clamp(8px, 1.5vh, 14px) clamp(12px, 2.5vw, 20px);
 					position: relative;
 					overflow: hidden;
 					min-height: 0;
+					transition: background 0.3s ease, border-color 0.3s ease;
 				}
 
 				.vital-card::before {
@@ -637,39 +695,39 @@ export default function HomePage() {
 
 				/* HR Card */
 				.hr-card {
-					background: linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(34,197,94,0.02) 100%);
-					border: 1px solid rgba(34,197,94,0.15);
+					background: linear-gradient(135deg, rgba(34,197,94,var(--card-opacity)) 0%, rgba(34,197,94,var(--card-opacity-end)) 100%);
+					border: 1px solid rgba(34,197,94,var(--card-border-opacity));
 				}
 				.hr-card::before { background: #22c55e; }
 				.hr-card .vital-label,
 				.hr-card .vital-icon { color: #22c55e; }
-				.hr-card .vital-unit { color: rgba(34,197,94,0.5); }
-				.hr-value { color: #4ade80; }
-				.hr-card .vital-range { color: rgba(34,197,94,0.4); }
+				.hr-card .vital-unit { color: rgba(34,197,94,var(--accent-opacity)); }
+				.hr-value { color: var(--hr-value); }
+				.hr-card .vital-range { color: rgba(34,197,94,var(--range-opacity)); }
 
 				/* SpO2 Card */
 				.spo2-card {
-					background: linear-gradient(135deg, rgba(56,189,248,0.08) 0%, rgba(56,189,248,0.02) 100%);
-					border: 1px solid rgba(56,189,248,0.15);
+					background: linear-gradient(135deg, rgba(56,189,248,var(--card-opacity)) 0%, rgba(56,189,248,var(--card-opacity-end)) 100%);
+					border: 1px solid rgba(56,189,248,var(--card-border-opacity));
 				}
 				.spo2-card::before { background: #38bdf8; }
 				.spo2-card .vital-label,
 				.spo2-card .vital-icon { color: #38bdf8; }
-				.spo2-card .vital-unit { color: rgba(56,189,248,0.5); }
-				.spo2-value { color: #7dd3fc; }
-				.spo2-card .vital-range { color: rgba(56,189,248,0.4); }
+				.spo2-card .vital-unit { color: rgba(56,189,248,var(--accent-opacity)); }
+				.spo2-value { color: var(--spo2-value); }
+				.spo2-card .vital-range { color: rgba(56,189,248,var(--range-opacity)); }
 
 				/* BP Card */
 				.bp-card {
-					background: linear-gradient(135deg, rgba(251,146,60,0.08) 0%, rgba(251,146,60,0.02) 100%);
-					border: 1px solid rgba(251,146,60,0.15);
+					background: linear-gradient(135deg, rgba(251,146,60,var(--card-opacity)) 0%, rgba(251,146,60,var(--card-opacity-end)) 100%);
+					border: 1px solid rgba(251,146,60,var(--card-border-opacity));
 				}
 				.bp-card::before { background: #fb923c; }
 				.bp-card .vital-label,
 				.bp-card .vital-icon { color: #fb923c; }
-				.bp-card .vital-unit { color: rgba(251,146,60,0.5); }
-				.bp-value, .bp-dia-value { color: #fdba74; }
-				.bp-card .vital-range { color: rgba(251,146,60,0.4); }
+				.bp-card .vital-unit { color: rgba(251,146,60,var(--accent-opacity)); }
+				.bp-value, .bp-dia-value { color: var(--bp-value); }
+				.bp-card .vital-range { color: rgba(251,146,60,var(--range-opacity)); }
 
 				/* ─── Vital Header ─── */
 				.vital-header {
@@ -686,19 +744,19 @@ export default function HomePage() {
 				}
 
 				.vital-icon {
-					width: 27px;
-					height: 27px;
+					width: clamp(18px, 3.3vh, 27px);
+					height: clamp(18px, 3.3vh, 27px);
 				}
 
 				.vital-label {
-					font-size: 21px;
+					font-size: clamp(14px, 2.6vh, 21px);
 					font-weight: 700;
 					letter-spacing: 0.08em;
 					text-transform: uppercase;
 				}
 
 				.vital-unit {
-					font-size: 18px;
+					font-size: clamp(12px, 2.2vh, 18px);
 					font-weight: 500;
 					letter-spacing: 0.04em;
 				}
@@ -713,7 +771,7 @@ export default function HomePage() {
 				}
 
 				.vital-value {
-					font-size: 108px;
+					font-size: clamp(48px, 14vh, 108px);
 					font-weight: 800;
 					line-height: 1;
 					font-variant-numeric: tabular-nums;
@@ -721,7 +779,7 @@ export default function HomePage() {
 				}
 
 				.vital-range {
-					font-size: 15px;
+					font-size: clamp(11px, 1.8vh, 15px);
 					font-weight: 400;
 					text-align: right;
 					flex-shrink: 0;
@@ -737,14 +795,14 @@ export default function HomePage() {
 				}
 
 				.bp-separator {
-					font-size: 72px;
+					font-size: clamp(32px, 9vh, 72px);
 					font-weight: 300;
 					color: rgba(251,146,60,0.3);
 					line-height: 1;
 				}
 
 				.bp-dia-value {
-					font-size: 78px;
+					font-size: clamp(36px, 10vh, 78px);
 					font-weight: 700;
 					line-height: 1;
 					font-variant-numeric: tabular-nums;
@@ -753,14 +811,14 @@ export default function HomePage() {
 				.bp-labels {
 					display: flex;
 					flex-direction: column;
-					margin-left: 10px;
-					gap: 8px;
+					margin-left: clamp(6px, 1vw, 10px);
+					gap: clamp(4px, 1vh, 8px);
 				}
 
 				.bp-sys-label, .bp-dia-label {
-					font-size: 14px;
+					font-size: clamp(10px, 1.7vh, 14px);
 					font-weight: 600;
-					color: rgba(251,146,60,0.4);
+					color: rgba(251,146,60,var(--range-opacity));
 					letter-spacing: 0.1em;
 				}
 
@@ -773,16 +831,16 @@ export default function HomePage() {
 				}
 
 				.waiting-text {
-					font-size: 72px;
+					font-size: clamp(32px, 9vh, 72px);
 					font-weight: 300;
-					color: #334155;
+					color: var(--waiting-text);
 					letter-spacing: 4px;
 				}
 
 				.pulse-ring {
 					position: absolute;
-					width: 60px;
-					height: 60px;
+					width: clamp(36px, 7.5vh, 60px);
+					height: clamp(36px, 7.5vh, 60px);
 					border-radius: 50%;
 					border: 2px solid rgba(34,197,94,0.2);
 					animation: pulse-expand 2s ease-out infinite;
@@ -799,8 +857,8 @@ export default function HomePage() {
 				/* ─── Action Bar ─── */
 				.action-bar {
 					display: flex;
-					gap: 10px;
-					padding: 12px 0 20px;
+					gap: clamp(6px, 1.2vw, 10px);
+					padding: clamp(6px, 1.5vh, 12px) 0 clamp(10px, 2.5vh, 20px);
 					flex-shrink: 0;
 				}
 
@@ -809,12 +867,12 @@ export default function HomePage() {
 					display: flex;
 					align-items: center;
 					justify-content: center;
-					gap: 10px;
-					padding: 18px;
+					gap: clamp(6px, 1.2vw, 10px);
+					padding: clamp(10px, 2.2vh, 18px);
 					border: none;
 					border-radius: 10px;
 					font-family: 'Inter', sans-serif;
-					font-size: 21px;
+					font-size: clamp(14px, 2.6vh, 21px);
 					font-weight: 600;
 					cursor: pointer;
 					transition: all 0.2s ease;
@@ -822,8 +880,8 @@ export default function HomePage() {
 				}
 
 				.btn-icon {
-					width: 27px;
-					height: 27px;
+					width: clamp(18px, 3.3vh, 27px);
+					height: clamp(18px, 3.3vh, 27px);
 				}
 
 				.calibrate-btn {
@@ -854,6 +912,25 @@ export default function HomePage() {
 					transform: scale(0.98);
 				}
 
+				/* ─── Light theme button adjustments ─── */
+				.light .calibrate-btn {
+					background: rgba(56,189,248,0.08);
+					color: #0284c7;
+					border: 1px solid rgba(56,189,248,0.25);
+				}
+				.light .calibrate-btn:hover {
+					background: rgba(56,189,248,0.15);
+				}
+
+				.light .reset-btn {
+					background: rgba(239,68,68,0.06);
+					color: #dc2626;
+					border: 1px solid rgba(239,68,68,0.2);
+				}
+				.light .reset-btn:hover {
+					background: rgba(239,68,68,0.12);
+				}
+
 				/* ─── Modal Overlay ─── */
 				.modal-overlay {
 					position: fixed;
@@ -868,14 +945,14 @@ export default function HomePage() {
 				}
 
 				.modal-card {
-					background: #1e293b;
+					background: var(--modal-bg);
 					border-radius: 16px;
 					padding: 32px;
 					width: 100%;
 					max-width: 400px;
 					text-align: center;
-					border: 1px solid rgba(255,255,255,0.06);
-					box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+					border: 1px solid var(--modal-border);
+					box-shadow: 0 24px 48px var(--modal-shadow);
 				}
 
 				.modal-icon-container {
@@ -915,7 +992,7 @@ export default function HomePage() {
 				.modal-title {
 					font-size: 20px;
 					font-weight: 700;
-					color: #f1f5f9;
+					color: var(--modal-title);
 					margin-bottom: 8px;
 				}
 
@@ -924,7 +1001,7 @@ export default function HomePage() {
 
 				.modal-desc {
 					font-size: 14px;
-					color: #94a3b8;
+					color: var(--text-muted);
 					line-height: 1.5;
 					margin-bottom: 24px;
 				}
@@ -941,12 +1018,12 @@ export default function HomePage() {
 				}
 
 				.cancel-btn {
-					background: rgba(255,255,255,0.06);
-					color: #94a3b8;
-					border: 1px solid rgba(255,255,255,0.08);
+					background: var(--cancel-bg);
+					color: var(--text-muted);
+					border: 1px solid var(--cancel-border);
 				}
 				.cancel-btn:hover {
-					background: rgba(255,255,255,0.1);
+					background: var(--cancel-bg-hover);
 				}
 
 				.error-btn {
@@ -971,7 +1048,7 @@ export default function HomePage() {
 				.progress-track {
 					width: 100%;
 					height: 6px;
-					background: rgba(255,255,255,0.06);
+					background: var(--progress-track);
 					border-radius: 3px;
 					overflow: hidden;
 					margin-bottom: 8px;
@@ -1008,7 +1085,7 @@ export default function HomePage() {
 				.icon-success { background: rgba(34,197,94,0.12); }
 
 				.progress-text {
-					font-size: 28px;
+					font-size: clamp(18px, 3.5vh, 28px);
 					font-weight: 800;
 					color: #38bdf8;
 					font-variant-numeric: tabular-nums;
