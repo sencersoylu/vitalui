@@ -368,7 +368,6 @@ export default function O2AnalyzerPage() {
 				{/* Footer with Date and Time */}
 				<div className="flex justify-end items-center px-8 py-4">
 					<div className="flex items-center gap-4 text-brand-blue font-bold text-xl">
-						<span className="text-3xl">🚀</span>
 						<span>
 							{currentDate || '18.08.2025'} - {currentTime || '12:23'}
 						</span>

@@ -12,10 +12,55 @@ const isProd = process.env.NODE_ENV === 'production';
 
 if (process.platform === 'linux') {
 	app.disableHardwareAcceleration();
+	app.commandLine.appendSwitch('disable-gpu-compositing');
+	app.commandLine.appendSwitch('disable-software-rasterizer');
+	app.commandLine.appendSwitch('js-flags', '--max-old-space-size=256');
+}
+
+// --- Crash & event logger ---
+const logFile = path.join(app.getPath('userData'), 'crash-log.txt');
+
+function log(msg: string) {
+	const line = `[${new Date().toISOString()}] ${msg}`;
+	console.log(line);
+	try {
+		fs.appendFileSync(logFile, line + '\n');
+	} catch {}
+}
+
+function attachWindowLogging(win: import('electron').BrowserWindow, windowId: string) {
+	win.webContents.on('render-process-gone', (_event, details) => {
+		log(`[${windowId}] render-process-gone: reason=${details.reason} exitCode=${details.exitCode}`);
+		win.webContents.reload();
+	});
+
+	win.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+		log(`[${windowId}] did-fail-load: code=${errorCode} desc="${errorDescription}" url=${validatedURL}`);
+	});
+
+	win.webContents.on('crashed' as any, () => {
+		log(`[${windowId}] webContents crashed event`);
+	});
+
+	win.webContents.on('unresponsive' as any, () => {
+		log(`[${windowId}] webContents unresponsive`);
+	});
+
+	win.webContents.on('responsive' as any, () => {
+		log(`[${windowId}] webContents responsive again`);
+	});
+
+	win.on('unresponsive', () => {
+		log(`[${windowId}] window unresponsive`);
+	});
+
+	win.on('responsive', () => {
+		log(`[${windowId}] window responsive again`);
+	});
 }
 
 process.on('uncaughtException', function (err) {
-	console.log(err);
+	log(`uncaughtException: ${err.stack || err.message}`);
 });
 
 if (isProd) {
@@ -101,11 +146,7 @@ function loadWindowsConfig(): WindowsConfig | null {
 				}
 			});
 
-			win.webContents.on('render-process-gone', (_event, detailed) => {
-				if (detailed.reason === 'crashed') {
-					win.webContents.reload();
-				}
-			});
+			attachWindowLogging(win, winConfig.id);
 
 			const pageUrl = winConfig.page.startsWith('/') ? winConfig.page.slice(1) : winConfig.page;
 
@@ -127,11 +168,7 @@ function loadWindowsConfig(): WindowsConfig | null {
 			},
 		});
 
-		mainWindow.webContents.on('render-process-gone', (_event, detailed) => {
-			if (detailed.reason === 'crashed') {
-				mainWindow.webContents.reload();
-			}
-		});
+		attachWindowLogging(mainWindow, 'main');
 
 		if (isProd) {
 			await mainWindow.loadURL('app://./dashboard');
