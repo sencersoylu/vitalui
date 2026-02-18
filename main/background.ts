@@ -28,12 +28,25 @@ function log(msg: string) {
 	} catch {}
 }
 
+function logMemory() {
+	try {
+		const memRaw = fs.readFileSync('/proc/meminfo', 'utf-8');
+		const total = memRaw.match(/MemTotal:\s+(\d+)/)?.[1];
+		const free = memRaw.match(/MemFree:\s+(\d+)/)?.[1];
+		const available = memRaw.match(/MemAvailable:\s+(\d+)/)?.[1];
+		const swapTotal = memRaw.match(/SwapTotal:\s+(\d+)/)?.[1];
+		const swapFree = memRaw.match(/SwapFree:\s+(\d+)/)?.[1];
+		log(`memory: total=${total}kB free=${free}kB available=${available}kB swap=${swapFree}/${swapTotal}kB`);
+	} catch {}
+}
+
 function attachWindowLogging(win: import('electron').BrowserWindow, windowId: string) {
 	let crashCount = 0;
 	let lastCrashTime = 0;
 
 	win.webContents.on('render-process-gone', (_event, details) => {
 		log(`[${windowId}] render-process-gone: reason=${details.reason} exitCode=${details.exitCode}`);
+		logMemory();
 
 		const now = Date.now();
 		// Reset crash counter if last crash was more than 60s ago
@@ -116,6 +129,14 @@ function loadWindowsConfig(): WindowsConfig | null {
 
 (async () => {
 	await app.whenReady();
+
+	log('App started');
+	logMemory();
+
+	// Log memory every 5 minutes to track gradual leaks
+	setInterval(() => {
+		logMemory();
+	}, 5 * 60 * 1000);
 
 	const config = loadWindowsConfig();
 
