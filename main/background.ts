@@ -29,17 +29,35 @@ function log(msg: string) {
 }
 
 function attachWindowLogging(win: import('electron').BrowserWindow, windowId: string) {
+	let crashCount = 0;
+	let lastCrashTime = 0;
+
 	win.webContents.on('render-process-gone', (_event, details) => {
 		log(`[${windowId}] render-process-gone: reason=${details.reason} exitCode=${details.exitCode}`);
-		win.webContents.reload();
+
+		const now = Date.now();
+		// Reset crash counter if last crash was more than 60s ago
+		if (now - lastCrashTime > 60000) {
+			crashCount = 0;
+		}
+		crashCount++;
+		lastCrashTime = now;
+
+		if (crashCount > 5) {
+			log(`[${windowId}] Too many crashes (${crashCount}), waiting 10s before reload`);
+			setTimeout(() => win.webContents.reload(), 10000);
+		} else {
+			log(`[${windowId}] Reloading (crash #${crashCount})`);
+			setTimeout(() => win.webContents.reload(), 1000);
+		}
 	});
 
 	win.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
 		log(`[${windowId}] did-fail-load: code=${errorCode} desc="${errorDescription}" url=${validatedURL}`);
-	});
-
-	win.webContents.on('crashed' as any, () => {
-		log(`[${windowId}] webContents crashed event`);
+		// Retry load after 3s
+		if (errorCode !== -3) { // -3 = aborted (intentional navigation)
+			setTimeout(() => win.webContents.reload(), 3000);
+		}
 	});
 
 	win.webContents.on('unresponsive' as any, () => {
