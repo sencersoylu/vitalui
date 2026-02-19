@@ -11,11 +11,10 @@ import { createWindow } from './helpers';
 const isProd = process.env.NODE_ENV === 'production';
 
 if (process.platform === 'linux') {
-	app.disableHardwareAcceleration();
-	app.commandLine.appendSwitch('disable-gpu');
-	app.commandLine.appendSwitch('disable-software-rasterizer');
-	app.commandLine.appendSwitch('no-sandbox');
-	app.commandLine.appendSwitch('disable-dev-shm-usage');
+	// Force X11/XWayland to avoid GBM/DMA-BUF errors on labwc Wayland compositor
+	app.commandLine.appendSwitch('ozone-platform', 'x11');
+	app.commandLine.appendSwitch('disable-gpu-compositing');
+	app.commandLine.appendSwitch('in-process-gpu');
 	app.commandLine.appendSwitch('js-flags', '--max-old-space-size=384');
 }
 
