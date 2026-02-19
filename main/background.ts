@@ -11,7 +11,11 @@ import { createWindow } from './helpers';
 const isProd = process.env.NODE_ENV === 'production';
 
 if (process.platform === 'linux') {
-	// Force X11/XWayland to avoid GBM/DMA-BUF errors on labwc Wayland compositor
+	// exitCode=5 = RESULT_CODE_INVALID_SANDBOX_STATE
+	// Raspberry Pi ARM64 kernel may not support Chromium sandbox (seccomp-bpf)
+	app.commandLine.appendSwitch('no-sandbox');
+	app.commandLine.appendSwitch('disable-gpu-sandbox');
+	// Force X11/XWayland to avoid GBM/DMA-BUF errors on labwc
 	app.commandLine.appendSwitch('ozone-platform', 'x11');
 	app.commandLine.appendSwitch('disable-gpu-compositing');
 	app.commandLine.appendSwitch('in-process-gpu');
@@ -165,6 +169,7 @@ function loadWindowsConfig(): WindowsConfig | null {
 				fullscreen: false,
 				webPreferences: {
 					preload: path.join(__dirname, 'preload.js'),
+					sandbox: false,
 				},
 			});
 
@@ -205,6 +210,7 @@ function loadWindowsConfig(): WindowsConfig | null {
 			fullscreen: true,
 			webPreferences: {
 				preload: path.join(__dirname, 'preload.js'),
+				sandbox: false,
 			},
 		});
 
