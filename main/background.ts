@@ -11,15 +11,14 @@ import { createWindow } from './helpers';
 const isProd = process.env.NODE_ENV === 'production';
 
 if (process.platform === 'linux') {
-	// exitCode=5 = RESULT_CODE_INVALID_SANDBOX_STATE
-	// Raspberry Pi ARM64 kernel may not support Chromium sandbox (seccomp-bpf)
 	app.commandLine.appendSwitch('no-sandbox');
-	app.commandLine.appendSwitch('disable-gpu-sandbox');
-	// Force X11/XWayland to avoid GBM/DMA-BUF errors on labwc
-	app.commandLine.appendSwitch('ozone-platform', 'x11');
 	app.commandLine.appendSwitch('disable-gpu-compositing');
 	app.commandLine.appendSwitch('in-process-gpu');
 	app.commandLine.appendSwitch('js-flags', '--max-old-space-size=384');
+	// Verbose Chromium logging to diagnose exitCode=5
+	app.commandLine.appendSwitch('enable-logging');
+	app.commandLine.appendSwitch('log-level', '0');
+	app.commandLine.appendSwitch('v', '1');
 }
 
 // --- Crash & event logger ---
@@ -217,7 +216,15 @@ function loadWindowsConfig(): WindowsConfig | null {
 		attachWindowLogging(mainWindow, 'main');
 
 		if (isProd) {
-			await mainWindow.loadURL('app://./dashboard');
+			// DIAGNOSTIC: Load blank page first to test if renderer works at all
+			log('Loading about:blank test...');
+			try {
+				await mainWindow.loadURL('about:blank');
+				log('about:blank loaded OK - renderer works. Loading app...');
+				await mainWindow.loadURL('app://./dashboard');
+			} catch (e) {
+				log(`Load failed: ${e.message}`);
+			}
 		} else {
 			const port = process.argv[2];
 			await mainWindow.loadURL(`http://localhost:${port}/dashboard`);
