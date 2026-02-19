@@ -11,14 +11,9 @@ import { createWindow } from './helpers';
 const isProd = process.env.NODE_ENV === 'production';
 
 if (process.platform === 'linux') {
-	app.commandLine.appendSwitch('no-sandbox');
 	app.commandLine.appendSwitch('disable-gpu-compositing');
 	app.commandLine.appendSwitch('in-process-gpu');
 	app.commandLine.appendSwitch('js-flags', '--max-old-space-size=384');
-	// Verbose Chromium logging to diagnose exitCode=5
-	app.commandLine.appendSwitch('enable-logging');
-	app.commandLine.appendSwitch('log-level', '0');
-	app.commandLine.appendSwitch('v', '1');
 }
 
 // --- Crash & event logger ---
@@ -168,7 +163,6 @@ function loadWindowsConfig(): WindowsConfig | null {
 				fullscreen: false,
 				webPreferences: {
 					preload: path.join(__dirname, 'preload.js'),
-					sandbox: false,
 				},
 			});
 
@@ -209,22 +203,13 @@ function loadWindowsConfig(): WindowsConfig | null {
 			fullscreen: true,
 			webPreferences: {
 				preload: path.join(__dirname, 'preload.js'),
-				sandbox: false,
 			},
 		});
 
 		attachWindowLogging(mainWindow, 'main');
 
 		if (isProd) {
-			// DIAGNOSTIC: Load blank page first to test if renderer works at all
-			log('Loading about:blank test...');
-			try {
-				await mainWindow.loadURL('about:blank');
-				log('about:blank loaded OK - renderer works. Loading app...');
-				await mainWindow.loadURL('app://./dashboard');
-			} catch (e) {
-				log(`Load failed: ${e.message}`);
-			}
+			await mainWindow.loadURL('app://./dashboard');
 		} else {
 			const port = process.argv[2];
 			await mainWindow.loadURL(`http://localhost:${port}/dashboard`);
