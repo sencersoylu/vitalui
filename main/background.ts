@@ -11,11 +11,9 @@ import { createWindow } from './helpers';
 const isProd = process.env.NODE_ENV === 'production';
 
 if (process.platform === 'linux') {
-	app.commandLine.appendSwitch('enable-features', 'UseOzonePlatform');
-	app.commandLine.appendSwitch('ozone-platform', 'wayland');
 	app.commandLine.appendSwitch('ignore-gpu-blocklist');
-	app.commandLine.appendSwitch('enable-gpu-rasterization');
-	app.commandLine.appendSwitch('disable-features', 'VizDisplayCompositor');
+	app.commandLine.appendSwitch('disable-gpu-compositing');
+	app.commandLine.appendSwitch('in-process-gpu');
 	app.commandLine.appendSwitch('js-flags', '--max-old-space-size=384');
 }
 
