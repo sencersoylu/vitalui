@@ -11,9 +11,11 @@ import { createWindow } from './helpers';
 const isProd = process.env.NODE_ENV === 'production';
 
 if (process.platform === 'linux') {
-	app.commandLine.appendSwitch('ignore-gpu-blocklist');
-	app.commandLine.appendSwitch('disable-gpu-compositing');
-	app.commandLine.appendSwitch('in-process-gpu');
+	app.disableHardwareAcceleration();
+	app.commandLine.appendSwitch('disable-gpu');
+	app.commandLine.appendSwitch('disable-software-rasterizer');
+	app.commandLine.appendSwitch('no-sandbox');
+	app.commandLine.appendSwitch('disable-dev-shm-usage');
 	app.commandLine.appendSwitch('js-flags', '--max-old-space-size=384');
 }
 
