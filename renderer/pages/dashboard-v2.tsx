@@ -306,7 +306,7 @@ export default function HomePage() {
 					{/* Main Grid */}
 					<div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-12 gap-4 md:gap-6">
 						{/* Chamber Control - Left Column */}
-						<div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-3">
+						<div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4">
 							<ChamberControlPanel
 								isDark={darkMode}
 								onAutoToggle={handleAutoToggle}
@@ -317,7 +317,7 @@ export default function HomePage() {
 						</div>
 
 						{/* Auxiliary Output - Middle Column */}
-						<div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4">
+						<div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-3">
 							<AuxiliaryOutputPanel
 								isDark={darkMode}
 								onValve1Toggle={handleValve1Toggle}

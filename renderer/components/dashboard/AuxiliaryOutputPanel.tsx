@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDashboardStore } from '../../store';
-import { Button } from '../ui/Button';
+import { ToggleSwitch, TOGGLE_COLORS } from '../ui/ToggleSwitch';
 import { Card } from '../ui/Card';
 
 /**
@@ -31,13 +31,15 @@ export function AuxiliaryOutputPanel({
 							Main
 						</h3>
 					</div>
-					<Button
-						variant={valve1Status ? 'danger' : 'success'}
-						size="lg"
-						fullWidth
-						onClick={onValve1Toggle}>
-						{valve1Status ? 'Close Valve' : 'Open Valve'}
-					</Button>
+					<ToggleSwitch
+						value={valve1Status ? 1 : 0}
+						states={[
+							{ label: 'Closed', color: TOGGLE_COLORS.grey },
+							{ label: 'Open', color: TOGGLE_COLORS.emerald },
+						]}
+						onClick={onValve1Toggle}
+						isDark={isDark}
+					/>
 				</div>
 
 				{/* Divider */}
@@ -58,13 +60,15 @@ export function AuxiliaryOutputPanel({
 							Ante
 						</h3>
 					</div>
-					<Button
-						variant={valve2Status ? 'danger' : 'success'}
-						size="lg"
-						fullWidth
-						onClick={onValve2Toggle}>
-						{valve2Status ? 'Close Valve' : 'Open Valve'}
-					</Button>
+					<ToggleSwitch
+						value={valve2Status ? 1 : 0}
+						states={[
+							{ label: 'Closed', color: TOGGLE_COLORS.grey },
+							{ label: 'Open', color: TOGGLE_COLORS.emerald },
+						]}
+						onClick={onValve2Toggle}
+						isDark={isDark}
+					/>
 				</div>
 			</div>
 		</Card>

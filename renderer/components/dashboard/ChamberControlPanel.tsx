@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDashboardStore } from '../../store';
+import { ToggleSwitch, TOGGLE_COLORS } from '../ui/ToggleSwitch';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Monitor } from 'lucide-react';
@@ -31,35 +32,36 @@ export function ChamberControlPanel({
 	return (
 		<Card title="Chamber Control" className="h-full" isDark={isDark}>
 			<div className="flex flex-col justify-between h-full gap-4">
-				<Button
-					variant={autoMode ? 'danger' : 'success'}
-					size="lg"
-					fullWidth
-					onClick={onAutoToggle}>
-					{autoMode ? 'Manual' : 'Automatic'}
-				</Button>
+				<ToggleSwitch
+					value={autoMode ? 0 : 1}
+					states={[
+						{ label: 'Manual', color: TOGGLE_COLORS.red },
+						{ label: 'Automatic', color: TOGGLE_COLORS.emerald },
+					]}
+					onClick={onAutoToggle}
+					isDark={isDark}
+				/>
 
-				<Button
-					variant={airMode ? 'info' : 'success'}
-					size="lg"
-					fullWidth
-					onClick={onAirToggle}>
-					{airMode ? 'Oxygen' : 'Air'}
-				</Button>
+				<ToggleSwitch
+					value={airMode ? 1 : 0}
+					states={[
+						{ label: 'Air', color: TOGGLE_COLORS.emerald },
+						{ label: 'Oxygen', color: TOGGLE_COLORS.blue },
+					]}
+					onClick={onAirToggle}
+					isDark={isDark}
+				/>
 
-				<Button
-					variant={
-						ventilMode === 0
-							? 'success'
-							: ventilMode === 1
-							? 'danger'
-							: 'warning'
-					}
-					size="lg"
-					fullWidth
-					onClick={onVentilToggle}>
-					{ventilMode === 0 ? 'Ventilation' : ventilMode === 1 ? 'Low' : 'High'}
-				</Button>
+				<ToggleSwitch
+					value={ventilMode}
+					states={[
+						{ label: 'Off', color: TOGGLE_COLORS.grey },
+						{ label: 'Low', color: TOGGLE_COLORS.red },
+						{ label: 'High', color: TOGGLE_COLORS.amber },
+					]}
+					onClick={onVentilToggle}
+					isDark={isDark}
+				/>
 
 				<Button
 					variant={chillerRunning ? 'info' : 'muted'}
