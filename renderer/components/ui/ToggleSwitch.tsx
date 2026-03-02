@@ -15,7 +15,7 @@ export const TOGGLE_COLORS = {
 } as const;
 
 interface ToggleSwitchState {
-	label: string;
+	label: React.ReactNode;
 	color: string;
 }
 

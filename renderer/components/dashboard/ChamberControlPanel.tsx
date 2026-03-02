@@ -55,7 +55,7 @@ export function ChamberControlPanel({
 				<ToggleSwitch
 					value={ventilMode}
 					states={[
-						{ label: 'Off', color: TOGGLE_COLORS.grey },
+						{ label: <span className="flex flex-col items-center leading-tight"><span className="text-[10px] opacity-70">Ventil</span><span>Off</span></span>, color: TOGGLE_COLORS.grey },
 						{ label: 'Low', color: TOGGLE_COLORS.red },
 						{ label: 'High', color: TOGGLE_COLORS.amber },
 					]}
