@@ -178,68 +178,68 @@ export default function HomePage() {
 	// Control handlers
 	const handleAutoToggle = useCallback(() => {
 		setAutoMode(!autoMode);
-		if (socketRef.current) {
-			socketRef.current.emit('writeBit', { register: 'M0400', value: autoMode ? 1 : 0 });
+		if (socketRef) {
+			socketRef.emit('writeBit', { register: 'M0400', value: autoMode ? 1 : 0 });
 		}
 	}, [autoMode, socketRef]);
 
 	const handleAirToggle = useCallback(() => {
 		setAirMode(!airMode);
-		if (socketRef.current) {
-			socketRef.current.emit('writeBit', { register: 'M0401', value: airMode ? 1 : 0 });
+		if (socketRef) {
+			socketRef.emit('writeBit', { register: 'M0401', value: airMode ? 1 : 0 });
 		}
 	}, [airMode, socketRef]);
 
 	const handleVentilToggle = useCallback(() => {
 		const newMode = (ventilMode + 1) % 3;
 		setVentilMode(newMode);
-		if (socketRef.current) {
-			socketRef.current.emit('writeBit', { register: 'M0402', value: newMode });
+		if (socketRef) {
+			socketRef.emit('writeBit', { register: 'M0402', value: newMode });
 		}
 	}, [ventilMode, socketRef]);
 
 	const handleLightToggle = useCallback(() => {
 		const newStatus = (lightStatus + 1) % 4;
 		setLightStatus(newStatus);
-		if (socketRef.current) {
-			socketRef.current.emit('writeRegister', { register: 'R01702', value: newStatus });
+		if (socketRef) {
+			socketRef.emit('writeRegister', { register: 'R01702', value: newStatus });
 		}
 	}, [lightStatus, socketRef]);
 
 	const handleFanToggle = useCallback(() => {
 		const newStatus = (fan1Status + 1) % 4;
 		setFan1Status(newStatus);
-		if (socketRef.current) {
-			socketRef.current.emit('writeRegister', { register: 'R01700', value: newStatus });
+		if (socketRef) {
+			socketRef.emit('writeRegister', { register: 'R01700', value: newStatus });
 		}
 	}, [fan1Status, socketRef]);
 
 	const handleValve1Toggle = useCallback(() => {
 		setValve1Status(!valve1Status);
-		if (socketRef.current) {
-			socketRef.current.emit('writeBit', { register: 'M0500', value: valve1Status ? 1 : 0 });
+		if (socketRef) {
+			socketRef.emit('writeBit', { register: 'M0500', value: valve1Status ? 1 : 0 });
 		}
 	}, [valve1Status, socketRef]);
 
 	const handleValve2Toggle = useCallback(() => {
 		setValve2Status(!valve2Status);
-		if (socketRef.current) {
-			socketRef.current.emit('writeBit', { register: 'M0501', value: valve2Status ? 1 : 0 });
+		if (socketRef) {
+			socketRef.emit('writeBit', { register: 'M0501', value: valve2Status ? 1 : 0 });
 		}
 	}, [valve2Status, socketRef]);
 
 	const handleCloseErrorModal = useCallback(() => {
-		if (socketRef.current) {
-			socketRef.current.emit('writeBit', { register: 'M0400', value: 0 });
+		if (socketRef) {
+			socketRef.emit('writeBit', { register: 'M0400', value: 0 });
 		}
 		setShowErrorModal(false);
 		setErrorMessage('');
 	}, [socketRef]);
 
 	const handleCloseSeatAlarmModal = useCallback(() => {
-		if (socketRef.current) {
-			socketRef.current.emit('writeBit', { register: 'M0400', value: 0 });
-			socketRef.current.emit('writeRegister', { register: 'R0030', value: 0 });
+		if (socketRef) {
+			socketRef.emit('writeBit', { register: 'M0400', value: 0 });
+			socketRef.emit('writeRegister', { register: 'R0030', value: 0 });
 		}
 		setShowSeatAlarmModal(false);
 		setActiveSeatAlarm(null);
@@ -259,8 +259,8 @@ export default function HomePage() {
 	// Clean up socket on unmount
 	useEffect(() => {
 		return () => {
-			if (socketRef.current) {
-				socketRef.current.disconnect();
+			if (socketRef) {
+				socketRef.disconnect();
 			}
 		};
 	}, []);
