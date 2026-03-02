@@ -26,17 +26,15 @@ export function LightingPanel({
 
 	return (
 		<Card title="Lighting" className="flex-1" isDark={isDark}>
-			<div className="flex gap-8">
+			<div className="flex flex-col justify-center h-full gap-6">
 				{/* Main Light */}
-				<div className="flex-1 space-y-3">
-					<div className="text-center">
-						<span
-							className={`text-xl font-semibold uppercase tracking-wider transition-colors duration-500 ${
-								isDark ? 'text-white/80' : 'text-slate-600'
-							}`}>
-							Main
-						</span>
-					</div>
+				<div className="flex items-center gap-3">
+					<span
+						className={`text-base font-semibold uppercase tracking-wider w-14 shrink-0 transition-colors duration-500 ${
+							isDark ? 'text-white/60' : 'text-slate-500'
+						}`}>
+						Main
+					</span>
 					<ToggleSwitch
 						value={lightStatus}
 						states={LIGHT_STATES}
@@ -46,15 +44,13 @@ export function LightingPanel({
 				</div>
 
 				{/* Ante Light */}
-				<div className="flex-1 space-y-3">
-					<div className="text-center">
-						<span
-							className={`text-xl font-semibold uppercase tracking-wider transition-colors duration-500 ${
-								isDark ? 'text-white/80' : 'text-slate-600'
-							}`}>
-							Ante
-						</span>
-					</div>
+				<div className="flex items-center gap-3">
+					<span
+						className={`text-base font-semibold uppercase tracking-wider w-14 shrink-0 transition-colors duration-500 ${
+							isDark ? 'text-white/60' : 'text-slate-500'
+						}`}>
+						Ante
+					</span>
 					<ToggleSwitch
 						value={light2Status}
 						states={LIGHT_STATES}

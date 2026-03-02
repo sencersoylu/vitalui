@@ -18,15 +18,13 @@ export function FanPanel({ isDark, onFanToggle }: { isDark: boolean; onFanToggle
 
 	return (
 		<Card title="Fan" className="flex-1" isDark={isDark}>
-			<div className="space-y-3">
-				<div className="text-center">
-					<span
-						className={`text-xl font-semibold uppercase tracking-wider transition-colors duration-500 ${
-							isDark ? 'text-white/80' : 'text-slate-600'
-						}`}>
-						Main
-					</span>
-				</div>
+			<div className="flex items-center justify-center h-full gap-3">
+				<span
+					className={`text-base font-semibold uppercase tracking-wider w-14 shrink-0 transition-colors duration-500 ${
+						isDark ? 'text-white/60' : 'text-slate-500'
+					}`}>
+					Main
+				</span>
 				<ToggleSwitch
 					value={fan1Status}
 					states={FAN_STATES}
