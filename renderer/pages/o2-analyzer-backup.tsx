@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Head from 'next/head';
+import Image from 'next/image';
 import toast, { Toaster } from 'react-hot-toast';
 import io from 'socket.io-client';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { O2AnalyzerCard } from '../components/O2AnalyzerCard';
 import { O2AnalyzerSettings } from '../components/O2AnalyzerSettings';
 import { useChambers } from '../hooks/useChambers';
@@ -17,7 +17,6 @@ interface ChamberCardProps {
 	onMuteAlarm: () => void;
 	isMuted: boolean;
 	onAlarmStateChange: (chamberId: number, hasAlarm: boolean) => void;
-	showAlarm?: boolean;
 }
 
 const ChamberCard: React.FC<ChamberCardProps> = ({
@@ -26,7 +25,6 @@ const ChamberCard: React.FC<ChamberCardProps> = ({
 	onMuteAlarm,
 	isMuted,
 	onAlarmStateChange,
-	showAlarm = true,
 }) => {
 	const { reading, loading: readingLoading } = useLatestReading(
 		chamber.id,
@@ -49,7 +47,7 @@ const ChamberCard: React.FC<ChamberCardProps> = ({
 	const hasO2Alarm = o2Level > alarmLevel;
 
 	// Alarm is active if either backend reports alarm OR O2 level exceeds threshold
-	const hasActiveAlarms = showAlarm ? (hasBackendAlarms || hasO2Alarm) : false;
+	const hasActiveAlarms = hasBackendAlarms || hasO2Alarm;
 
 	// Report alarm state changes to parent
 	useEffect(() => {
@@ -66,22 +64,16 @@ const ChamberCard: React.FC<ChamberCardProps> = ({
 		  })
 		: 'Never';
 
-	// Format FiO names: "fio1" → "FiO₂ - 1"
-	const displayName = !showAlarm
-		? chamber.name.replace(/^fio(\d+)$/i, 'FiO₂ - $1')
-		: chamber.name;
-
 	return (
 		<O2AnalyzerCard
-			title={displayName}
+			title={chamber.name}
 			o2Level={o2Level}
 			alarmLevel={alarmLevel}
 			isAlarmActive={hasActiveAlarms}
 			lastCalibration={lastCalibration}
 			onSettingsClick={onSettingsClick}
-			onMuteAlarm={showAlarm ? onMuteAlarm : undefined}
+			onMuteAlarm={onMuteAlarm}
 			isMuted={isMuted}
-			showAlarm={showAlarm}
 		/>
 	);
 };
@@ -94,7 +86,6 @@ export default function O2AnalyzerPage() {
 	const [mutedAlarms, setMutedAlarms] = useState<{ [key: number]: boolean }>(
 		{}
 	);
-	const [currentPage, setCurrentPage] = useState(0); // 0: Main/Ante, 1: FiO
 
 	// Socket reference for PLC communication
 	const socketRef = useRef<any>(null);
@@ -109,14 +100,6 @@ export default function O2AnalyzerPage() {
 		error: chambersError,
 		refetch: refetchChambers,
 	} = useChambers();
-
-	// Filter chambers into two groups
-	const mainAnteChambers = chambers.filter(
-		(c) => !c.name.toLowerCase().startsWith('fio')
-	);
-	const fioChambers = chambers.filter(
-		(c) => c.name.toLowerCase().startsWith('fio')
-	);
 
 	// Socket connection state
 	const [socketConnected, setSocketConnected] = useState(false);
@@ -320,14 +303,6 @@ export default function O2AnalyzerPage() {
 		[chambers]
 	);
 
-	// No-op alarm handler for FiO sensors
-	const handleFioAlarmStateChange = useCallback(
-		(_chamberId: number, _hasAlarm: boolean) => {
-			// FiO sensors don't write to PLC
-		},
-		[]
-	);
-
 	// Loading state
 	if (chambersLoading) {
 		return (
@@ -352,8 +327,6 @@ export default function O2AnalyzerPage() {
 		);
 	}
 
-	const hasMultiplePages = fioChambers.length > 0;
-
 	return (
 		<>
 			<Head>
@@ -361,7 +334,7 @@ export default function O2AnalyzerPage() {
 				<meta name="description" content="O2 Analyzer Dashboard" />
 			</Head>
 
-			<div className="h-screen bg-[#f5f7fa] flex flex-col relative">
+			<div className="h-screen bg-[#f5f7fa] flex flex-col">
 				{/* Header */}
 				<div className="flex justify-between items-center py-4 px-8">
 					<img
@@ -376,87 +349,24 @@ export default function O2AnalyzerPage() {
 					/>
 				</div>
 
-				{/* Navigation Arrows */}
-				{hasMultiplePages && currentPage < 1 && (
-					<button
-						onClick={() => setCurrentPage(1)}
-						className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-32 w-16 flex items-center justify-center bg-blue-500/20 hover:bg-blue-500/40 transition-all duration-200 rounded-l-2xl"
-						aria-label="Next page">
-						<ChevronRight className="w-10 h-10 text-blue-600" />
-					</button>
-				)}
-				{hasMultiplePages && currentPage > 0 && (
-					<button
-						onClick={() => setCurrentPage(0)}
-						className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-32 w-16 flex items-center justify-center bg-blue-500/20 hover:bg-blue-500/40 transition-all duration-200 rounded-r-2xl"
-						aria-label="Previous page">
-						<ChevronLeft className="w-10 h-10 text-blue-600" />
-					</button>
-				)}
-
 				{/* Main Content */}
 				<div className="flex-1 flex items-center justify-center px-8">
-					{currentPage === 0 ? (
-						/* Page 1: Main/Ante Chambers */
-						<div className="flex gap-8 items-center w-full max-w-5xl justify-center">
-							{mainAnteChambers.map((chamber) => (
-								<ChamberCard
-									key={chamber.id}
-									chamber={chamber}
-									onSettingsClick={() => handleSettingsClick(chamber)}
-									onMuteAlarm={() => handleMuteAlarm(chamber)}
-									isMuted={mutedAlarms[chamber.id] || false}
-									onAlarmStateChange={handleAlarmStateChange}
-									showAlarm={true}
-								/>
-							))}
-						</div>
-					) : (
-						/* Page 2: FiO Sensors */
-						<div className="grid grid-cols-3 gap-3 w-full max-w-5xl justify-items-center px-4">
-							{fioChambers.map((chamber) => (
-								<ChamberCard
-									key={chamber.id}
-									chamber={chamber}
-									onSettingsClick={() => handleSettingsClick(chamber)}
-									onMuteAlarm={() => {}}
-									isMuted={false}
-									onAlarmStateChange={handleFioAlarmStateChange}
-									showAlarm={false}
-								/>
-							))}
-						</div>
-					)}
+					<div className="flex gap-8 items-center w-full max-w-5xl justify-center">
+						{chambers.map((chamber) => (
+							<ChamberCard
+								key={chamber.id}
+								chamber={chamber}
+								onSettingsClick={() => handleSettingsClick(chamber)}
+								onMuteAlarm={() => handleMuteAlarm(chamber)}
+								isMuted={mutedAlarms[chamber.id] || false}
+								onAlarmStateChange={handleAlarmStateChange}
+							/>
+						))}
+					</div>
 				</div>
 
-				{/* Footer with Date, Time, and Page Indicator */}
-				<div className="flex justify-between items-center px-8 py-4">
-					{/* Page Indicator */}
-					<div className="flex items-center gap-2">
-						{hasMultiplePages && (
-							<>
-								<button
-									onClick={() => setCurrentPage(0)}
-									className={`w-3 h-3 rounded-full transition-all duration-200 ${
-										currentPage === 0
-											? 'bg-blue-600 scale-125'
-											: 'bg-blue-300 hover:bg-blue-400'
-									}`}
-									aria-label="Page 1: Main/Ante"
-								/>
-								<button
-									onClick={() => setCurrentPage(1)}
-									className={`w-3 h-3 rounded-full transition-all duration-200 ${
-										currentPage === 1
-											? 'bg-blue-600 scale-125'
-											: 'bg-blue-300 hover:bg-blue-400'
-									}`}
-									aria-label="Page 2: FiO Sensors"
-								/>
-							</>
-						)}
-					</div>
-
+				{/* Footer with Date and Time */}
+				<div className="flex justify-end items-center px-8 py-4">
 					<div className="flex items-center gap-4 text-brand-blue font-bold text-xl">
 						<span>
 							{currentDate || '18.08.2025'} - {currentTime || '12:23'}
