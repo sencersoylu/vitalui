@@ -238,7 +238,11 @@ export default function HomePage() {
 			setCurrentTime2(formattedTime);
 		};
 
+		updateCurrentTime();
+		const timer = setInterval(updateCurrentTime, 60000);
+
 		return () => {
+			clearInterval(timer);
 			socket.disconnect();
 		};
 	}, []);

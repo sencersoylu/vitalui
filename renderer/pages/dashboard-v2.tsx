@@ -257,11 +257,12 @@ export default function HomePage() {
 		handleConnect();
 	}, []);
 
-	// Update time every minute
+	// Update time immediately and every minute
 	useEffect(() => {
+		updateCurrentTime();
 		const timer = setInterval(updateCurrentTime, 60000);
 		return () => clearInterval(timer);
-	}, []);
+	}, [updateCurrentTime]);
 
 	// Clean up socket on unmount
 	useEffect(() => {
