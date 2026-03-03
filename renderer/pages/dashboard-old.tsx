@@ -333,6 +333,22 @@ export default function HomePage() {
 		}
 	};
 
+	const setVentilDirect = (mode: number) => {
+		if (socketRef) {
+			if (mode === 0) {
+				socketRef.emit('writeBit', { register: 'M0202', value: 0 });
+				socketRef.emit('writeBit', { register: 'M0203', value: 0 });
+			} else if (mode === 1) {
+				socketRef.emit('writeBit', { register: 'M0202', value: 1 });
+				socketRef.emit('writeBit', { register: 'M0203', value: 0 });
+			} else if (mode === 2) {
+				socketRef.emit('writeBit', { register: 'M0202', value: 0 });
+				socketRef.emit('writeBit', { register: 'M0203', value: 1 });
+			}
+			setVentilMode(mode);
+		}
+	};
+
 	const setAuto = () => {
 		if (socketRef) {
 			const newValue = autoMode ? 0 : 1;
@@ -459,6 +475,7 @@ export default function HomePage() {
 								onAutoToggle={setAuto}
 								onAirToggle={setAir}
 								onVentilToggle={setVentil}
+								onVentilChange={setVentilDirect}
 								onOpenChiller={() => setShowChillerModal(true)}
 							/>
 						</div>
