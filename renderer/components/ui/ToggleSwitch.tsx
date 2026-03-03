@@ -22,7 +22,8 @@ interface ToggleSwitchState {
 interface ToggleSwitchProps {
 	value: number;
 	states: ToggleSwitchState[];
-	onClick: () => void;
+	onClick?: () => void;
+	onValueChange?: (index: number) => void;
 	isDark?: boolean;
 	className?: string;
 }
@@ -31,6 +32,7 @@ export function ToggleSwitch({
 	value,
 	states,
 	onClick,
+	onValueChange,
 	isDark = false,
 	className,
 }: ToggleSwitchProps) {
@@ -38,13 +40,13 @@ export function ToggleSwitch({
 	const count = states.length;
 
 	return (
-		<button
-			onClick={onClick}
+		<div
 			className={cn(
 				'relative w-full h-14 rounded-full cursor-pointer overflow-hidden select-none shadow-lg hover:shadow-xl active:scale-[0.98] transition-shadow duration-300',
 				isDark ? 'bg-white/10' : 'bg-slate-200/80',
 				className,
 			)}
+			onClick={!onValueChange ? onClick : undefined}
 		>
 			{/* Sliding highlight pill */}
 			<div
@@ -61,8 +63,9 @@ export function ToggleSwitch({
 				{states.map((state, i) => (
 					<div
 						key={i}
+						onClick={onValueChange ? (e) => { e.stopPropagation(); onValueChange(i); } : undefined}
 						className={cn(
-							'flex-1 flex items-center justify-center font-semibold transition-colors duration-300',
+							'flex-1 flex items-center justify-center font-semibold transition-colors duration-300 cursor-pointer',
 							count <= 2 ? 'text-base tracking-wide' : 'text-sm tracking-normal',
 							i === value
 								? 'text-white'
@@ -75,6 +78,6 @@ export function ToggleSwitch({
 					</div>
 				))}
 			</div>
-		</button>
+		</div>
 	);
 }

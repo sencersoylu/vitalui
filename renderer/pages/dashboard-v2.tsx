@@ -198,6 +198,13 @@ export default function HomePage() {
 		}
 	}, [ventilMode, socketRef]);
 
+	const handleVentilChange = useCallback((mode: number) => {
+		setVentilMode(mode);
+		if (socketRef) {
+			socketRef.emit('writeBit', { register: 'M0402', value: mode });
+		}
+	}, [socketRef]);
+
 	const handleLightToggle = useCallback(() => {
 		const newStatus = (lightStatus + 1) % 4;
 		setLightStatus(newStatus);
@@ -312,6 +319,7 @@ export default function HomePage() {
 								onAutoToggle={handleAutoToggle}
 								onAirToggle={handleAirToggle}
 								onVentilToggle={handleVentilToggle}
+								onVentilChange={handleVentilChange}
 								onOpenChiller={() => setShowChillerModal(true)}
 							/>
 						</div>

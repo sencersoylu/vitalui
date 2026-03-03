@@ -13,12 +13,14 @@ export function ChamberControlPanel({
 	onAutoToggle,
 	onAirToggle,
 	onVentilToggle,
+	onVentilChange,
 	onOpenChiller,
 }: {
 	isDark: boolean;
 	onAutoToggle: () => void;
 	onAirToggle: () => void;
 	onVentilToggle: () => void;
+	onVentilChange: (mode: number) => void;
 	onOpenChiller: () => void;
 }) {
 	const {
@@ -59,7 +61,7 @@ export function ChamberControlPanel({
 						{ label: 'Low', color: TOGGLE_COLORS.red },
 						{ label: 'High', color: TOGGLE_COLORS.amber },
 					]}
-					onClick={onVentilToggle}
+					onValueChange={onVentilChange}
 					isDark={isDark}
 				/>
 
