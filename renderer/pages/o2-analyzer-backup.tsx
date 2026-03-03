@@ -165,8 +165,8 @@ export default function O2AnalyzerPage() {
 		// Update time immediately
 		updateDateTime();
 
-		// Update time every minute
-		const interval = setInterval(updateDateTime, 60000);
+		// Update time every second
+		const interval = setInterval(updateDateTime, 1000);
 
 		return () => clearInterval(interval);
 	}, []);

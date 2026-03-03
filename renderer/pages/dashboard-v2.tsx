@@ -257,10 +257,10 @@ export default function HomePage() {
 		handleConnect();
 	}, []);
 
-	// Update time immediately and every minute
+	// Update time immediately and every second
 	useEffect(() => {
 		updateCurrentTime();
-		const timer = setInterval(updateCurrentTime, 60000);
+		const timer = setInterval(updateCurrentTime, 1000);
 		return () => clearInterval(timer);
 	}, [updateCurrentTime]);
 

@@ -239,7 +239,7 @@ export default function HomePage() {
 		};
 
 		updateCurrentTime();
-		const timer = setInterval(updateCurrentTime, 60000);
+		const timer = setInterval(updateCurrentTime, 1000);
 
 		return () => {
 			clearInterval(timer);
