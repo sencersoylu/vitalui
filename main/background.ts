@@ -209,10 +209,10 @@ function loadWindowsConfig(): WindowsConfig | null {
 		attachWindowLogging(mainWindow, 'main');
 
 		if (isProd) {
-			await mainWindow.loadURL('app://./o2-analyzer');
+			await mainWindow.loadURL('app://./home_dik');
 		} else {
 			const port = process.argv[2];
-			await mainWindow.loadURL(`http://localhost:${port}/o2-analyzer`);
+			await mainWindow.loadURL(`http://localhost:${port}/home_dik`);
 			mainWindow.webContents.openDevTools();
 		}
 	}
