@@ -79,8 +79,8 @@ export default function HomePage() {
 		socket.on('serialData', (data) => {
 			const msg = data.data;
 
-			// Calibration progress - new format: PRO:status,progress
-			if (msg.includes('PRO:')) {
+			// Calibration progress - formats: PRO:status,progress or CAL:status,progress
+			if (msg.includes('PRO:') || msg.includes('CAL:')) {
 				const parts = msg.split(':')[1].split(',');
 				handleCalibrationProgress(parseInt(parts[0]), parseInt(parts.length > 1 ? parts[1] : parts[0]));
 			}
