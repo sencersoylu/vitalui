@@ -15,12 +15,12 @@ const LIGHT_STATES = [
  */
 export function LightingPanel({
 	isDark,
-	onMainLightToggle,
-	onAnteLightToggle,
+	onMainLightChange,
+	onAnteLightChange,
 }: {
 	isDark: boolean;
-	onMainLightToggle: () => void;
-	onAnteLightToggle: () => void;
+	onMainLightChange: (index: number) => void;
+	onAnteLightChange: (index: number) => void;
 }) {
 	const { lightStatus, light2Status } = useDashboardStore();
 
@@ -38,7 +38,7 @@ export function LightingPanel({
 					<ToggleSwitch
 						value={lightStatus}
 						states={LIGHT_STATES}
-						onClick={onMainLightToggle}
+						onValueChange={onMainLightChange}
 						isDark={isDark}
 					/>
 				</div>
@@ -54,7 +54,7 @@ export function LightingPanel({
 					<ToggleSwitch
 						value={light2Status}
 						states={LIGHT_STATES}
-						onClick={onAnteLightToggle}
+						onValueChange={onAnteLightChange}
 						isDark={isDark}
 					/>
 				</div>

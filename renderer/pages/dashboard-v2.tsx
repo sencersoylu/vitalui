@@ -6,10 +6,13 @@ import { ChillerControlModal } from '../components/ChillerControlModal';
 import { Header } from '../components/dashboard/Header';
 import { ChamberControlPanel } from '../components/dashboard/ChamberControlPanel';
 import { AuxiliaryOutputPanel } from '../components/dashboard/AuxiliaryOutputPanel';
+import { DetectorPanel } from '../components/dashboard/DetectorPanel';
 import { LightingPanel } from '../components/dashboard/LightingPanel';
 import { FanPanel } from '../components/dashboard/FanPanel';
 import { ErrorModal } from '../components/dashboard/ErrorModal';
 import { SeatAlarmModal } from '../components/dashboard/SeatAlarmModal';
+import { useTechCalibration } from '../hooks/useTechCalibration';
+import { linearConversion } from '../utils/linearConversion';
 import { Loader2, Power, Zap, Thermometer, AlertTriangle, Wifi, WifiOff, Moon, Sun, Calendar, Clock } from 'lucide-react';
 
 /**
@@ -56,7 +59,18 @@ export default function HomePage() {
 		setValve1Status,
 		valve2Status,
 		setValve2Status,
+		showAuxPanel,
+		setShowAuxPanel,
+		setMainFlameDetected,
+		setMainSmokeDetected,
+		setAnteSmokeDetected,
+		setAirTankPressure,
+		setPrimaryO2Pressure,
 	} = useDashboardStore();
+
+	const techCal = useTechCalibration();
+	const techCalRef = React.useRef(techCal);
+	React.useEffect(() => { techCalRef.current = techCal; }, [techCal]);
 
 	const [socketRef, setSocketRef] = React.useState<Socket | null>(null);
 
@@ -99,6 +113,17 @@ export default function HomePage() {
 			const errorData = JSON.parse(data);
 			setChillerCurrentTemp(errorData.data[15] / 10);
 
+			// Air Pressure & O2 Pressure calculation
+			const cal = techCalRef.current;
+			if (cal.tech_pressure_analog > 0) {
+				const airPressure = linearConversion(0, cal.tech_pressure_upper, cal.tech_pressure_offset, cal.tech_pressure_analog, errorData.data[8]);
+				setAirTankPressure(airPressure);
+			}
+			if (cal.tech_o_analog > 0) {
+				const o2Pressure = linearConversion(0, cal.tech_o_upper, cal.tech_o_offset, cal.tech_o_analog, errorData.data[9], 1);
+				setPrimaryO2Pressure(o2Pressure);
+			}
+
 			let errorArray = Number(errorData.data[19])
 				.toString(2)
 				.padStart(16, '0')
@@ -136,16 +161,19 @@ export default function HomePage() {
 						setErrorMessage('Ante Chamber Fire Suppression System Activated!');
 					}
 				} else if (errorArray[4] === '1') {
+					setMainFlameDetected(true);
 					if (!showErrorModal) {
 						setShowErrorModal(true);
 						setErrorMessage('Main Chamber Flame Detected!');
 					}
 				} else if (errorArray[5] === '1') {
+					setMainSmokeDetected(true);
 					if (!showErrorModal) {
 						setShowErrorModal(true);
 						setErrorMessage('Main Chamber Smoke Detected!');
 					}
 				} else if (errorArray[6] === '1') {
+					setAnteSmokeDetected(true);
 					if (!showErrorModal) {
 						setShowErrorModal(true);
 						setErrorMessage('Ante Chamber Smoke Detected!');
@@ -166,6 +194,9 @@ export default function HomePage() {
 				setErrorMessage('');
 				setActiveSeatAlarm(null);
 				setShowSeatAlarmModal(false);
+				setMainFlameDetected(false);
+				setMainSmokeDetected(false);
+				setAnteSmokeDetected(false);
 			}
 		});
 
@@ -205,21 +236,21 @@ export default function HomePage() {
 		}
 	}, [socketRef]);
 
-	const handleLightToggle = useCallback(() => {
-		const newStatus = (lightStatus + 1) % 4;
-		setLightStatus(newStatus);
+	const handleLightChange = useCallback((index: number) => {
+		const regValues = [0, 85, 170, 255];
+		setLightStatus(index);
 		if (socketRef) {
-			socketRef.emit('writeRegister', { register: 'R01702', value: newStatus });
+			socketRef.emit('writeRegister', { register: 'R01702', value: regValues[index] });
 		}
-	}, [lightStatus, socketRef]);
+	}, [socketRef]);
 
-	const handleFanToggle = useCallback(() => {
-		const newStatus = (fan1Status + 1) % 4;
-		setFan1Status(newStatus);
+	const handleFanChange = useCallback((index: number) => {
+		const regValues = [0, 85, 170, 255];
+		setFan1Status(index);
 		if (socketRef) {
-			socketRef.emit('writeRegister', { register: 'R01700', value: newStatus });
+			socketRef.emit('writeRegister', { register: 'R01700', value: regValues[index] });
 		}
-	}, [fan1Status, socketRef]);
+	}, [socketRef]);
 
 	const handleValve1Toggle = useCallback(() => {
 		setValve1Status(!valve1Status);
@@ -325,25 +356,30 @@ export default function HomePage() {
 							/>
 						</div>
 
-						{/* Auxiliary Output - Middle Column */}
+						{/* Middle Column */}
 						<div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-3">
-							<AuxiliaryOutputPanel
-								isDark={darkMode}
-								onValve1Toggle={handleValve1Toggle}
-								onValve2Toggle={handleValve2Toggle}
-							/>
+							{showAuxPanel ? (
+								<AuxiliaryOutputPanel
+									isDark={darkMode}
+									onValve1Toggle={handleValve1Toggle}
+									onValve2Toggle={handleValve2Toggle}
+									onHide={() => setShowAuxPanel(false)}
+								/>
+							) : (
+								<DetectorPanel isDark={darkMode} />
+							)}
 						</div>
 
 						{/* Right Column - Lighting & Fan */}
 						<div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-5 flex flex-col gap-6">
 							<LightingPanel
 								isDark={darkMode}
-								onMainLightToggle={handleLightToggle}
-								onAnteLightToggle={handleLightToggle}
+								onMainLightChange={handleLightChange}
+								onAnteLightChange={handleLightChange}
 							/>
 							<FanPanel
 								isDark={darkMode}
-								onFanToggle={handleFanToggle}
+								onFanChange={handleFanChange}
 							/>
 						</div>
 					</div>

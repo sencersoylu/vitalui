@@ -35,6 +35,10 @@ interface DashboardState {
   setCurrentTime: (time: string) => void
   setCurrentTime2: (time: string) => void
 
+  // Panel visibility
+  showAuxPanel: boolean
+  setShowAuxPanel: (show: boolean) => void
+
   // Modal states
   showCalibrationModal: boolean
   showErrorModal: boolean
@@ -164,6 +168,7 @@ export const useDashboardStore = create<DashboardState>()(
       connected: false,
       currentTime: '',
       currentTime2: '',
+      showAuxPanel: false,
       showCalibrationModal: false,
       showErrorModal: false,
       showSeatAlarmModal: false,
@@ -223,6 +228,7 @@ export const useDashboardStore = create<DashboardState>()(
       setConnected: (connected) => set({ connected }),
       setCurrentTime: (time) => set({ currentTime: time }),
       setCurrentTime2: (time) => set({ currentTime2: time }),
+      setShowAuxPanel: (show) => set({ showAuxPanel: show }),
       setShowCalibrationModal: (show) => set({ showCalibrationModal: show }),
       setShowErrorModal: (show) => set({ showErrorModal: show }),
       setShowSeatAlarmModal: (show) => set({ showSeatAlarmModal: show }),

@@ -19,9 +19,7 @@ export function Header() {
 			<img
 				alt="Hipertech Logo"
 				src="/external/hipertechlogo2501-ygje.svg"
-				className={`h-16 w-auto transition-all duration-500 ${
-					!darkMode && 'brightness-0'
-				}`}
+				className="h-16 w-auto transition-all duration-500"
 			/>
 
 			<div className="flex items-center gap-4">

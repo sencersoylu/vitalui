@@ -3,6 +3,7 @@ import { cn } from '../utils';
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 	title?: string;
+	headerAction?: React.ReactNode;
 	isDark?: boolean;
 	hoverable?: boolean;
 	isLoading?: boolean;
@@ -22,6 +23,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
 		{
 			className,
 			title,
+			headerAction,
 			isDark = true,
 			hoverable = false,
 			isLoading = false,
@@ -77,7 +79,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
 				{...props}>
 				{title && (
 					<div
-						className={`px-6 py-4 border-b transition-all duration-500 ${
+						className={`px-6 py-4 border-b transition-all duration-500 flex items-center justify-between ${
 							isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-100/50'
 						}`}>
 						<h2
@@ -86,6 +88,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
 							}`}>
 							{title}
 						</h2>
+						{headerAction}
 					</div>
 				)}
 				<div className="p-6 flex-1">{children}</div>

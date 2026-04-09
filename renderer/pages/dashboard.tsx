@@ -6,10 +6,13 @@ import { ChillerControlModal } from '../components/ChillerControlModal';
 import { Header } from '../components/dashboard/Header';
 import { ChamberControlPanel } from '../components/dashboard/ChamberControlPanel';
 import { AuxiliaryOutputPanel } from '../components/dashboard/AuxiliaryOutputPanel';
+import { DetectorPanel } from '../components/dashboard/DetectorPanel';
 import { LightingPanel } from '../components/dashboard/LightingPanel';
 import { FanPanel } from '../components/dashboard/FanPanel';
 import { ErrorModal } from '../components/dashboard/ErrorModal';
 import { SeatAlarmModal } from '../components/dashboard/SeatAlarmModal';
+import { useTechCalibration } from '../hooks/useTechCalibration';
+import { linearConversion } from '../utils/linearConversion';
 
 export default function HomePage() {
 	const {
@@ -18,6 +21,8 @@ export default function HomePage() {
 		connected,
 		currentTime,
 		currentTime2,
+		showAuxPanel,
+		setShowAuxPanel,
 		showCalibrationModal,
 		showErrorModal,
 		showSeatAlarmModal,
@@ -58,7 +63,16 @@ export default function HomePage() {
 		setActiveSeatAlarm,
 		setChillerRunning,
 		setChillerCurrentTemp,
+		setMainFlameDetected,
+		setMainSmokeDetected,
+		setAnteSmokeDetected,
+		setAirTankPressure,
+		setPrimaryO2Pressure,
 	} = useDashboardStore();
+
+	const techCal = useTechCalibration();
+	const techCalRef = React.useRef(techCal);
+	React.useEffect(() => { techCalRef.current = techCal; }, [techCal]);
 
 	const [socketRef, setSocketRef] = React.useState(null);
 
@@ -107,6 +121,17 @@ export default function HomePage() {
 			const errorData = JSON.parse(data);
 			setChillerCurrentTemp(errorData.data[15] / 10);
 
+			// Air Pressure & O2 Pressure calculation
+			const cal = techCalRef.current;
+			if (cal.tech_pressure_analog > 0) {
+				const airPressure = linearConversion(0, cal.tech_pressure_upper, cal.tech_pressure_offset, cal.tech_pressure_analog, errorData.data[8]);
+				setAirTankPressure(airPressure);
+			}
+			if (cal.tech_o_analog > 0) {
+				const o2Pressure = linearConversion(0, cal.tech_o_upper, cal.tech_o_offset, cal.tech_o_analog, errorData.data[9], 1);
+				setPrimaryO2Pressure(o2Pressure);
+			}
+
 			let errorArray = Number(errorData.data[19])
 				.toString(2)
 				.padStart(16, '0')
@@ -148,18 +173,21 @@ export default function HomePage() {
 						playSound();
 					}
 				} else if (errorArray[4] === '1') {
+					setMainFlameDetected(true);
 					if (!showErrorModal) {
 						setShowErrorModal(true);
 						setErrorMessage('Main Chamber Flame Detected!');
 						playSound();
 					}
 				} else if (errorArray[5] === '1') {
+					setMainSmokeDetected(true);
 					if (!showErrorModal) {
 						setShowErrorModal(true);
 						setErrorMessage('Main Chamber Smoke Detected!');
 						playSound();
 					}
 				} else if (errorArray[6] === '1') {
+					setAnteSmokeDetected(true);
 					if (!showErrorModal) {
 						setShowErrorModal(true);
 						setErrorMessage('Ante Chamber Smoke Detected!');
@@ -183,6 +211,9 @@ export default function HomePage() {
 				setErrorMessage('');
 				setActiveSeatAlarm(null);
 				setShowSeatAlarmModal(false);
+				setMainFlameDetected(false);
+				setMainSmokeDetected(false);
+				setAnteSmokeDetected(false);
 			}
 		});
 
@@ -247,49 +278,19 @@ export default function HomePage() {
 		};
 	}, []);
 
-	const setLight = () => {
+	const setLight = (index: number) => {
 		if (socketRef) {
-			const newValue = (lightStatus + 1) % 4;
-			let regValue = 0;
-			switch (newValue) {
-				case 0:
-					regValue = 0;
-					break;
-				case 1:
-					regValue = 85;
-					break;
-				case 2:
-					regValue = 170;
-					break;
-				case 3:
-					regValue = 255;
-					break;
-			}
-			socketRef.emit('writeRegister', { register: 'R01700', value: regValue });
-			setLightStatus(newValue);
+			const regValues = [0, 85, 170, 255];
+			socketRef.emit('writeRegister', { register: 'R01700', value: regValues[index] });
+			setLightStatus(index);
 		}
 	};
 
-	const setFan1 = () => {
+	const setFan1 = (index: number) => {
 		if (socketRef) {
-			const newValue = (fan1Status + 1) % 4;
-			let regValue = 0;
-			switch (newValue) {
-				case 0:
-					regValue = 0;
-					break;
-				case 1:
-					regValue = 85;
-					break;
-				case 2:
-					regValue = 170;
-					break;
-				case 3:
-					regValue = 255;
-					break;
-			}
-			socketRef.emit('writeRegister', { register: 'R01704', value: regValue });
-			setFan1Status(newValue);
+			const regValues = [0, 85, 170, 255];
+			socketRef.emit('writeRegister', { register: 'R01704', value: regValues[index] });
+			setFan1Status(index);
 		}
 	};
 
@@ -372,26 +373,11 @@ export default function HomePage() {
 		}
 	};
 
-	const setLight2 = () => {
+	const setLight2 = (index: number) => {
 		if (socketRef) {
-			const newValue = (light2Status + 1) % 4;
-			let regValue = 0;
-			switch (newValue) {
-				case 0:
-					regValue = 0;
-					break;
-				case 1:
-					regValue = 85;
-					break;
-				case 2:
-					regValue = 170;
-					break;
-				case 3:
-					regValue = 255;
-					break;
-			}
-			socketRef.emit('writeRegister', { register: 'R01702', value: regValue });
-			setLight2Status(newValue);
+			const regValues = [0, 85, 170, 255];
+			socketRef.emit('writeRegister', { register: 'R01702', value: regValues[index] });
+			setLight2Status(index);
 		}
 	};
 
@@ -481,23 +467,28 @@ export default function HomePage() {
 							/>
 						</div>
 
-						{/* Auxiliary Output - Middle Column */}
+						{/* Middle Column */}
 						<div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4">
-							<AuxiliaryOutputPanel
-								isDark={darkMode}
-								onValve1Toggle={setValve1}
-								onValve2Toggle={setValve2}
-							/>
+							{showAuxPanel ? (
+								<AuxiliaryOutputPanel
+									isDark={darkMode}
+									onValve1Toggle={setValve1}
+									onValve2Toggle={setValve2}
+									onHide={() => setShowAuxPanel(false)}
+								/>
+							) : (
+								<DetectorPanel isDark={darkMode} />
+							)}
 						</div>
 
 						{/* Right Column - Lighting & Fan */}
 						<div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-5 flex flex-col gap-6">
 							<LightingPanel
 								isDark={darkMode}
-								onMainLightToggle={setLight}
-								onAnteLightToggle={setLight2}
+								onMainLightChange={setLight}
+								onAnteLightChange={setLight2}
 							/>
-							<FanPanel isDark={darkMode} onFanToggle={setFan1} />
+							<FanPanel isDark={darkMode} onFanChange={setFan1} />
 						</div>
 					</div>
 				</div>

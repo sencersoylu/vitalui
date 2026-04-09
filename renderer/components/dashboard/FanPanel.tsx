@@ -13,7 +13,7 @@ const FAN_STATES = [
 /**
  * FanPanel - Controls for main chamber fan
  */
-export function FanPanel({ isDark, onFanToggle }: { isDark: boolean; onFanToggle: () => void }) {
+export function FanPanel({ isDark, onFanChange }: { isDark: boolean; onFanChange: (index: number) => void }) {
 	const { fan1Status } = useDashboardStore();
 
 	return (
@@ -28,7 +28,7 @@ export function FanPanel({ isDark, onFanToggle }: { isDark: boolean; onFanToggle
 				<ToggleSwitch
 					value={fan1Status}
 					states={FAN_STATES}
-					onClick={onFanToggle}
+					onValueChange={onFanChange}
 					isDark={isDark}
 				/>
 			</div>
