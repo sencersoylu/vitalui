@@ -25,6 +25,7 @@ interface ToggleSwitchProps {
 	onClick?: () => void;
 	onValueChange?: (index: number) => void;
 	isDark?: boolean;
+	disabled?: boolean;
 	className?: string;
 }
 
@@ -34,6 +35,7 @@ export function ToggleSwitch({
 	onClick,
 	onValueChange,
 	isDark = false,
+	disabled = false,
 	className,
 }: ToggleSwitchProps) {
 	const currentState = states[value] || states[0];
@@ -42,11 +44,14 @@ export function ToggleSwitch({
 	return (
 		<div
 			className={cn(
-				'relative w-full h-14 rounded-full cursor-pointer overflow-hidden select-none shadow-lg hover:shadow-xl active:scale-[0.98] transition-shadow duration-300',
+				'relative w-full h-14 rounded-full overflow-hidden select-none shadow-lg transition-shadow duration-300',
+				disabled
+					? 'cursor-not-allowed opacity-40'
+					: 'cursor-pointer hover:shadow-xl active:scale-[0.98]',
 				isDark ? 'bg-white/10' : 'bg-slate-200/80',
 				className,
 			)}
-			onClick={!onValueChange ? onClick : undefined}
+			onClick={!disabled && !onValueChange ? onClick : undefined}
 		>
 			{/* Sliding highlight pill */}
 			<div
@@ -54,7 +59,7 @@ export function ToggleSwitch({
 				style={{
 					width: `calc(${100 / count}% - 8px)`,
 					left: `calc(${(value * 100) / count}% + 4px)`,
-					backgroundColor: currentState.color,
+					backgroundColor: disabled ? '#64748b' : currentState.color,
 				}}
 			/>
 
@@ -63,9 +68,10 @@ export function ToggleSwitch({
 				{states.map((state, i) => (
 					<div
 						key={i}
-						onClick={onValueChange ? (e) => { e.stopPropagation(); onValueChange(i); } : undefined}
+						onClick={!disabled && onValueChange ? (e) => { e.stopPropagation(); onValueChange(i); } : undefined}
 						className={cn(
-							'flex-1 flex items-center justify-center font-semibold transition-colors duration-300 cursor-pointer',
+							'flex-1 flex items-center justify-center font-semibold transition-colors duration-300',
+							disabled ? 'cursor-not-allowed' : 'cursor-pointer',
 							count <= 2 ? 'text-base tracking-wide' : 'text-sm tracking-normal',
 							i === value
 								? 'text-white'

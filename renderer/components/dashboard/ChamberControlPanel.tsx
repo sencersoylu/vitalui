@@ -52,6 +52,7 @@ export function ChamberControlPanel({
 					]}
 					onClick={onAirToggle}
 					isDark={isDark}
+					disabled={autoMode}
 				/>
 
 				<ToggleSwitch
