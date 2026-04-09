@@ -3,7 +3,7 @@ import { api } from './index';
 // Chamber Types - Updated according to backend data model
 export interface Chamber {
 	id: number;
-	name: string; // "Main" veya "Entry"
+	name: string; // "Main" or "Entry"
 	description: string;
 	lastValue: number; // Last read O2 value (DECIMAL 5,2)
 	// Calibration data (within Chamber model)
@@ -15,7 +15,7 @@ export interface Chamber {
 	alarmLevelHigh: number; // High alarm level (DECIMAL 5,2, default: 24.0)
 	alarmLevelLow: number; // Low alarm level (DECIMAL 5,2, default: 16.0)
 	lastSensorChange: string; // Last sensor change date
-	isActive: boolean; // Oda aktif mi? (default: true)
+	isActive: boolean; // Is chamber active? (default: true)
 	createdAt: string;
 	updatedAt: string;
 }
@@ -40,11 +40,11 @@ export interface AlarmLevelUpdateResponse {
 
 export interface O2Reading {
 	id: number;
-	chamberId: number; // Oda ID (Foreign Key)
+	chamberId: number; // Chamber ID (Foreign Key)
 	o2Level: number; // Calibrated O2 level (DECIMAL 5,2, 0-100%)
-	temperature: number | null; // Sıcaklık (DECIMAL 5,2, -50 ile 100°C arası, nullable)
-	humidity: number | null; // Nem (DECIMAL 5,2, 0-100%, nullable)
-	timestamp: string; // Okuma zamanı (default: NOW)
+	temperature: number | null; // Temperature (DECIMAL 5,2, -50 to 100°C, nullable)
+	humidity: number | null; // Humidity (DECIMAL 5,2, 0-100%, nullable)
+	timestamp: string; // Reading timestamp (default: NOW)
 	sensorStatus: string; // 'normal', 'warning', 'error' (ENUM)
 	createdAt: string;
 	updatedAt: string;
@@ -61,7 +61,7 @@ export interface CalibrationPoints {
 
 // Chamber API Functions
 
-// Tüm odaları getir
+// Get all chambers
 export const getChambers = async (): Promise<Chamber[]> => {
 	try {
 		const response = await api.get('/chambers');
@@ -73,7 +73,7 @@ export const getChambers = async (): Promise<Chamber[]> => {
 			return [];
 		}
 
-		// Eğer data array değilse, boş array döndür
+		// If data is not an array, return empty array
 		if (!Array.isArray(responseData.data)) {
 			console.warn(
 				'getChambers: Response data is not an array, returning empty array'
@@ -83,23 +83,23 @@ export const getChambers = async (): Promise<Chamber[]> => {
 
 		return responseData.data;
 	} catch (error) {
-		console.error('Odalar getirilemedi:', error);
+		console.error('Failed to fetch chambers:', error);
 		throw error;
 	}
 };
 
-// Belirli bir odayı getir
+// Get specific chamber
 export const getChamber = async (chamberId: number): Promise<Chamber> => {
 	try {
 		const response = await api.get(`/chambers/${chamberId}`);
 		return response.data.data;
 	} catch (error) {
-		console.error('Oda getirilemedi:', error);
+		console.error('Failed to fetch chamber:', error);
 		throw error;
 	}
 };
 
-// Yeni oda oluştur (genellikle sadece test için - sadece 2 sabit kabin var)
+// Create new chamber (usually for testing only - only 2 fixed chambers exist)
 export const createChamber = async (
 	chamberData: Omit<
 		Chamber,
@@ -115,7 +115,7 @@ export const createChamber = async (
 		const response = await api.post('/chambers', chamberData);
 		return response.data.data;
 	} catch (error) {
-		console.error('Oda oluşturulamadı:', error);
+		console.error('Failed to create chamber:', error);
 		throw error;
 	}
 };
@@ -134,19 +134,19 @@ export const updateChamber = async (
 	}
 };
 
-// Oda sil (genellikle sadece test için - sadece 2 sabit kabin var)
+// Delete chamber (usually for testing only - only 2 fixed chambers exist)
 export const deleteChamber = async (chamberId: number): Promise<void> => {
 	try {
 		await api.delete(`/chambers/${chamberId}`);
 	} catch (error) {
-		console.error('Oda silinemedi:', error);
+		console.error('Failed to delete chamber:', error);
 		throw error;
 	}
 };
 
 // Reading Functions
 
-// Oda okumalarını getir
+// Get chamber readings
 export const getChamberReadings = async (
 	chamberId: number
 ): Promise<O2Reading[]> => {
@@ -154,7 +154,7 @@ export const getChamberReadings = async (
 		const response = await api.get(`/chambers/${chamberId}/readings`);
 		const data = response.data.data || response.data;
 
-		// Eğer response array değilse, boş array döndür
+		// If response is not an array, return empty array
 		if (!Array.isArray(data)) {
 			console.warn(
 				'getChamberReadings: Response is not an array, returning empty array'
@@ -164,7 +164,7 @@ export const getChamberReadings = async (
 
 		return data;
 	} catch (error) {
-		console.error('Okumalar getirilemedi:', error);
+		console.error('Failed to fetch readings:', error);
 		throw error;
 	}
 };
@@ -186,7 +186,7 @@ export const getLatestReading = async (
 export const addReading = async (
 	chamberId: number,
 	readingData: {
-		o2Level: number; // Ham değer - backend tarafında kalibre edilir
+		o2Level: number; // Raw value - calibrated on backend side
 		temperature?: number;
 		humidity?: number;
 		sensorStatus?: string;
@@ -201,12 +201,12 @@ export const addReading = async (
 		});
 		return response.data.data;
 	} catch (error) {
-		console.error('Okuma eklenemedi:', error);
+		console.error('Failed to add reading:', error);
 		throw error;
 	}
 };
 
-// Geçmiş verileri getir
+// Get reading history
 export const getReadingHistory = async (
 	chamberId: number,
 	startDate?: string,
@@ -222,7 +222,7 @@ export const getReadingHistory = async (
 		);
 		const data = response.data.data || response.data;
 
-		// Eğer response array değilse, boş array döndür
+		// If response is not an array, return empty array
 		if (!Array.isArray(data)) {
 			console.warn(
 				'getReadingHistory: Response is not an array, returning empty array'
@@ -232,7 +232,7 @@ export const getReadingHistory = async (
 
 		return data;
 	} catch (error) {
-		console.error('Geçmiş veriler getirilemedi:', error);
+		console.error('Failed to fetch reading history:', error);
 		throw error;
 	}
 };

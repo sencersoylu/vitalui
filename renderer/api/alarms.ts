@@ -3,11 +3,11 @@ import { api } from './index';
 // Alarm Types - Updated according to backend data model
 export interface Alarm {
 	id: number;
-	chamberId: number; // Oda ID (Foreign Key)
+	chamberId: number; // Chamber ID (Foreign Key)
 	alarmType: string; // 'high_o2', 'low_o2', 'sensor_error', 'calibration_due' (ENUM)
 	isActive: boolean; // Is alarm active? (default: true)
 	isMuted: boolean; // Is alarm muted? (default: false)
-	mutedUntil: string | null; // Susturma bitiş zamanı (nullable)
+	mutedUntil: string | null; // Mute end time (nullable)
 	triggeredAt: string; // Alarm trigger time (default: NOW)
 	resolvedAt: string | null; // Alarm resolution time (nullable)
 	o2LevelWhenTriggered: number | null; // O2 level when alarm was triggered (DECIMAL 5,2, nullable)
@@ -33,7 +33,7 @@ export const getActiveAlarms = async (): Promise<Alarm[]> => {
 		const response = await api.get('/alarms');
 		const data = response.data.data || response.data;
 
-		// Eğer response array değilse, boş array döndür
+		// If response is not an array, return empty array
 		if (!Array.isArray(data)) {
 			console.warn(
 				'getActiveAlarms: Response is not an array, returning empty array'
@@ -57,7 +57,7 @@ export const getAlarmHistory = async (chamberId?: number): Promise<Alarm[]> => {
 		const response = await api.get(url);
 		const data = response.data.data || response.data;
 
-		// Eğer response array değilse, boş array döndür
+		// If response is not an array, return empty array
 		if (!Array.isArray(data)) {
 			console.warn(
 				'getAlarmHistory: Response is not an array, returning empty array'
@@ -88,10 +88,10 @@ export const getChamberAlarms = async (chamberId: number): Promise<Alarm[]> => {
 	try {
 		const response = await api.get(`/alarms/${chamberId}`);
 
-		// Backend response formatını kontrol et
+		// Check backend response format
 		const data = response.data.data || response.data;
 
-		// Eğer response array değilse, boş array döndür
+		// If response is not an array, return empty array
 		if (!Array.isArray(data)) {
 			console.warn(
 				'getChamberAlarms: Response is not an array, returning empty array'

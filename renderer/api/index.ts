@@ -1,12 +1,12 @@
 import axios from 'axios';
 
-// API Base URL - Backend'in çalışacağı port
+// API Base URL
 const API_BASE_URL =
 	process.env.NODE_ENV === 'production'
 		? 'http://localhost:3001/api'
 		: 'http://localhost:3001/api';
 
-// API instance oluştur
+// Create API instance
 export const api = axios.create({
 	baseURL: API_BASE_URL,
 	timeout: 10000,
@@ -39,32 +39,32 @@ api.interceptors.response.use(
 	}
 );
 
-// API Hata Yönetimi
+// API Error Handler
 export const handleApiError = (error: any): string => {
 	if (error.response) {
-		// Sunucu yanıt verdi ama hata kodu döndü
+		// Server responded with error status
 		const { status, data } = error.response;
 
 		switch (status) {
 			case 400:
-				return `Geçersiz veri: ${data.message || 'Bad Request'}`;
+				return `Invalid data: ${data.message || 'Bad Request'}`;
 			case 403:
-				return 'Bu işlem yasak: ' + (data.message || 'Forbidden');
+				return 'Forbidden: ' + (data.message || 'Forbidden');
 			case 404:
-				return 'Kaynak bulunamadı';
+				return 'Resource not found';
 			case 422:
-				return `Validasyon hatası: ${data.message || 'Unprocessable Entity'}`;
+				return `Validation error: ${data.message || 'Unprocessable Entity'}`;
 			case 500:
-				return 'Sunucu hatası oluştu';
+				return 'Internal server error';
 			default:
 				return `Beklenmeyen hata: ${status}`;
 		}
 	} else if (error.request) {
-		// İstek yapıldı ama yanıt alınamadı
-		return "Sunucuya bağlanılamıyor. Backend'in çalıştığından emin olun.";
+		// Request made but no response received
+		return 'Cannot connect to server. Make sure the backend is running.';
 	} else {
-		// İstek oluşturulurken hata oluştu
-		return 'İstek oluşturulamadı';
+		// Error creating request
+		return 'Failed to create request';
 	}
 };
 

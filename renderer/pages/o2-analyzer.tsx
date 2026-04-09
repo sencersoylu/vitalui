@@ -352,7 +352,8 @@ export default function O2AnalyzerPage() {
 		);
 	}
 
-	const hasMultiplePages = fioChambers.length > 0;
+	// Set to `fioChambers.length > 0` to re-enable FiO page
+	const hasMultiplePages = false;
 
 	return (
 		<>

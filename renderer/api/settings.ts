@@ -1,7 +1,7 @@
 import { api } from './index';
 import { Chamber, CalibrationPoints } from './chambers';
 
-// Settings API Functions - Backend integration prompt'a göre ayrı endpoint'ler
+// Settings API Functions
 
 // Get chamber settings
 export const getChamberSettings = async (
@@ -43,7 +43,7 @@ export const getActiveCalibrationPoints = async (
 	}
 };
 
-// Ham değeri kalibre et
+// Calibrate raw value
 export const calibrateReading = async (
 	chamberId: number,
 	rawValue: number
@@ -55,7 +55,7 @@ export const calibrateReading = async (
 		);
 		return response.data.data;
 	} catch (error) {
-		console.error('Okuma kalibre edilemedi:', error);
+		console.error('Failed to calibrate reading:', error);
 		throw error;
 	}
 };
