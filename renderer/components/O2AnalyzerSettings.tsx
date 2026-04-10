@@ -88,6 +88,7 @@ export function O2AnalyzerSettings({
 				`${chamber.name} calibration started! Level: ${calibrationLevel}%`,
 				{ duration: 4000, position: 'top-center' }
 			);
+			if (onUpdate) onUpdate();
 		} else {
 			toast.error(
 				`Calibration failed: ${calibrationError || 'Unknown error'}`,
@@ -103,6 +104,7 @@ export function O2AnalyzerSettings({
 				duration: 4000,
 				position: 'top-center',
 			});
+			if (onUpdate) onUpdate();
 		} else {
 			toast.error(
 				`Sensor change recording failed: ${calibrationError || 'Unknown error'}`,
@@ -463,7 +465,7 @@ export function O2AnalyzerSettings({
 										'rounded-xl p-3 mb-4 text-sm',
 										darkMode ? 'bg-emerald-500/10 text-emerald-300' : 'bg-emerald-50 text-emerald-700'
 									)}>
-										Last: {new Date(calibrationPoints.calibrationDate).toLocaleDateString('en-US')}
+										Last: {(() => { const d = new Date(calibrationPoints.calibrationDate); return `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()}`; })()}
 									</div>
 								)}
 
@@ -560,7 +562,7 @@ export function O2AnalyzerSettings({
 										</h3>
 										<p className={cn('text-xs', subtextColor)}>
 											Last change: {chamber.lastSensorChange
-												? new Date(chamber.lastSensorChange).toLocaleDateString('en-US') + ' ' + new Date(chamber.lastSensorChange).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+												? (() => { const d = new Date(chamber.lastSensorChange); return `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; })()
 												: 'No record'}
 										</p>
 									</div>

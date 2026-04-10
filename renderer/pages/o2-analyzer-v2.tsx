@@ -12,6 +12,16 @@ import { useDashboardStore } from '../store';
 import { Chamber } from '../api/chambers';
 import { cn } from '../components/utils';
 
+// Date formatter — DD.MM.YYYY HH:MM
+function formatDate(d: Date): string {
+	const day = d.getDate().toString().padStart(2, '0');
+	const month = (d.getMonth() + 1).toString().padStart(2, '0');
+	const year = d.getFullYear();
+	const hours = d.getHours().toString().padStart(2, '0');
+	const minutes = d.getMinutes().toString().padStart(2, '0');
+	return `${day}.${month}.${year} ${hours}:${minutes}`;
+}
+
 // ChamberCard wrapper component
 interface ChamberCardProps {
 	chamber: Chamber;
@@ -58,14 +68,9 @@ const ChamberCard: React.FC<ChamberCardProps> = ({
 		onAlarmStateChange(chamber.id, hasActiveAlarms);
 	}, [chamber.id, hasActiveAlarms, onAlarmStateChange]);
 
-	// Last calibration formatting
+	// Last calibration formatting — DD.MM.YYYY HH:MM
 	const lastCalibration = chamber.calibrationDate
-		? new Date(chamber.calibrationDate).toLocaleDateString('en-US') +
-		  ' ' +
-		  new Date(chamber.calibrationDate).toLocaleTimeString('en-US', {
-				hour: '2-digit',
-				minute: '2-digit',
-		  })
+		? formatDate(new Date(chamber.calibrationDate))
 		: 'Never';
 
 	// Format FiO names: "fio1" → "FiO₂ - 1"
@@ -229,7 +234,7 @@ export default function O2AnalyzerV2Page() {
 				expired.push({
 					name: chamber.name,
 					months: Math.floor(days / 30),
-					date: changeDate.toLocaleDateString('en-US') + ' ' + changeDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+					date: formatDate(changeDate),
 				});
 			}
 		});
