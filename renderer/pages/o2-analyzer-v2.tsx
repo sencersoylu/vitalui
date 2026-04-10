@@ -22,6 +22,39 @@ function formatDate(d: Date): string {
 	return `${day}.${month}.${year} ${hours}:${minutes}`;
 }
 
+// Clock component — isolated to prevent full page re-renders every second
+function Clock({ darkMode }: { darkMode: boolean }) {
+	const [currentTime, setCurrentTime] = useState('');
+	const [currentDate, setCurrentDate] = useState('');
+
+	useEffect(() => {
+		const update = () => {
+			const now = new Date();
+			setCurrentDate(
+				`${now.getDate().toString().padStart(2, '0')}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now.getFullYear()}`
+			);
+			setCurrentTime(
+				`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+			);
+		};
+		update();
+		const interval = setInterval(update, 1000);
+		return () => clearInterval(interval);
+	}, []);
+
+	return (
+		<>
+			<span className={cn('text-base font-semibold tabular-nums', darkMode ? 'text-slate-300' : 'text-slate-600')}>
+				{currentDate || '01.01.2026'}
+			</span>
+			<span className={cn('text-sm', darkMode ? 'text-slate-600' : 'text-slate-300')}>|</span>
+			<span className={cn('text-base font-bold tabular-nums', darkMode ? 'text-blue-300' : 'text-blue-600')}>
+				{currentTime || '00:00'}
+			</span>
+		</>
+	);
+}
+
 // ChamberCard wrapper component
 interface ChamberCardProps {
 	chamber: Chamber;
@@ -97,8 +130,6 @@ const ChamberCard: React.FC<ChamberCardProps> = ({
 export default function O2AnalyzerV2Page() {
 	const { darkMode, setDarkMode } = useDashboardStore();
 
-	const [currentTime, setCurrentTime] = useState('');
-	const [currentDate, setCurrentDate] = useState('');
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const [selectedChamber, setSelectedChamber] = useState<Chamber | null>(null);
 	const [mutedAlarms, setMutedAlarms] = useState<{ [key: number]: boolean }>(
@@ -110,6 +141,7 @@ export default function O2AnalyzerV2Page() {
 
 	// Track previous alarm states to detect changes
 	const prevAlarmStatesRef = useRef<{ [key: number]: boolean }>({});
+	const chambersRef = useRef<Chamber[]>([]);
 
 	// Backend data hooks
 	const {
@@ -141,6 +173,7 @@ export default function O2AnalyzerV2Page() {
 
 	// Use API data if available, otherwise fall back to mock
 	const chambers = apiChambers.length > 0 ? apiChambers : mockChambers;
+	chambersRef.current = chambers;
 
 	// Filter to only Main/Ante chambers (exclude FiO sensors)
 	const mainAnteChambers = chambers.filter(
@@ -178,29 +211,6 @@ export default function O2AnalyzerV2Page() {
 			console.log('O2 Analyzer v2: Cleaning up socket connection');
 			socket.disconnect();
 		};
-	}, []);
-
-	// Update current time and date every second
-	useEffect(() => {
-		const updateDateTime = () => {
-			const now = new Date();
-			const formattedDate = `${now.getDate().toString().padStart(2, '0')}.${(
-				now.getMonth() + 1
-			)
-				.toString()
-				.padStart(2, '0')}.${now.getFullYear()}`;
-			setCurrentDate(formattedDate);
-
-			const formattedTime = `${now.getHours().toString().padStart(2, '0')}:${now
-				.getMinutes()
-				.toString()
-				.padStart(2, '0')}`;
-			setCurrentTime(formattedTime);
-		};
-
-		updateDateTime();
-		const interval = setInterval(updateDateTime, 1000);
-		return () => clearInterval(interval);
 	}, []);
 
 	// Display error messages
@@ -314,7 +324,7 @@ export default function O2AnalyzerV2Page() {
 				prevAlarmStatesRef.current[chamberId] = hasAlarm;
 
 				if (socketRef.current && socketRef.current.connected) {
-					const chamber = chambers.find((c) => c.id === chamberId);
+					const chamber = chambersRef.current.find((c) => c.id === chamberId);
 					if (chamber) {
 						const isMainChamber = chamber.name.toLowerCase().includes('main');
 						const register = isMainChamber ? 'M0407' : 'M0408';
@@ -324,7 +334,7 @@ export default function O2AnalyzerV2Page() {
 				}
 			}
 		},
-		[chambers]
+		[]
 	);
 
 	// Loading state (skip if mock data is being used)
@@ -462,10 +472,8 @@ export default function O2AnalyzerV2Page() {
 					</div>
 
 					{/* Date & Time */}
-					<div className={cn('font-bold text-2xl tabular-nums', darkMode ? 'text-blue-300' : 'text-blue-600')}>
-						{currentDate || '01.01.2026'}
-						<span className={cn('mx-2 text-lg', darkMode ? 'text-slate-500' : 'text-slate-400')}>|</span>
-						{currentTime || '00:00'}
+					<div className="flex items-center gap-3">
+						<Clock darkMode={darkMode} />
 					</div>
 				</div>
 

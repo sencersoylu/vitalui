@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -28,8 +28,8 @@ interface O2AnalyzerCardV2Props {
 
 type TrendDirection = 'up' | 'down' | 'stable';
 
-// Mini sparkline chart component
-function Sparkline({
+// Mini sparkline chart component — memoized to avoid re-render on parent state changes
+const Sparkline = React.memo(function Sparkline({
   data,
   alarmLevel,
   darkMode,
@@ -153,9 +153,9 @@ function Sparkline({
       />
     </svg>
   );
-}
+});
 
-export function O2AnalyzerCardV2({
+export const O2AnalyzerCardV2 = React.memo(function O2AnalyzerCardV2({
   title,
   o2Level,
   alarmLevel,
@@ -212,9 +212,13 @@ export function O2AnalyzerCardV2({
       }
       prevO2Ref.current = o2Level;
 
-      // Append to history (30s in production, 5s for testing)
-      setHistory((prev) => [...prev.slice(-39), o2Level]);
-    }, 5000);
+      // Append to history every 30s
+      setHistory((prev) => {
+        const next = prev.length >= 40 ? prev.slice(1) : prev;
+        next.push(o2Level);
+        return [...next];
+      });
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [o2Level, trend]);
@@ -499,4 +503,4 @@ export function O2AnalyzerCardV2({
       </div>
     </div>
   );
-}
+});
