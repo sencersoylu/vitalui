@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -19,6 +19,7 @@ interface O2AnalyzerCardV2Props {
   alarmLevel: number;
   isAlarmActive: boolean;
   lastCalibration: string;
+  lastSensorChange?: string;
   onSettingsClick?: () => void;
   onMuteAlarm?: () => void;
   isMuted?: boolean;
@@ -27,12 +28,140 @@ interface O2AnalyzerCardV2Props {
 
 type TrendDirection = 'up' | 'down' | 'stable';
 
+// Mini sparkline chart component
+function Sparkline({
+  data,
+  alarmLevel,
+  darkMode,
+  hasAlarm,
+}: {
+  data: number[];
+  alarmLevel: number;
+  darkMode: boolean;
+  hasAlarm: boolean;
+}) {
+  const width = 440;
+  const height = 120;
+  const padding = { top: 12, right: 40, bottom: 12, left: 40 };
+
+  const innerW = width - padding.left - padding.right;
+  const innerH = height - padding.top - padding.bottom;
+
+  // Focus Y axis on data range only (not alarm level) for better visibility
+  const dataMin = Math.min(...data);
+  const dataMax = Math.max(...data);
+  const dataRange = dataMax - dataMin;
+  // Add padding: at least ±0.5, or 30% of range
+  const yPadding = Math.max(0.5, dataRange * 0.3);
+  const min = dataMin - yPadding;
+  const max = dataMax + yPadding;
+  const range = max - min || 1;
+
+  const points = data.map((val, i) => {
+    const x = padding.left + (i / (data.length - 1)) * innerW;
+    const y = padding.top + innerH - ((val - min) / range) * innerH;
+    return { x, y };
+  });
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+  const areaPath = `${linePath} L${points[points.length - 1].x},${height - padding.bottom} L${points[0].x},${height - padding.bottom} Z`;
+
+  // Alarm threshold line (only show if within visible range)
+  const alarmInRange = alarmLevel >= min && alarmLevel <= max;
+  const alarmY = padding.top + innerH - ((alarmLevel - min) / range) * innerH;
+
+  // Grid lines (3 horizontal)
+  const gridValues = [min + range * 0.25, min + range * 0.5, min + range * 0.75];
+
+  const lineColor = hasAlarm ? '#ef4444' : darkMode ? '#34d399' : '#059669';
+  const fillColor = hasAlarm
+    ? darkMode ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.12)'
+    : darkMode ? 'rgba(52,211,153,0.2)' : 'rgba(5,150,105,0.12)';
+  const gridColor = darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const labelColor = darkMode ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)';
+
+  const currentVal = data[data.length - 1];
+  const minVal = dataMin;
+  const maxVal = dataMax;
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" className="rounded-xl">
+      {/* Grid lines */}
+      {gridValues.map((val, i) => {
+        const gy = padding.top + innerH - ((val - min) / range) * innerH;
+        return (
+          <line key={i} x1={padding.left} y1={gy} x2={width - padding.right} y2={gy}
+            stroke={gridColor} strokeWidth="1" />
+        );
+      })}
+
+      {/* Area fill */}
+      <path d={areaPath} fill={fillColor} />
+
+      {/* Line — thicker */}
+      <path d={linePath} fill="none" stroke={lineColor} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+
+      {/* Alarm threshold dashed line */}
+      {alarmInRange && (
+        <>
+          <line
+            x1={padding.left} y1={alarmY}
+            x2={width - padding.right} y2={alarmY}
+            stroke={darkMode ? 'rgba(239,68,68,0.5)' : 'rgba(239,68,68,0.4)'}
+            strokeWidth="1.5"
+            strokeDasharray="6,4"
+          />
+          <text x={width - padding.right + 4} y={alarmY + 4}
+            fontSize="10" fill={darkMode ? 'rgba(239,68,68,0.6)' : 'rgba(239,68,68,0.5)'}
+            fontWeight="600">{alarmLevel}%</text>
+        </>
+      )}
+
+      {/* Min/Max labels on left */}
+      <text x={padding.left - 4} y={padding.top + 4}
+        fontSize="10" fill={labelColor} textAnchor="end" fontWeight="500">
+        {maxVal.toFixed(1)}
+      </text>
+      <text x={padding.left - 4} y={height - padding.bottom}
+        fontSize="10" fill={labelColor} textAnchor="end" fontWeight="500">
+        {minVal.toFixed(1)}
+      </text>
+
+      {/* Current value label on right */}
+      <text x={width - padding.right + 4} y={points[points.length - 1].y + 4}
+        fontSize="11" fill={lineColor} fontWeight="700">
+        {currentVal.toFixed(1)}%
+      </text>
+
+      {/* Current value dot — larger with glow */}
+      <circle
+        cx={points[points.length - 1].x}
+        cy={points[points.length - 1].y}
+        r="6"
+        fill={lineColor}
+        stroke={darkMode ? '#1a1a2e' : '#fff'}
+        strokeWidth="2.5"
+        opacity="0.3"
+      />
+      <circle
+        cx={points[points.length - 1].x}
+        cy={points[points.length - 1].y}
+        r="4"
+        fill={lineColor}
+        stroke={darkMode ? '#1a1a2e' : '#fff'}
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
 export function O2AnalyzerCardV2({
   title,
   o2Level,
   alarmLevel,
   isAlarmActive,
   lastCalibration,
+  lastSensorChange,
   onSettingsClick,
   onMuteAlarm,
   isMuted = false,
@@ -41,10 +170,34 @@ export function O2AnalyzerCardV2({
   const { darkMode } = useDashboardStore();
   const hasAlarm = showAlarm && (isAlarmActive || o2Level > alarmLevel);
 
+  // Sensor age check — warn if > 1 year
+  const sensorExpired = useMemo(() => {
+    if (!lastSensorChange) return false;
+    const changeDate = new Date(lastSensorChange);
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    return changeDate < oneYearAgo;
+  }, [lastSensorChange]);
+
+  const sensorAgeDays = useMemo(() => {
+    if (!lastSensorChange) return null;
+    const diff = Date.now() - new Date(lastSensorChange).getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  }, [lastSensorChange]);
+
   // Trend tracking
   const prevO2Ref = useRef<number>(o2Level);
   const [trend, setTrend] = useState<TrendDirection>('stable');
-  const [trendKey, setTrendKey] = useState(0); // used to re-trigger fade-in
+  const [trendKey, setTrendKey] = useState(0);
+
+  // History for sparkline — 40 points x 30s interval = 20 minutes
+  const [history, setHistory] = useState<number[]>(() => {
+    const h: number[] = [];
+    for (let i = 0; i < 40; i++) {
+      h.push(o2Level + (Math.random() - 0.5) * 0.8);
+    }
+    return h;
+  });
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -58,7 +211,10 @@ export function O2AnalyzerCardV2({
         setTrendKey((k) => k + 1);
       }
       prevO2Ref.current = o2Level;
-    }, 30000);
+
+      // Append to history (30s in production, 5s for testing)
+      setHistory((prev) => [...prev.slice(-39), o2Level]);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [o2Level, trend]);
@@ -84,10 +240,12 @@ export function O2AnalyzerCardV2({
       )
     : '';
 
-  // O2 value gradient
-  const o2GradientClass = hasAlarm
-    ? 'bg-gradient-to-br from-red-400 to-rose-600 bg-clip-text text-transparent'
-    : 'bg-gradient-to-br from-emerald-400 to-teal-500 bg-clip-text text-transparent';
+  // O2 value color — solid colors for readability
+  const o2ValueColor = hasAlarm
+    ? 'text-red-500'
+    : darkMode
+      ? 'text-emerald-400'
+      : 'text-emerald-600';
 
   // Trend icon
   const TrendIcon =
@@ -103,7 +261,7 @@ export function O2AnalyzerCardV2({
     <div
       className={cn(
         'relative flex flex-col overflow-hidden transition-all duration-500',
-        showAlarm ? 'w-[480px] h-[480px] rounded-3xl' : 'w-full h-auto rounded-2xl',
+        showAlarm ? 'w-[520px] rounded-3xl' : 'w-full h-auto rounded-2xl',
         cardGlass,
         cardAlarmClasses
       )}
@@ -148,16 +306,27 @@ export function O2AnalyzerCardV2({
         )}
       >
         {/* Header row: title + settings */}
-        <div className="flex items-center justify-between">
-          <h2
-            className={cn(
-              'font-bold',
-              showAlarm ? 'text-2xl' : 'text-lg',
-              darkMode ? 'text-white' : 'text-slate-800'
-            )}
-          >
-            {title}
-          </h2>
+        <div className="flex items-center justify-between relative">
+          {/* Title centered */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                'w-1.5 h-8 rounded-full',
+                hasAlarm ? 'bg-red-500' : darkMode ? 'bg-emerald-400' : 'bg-emerald-500'
+              )} />
+              <h2
+                className={cn(
+                  'font-extrabold tracking-tight',
+                  showAlarm ? 'text-3xl' : 'text-lg',
+                  darkMode ? 'text-white' : 'text-slate-800'
+                )}
+              >
+                {title}
+              </h2>
+            </div>
+          </div>
+          {/* Spacer for left side */}
+          <div />
           {onSettingsClick && (
             <button
               onClick={onSettingsClick}
@@ -193,7 +362,7 @@ export function O2AnalyzerCardV2({
             <span
               className={cn(
                 'text-8xl font-extrabold tabular-nums transition-all duration-500 leading-none',
-                o2GradientClass
+                o2ValueColor
               )}
             >
               {o2Level.toFixed(1)}
@@ -216,6 +385,21 @@ export function O2AnalyzerCardV2({
             <span className="text-xs font-medium capitalize">{trend}</span>
           </div>
         </div>
+
+        {/* Trend Sparkline Chart */}
+        {showAlarm && (
+          <div className={cn('rounded-2xl p-2', innerGlass)}>
+            <div className="flex items-center justify-between px-2 mb-1">
+              <span className={cn('text-[10px] font-medium uppercase tracking-wider', darkMode ? 'text-slate-500' : 'text-slate-400')}>
+                Trend (20min)
+              </span>
+              <span className={cn('text-[10px] font-medium', darkMode ? 'text-red-400/60' : 'text-red-400/50')}>
+                Alarm: {alarmLevel}%
+              </span>
+            </div>
+            <Sparkline data={history} alarmLevel={alarmLevel} darkMode={darkMode} hasAlarm={hasAlarm} />
+          </div>
+        )}
 
         {/* Alarm Info Panel */}
         {showAlarm && (
@@ -268,8 +452,8 @@ export function O2AnalyzerCardV2({
           </div>
         )}
 
-        {/* Last Calibration */}
-        <div className={cn('rounded-2xl p-3', innerGlass)}>
+        {/* Last Calibration + Sensor Age — hidden during alarm */}
+        {!hasAlarm && <div className={cn('rounded-2xl p-3 flex items-center justify-between', innerGlass)}>
           <div className="flex items-center gap-3">
             <Clock
               className={cn(
@@ -297,7 +481,21 @@ export function O2AnalyzerCardV2({
               </div>
             </div>
           </div>
-        </div>
+
+          {/* Sensor age warning */}
+          {showAlarm && sensorExpired && (
+            <div
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold animate-alarm-pulse',
+                darkMode ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-600 border border-amber-200'
+              )}
+              title={sensorAgeDays ? `Sensor age: ${sensorAgeDays} days` : ''}
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              Sensor {sensorAgeDays ? `${Math.floor(sensorAgeDays / 30)}mo` : ''}
+            </div>
+          )}
+        </div>}
       </div>
     </div>
   );

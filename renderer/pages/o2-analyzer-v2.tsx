@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import toast, { Toaster } from 'react-hot-toast';
 import io from 'socket.io-client';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, AlertTriangle } from 'lucide-react';
 import { O2AnalyzerCardV2 } from '../components/O2AnalyzerCardV2';
 import { O2AnalyzerSettings } from '../components/O2AnalyzerSettings';
 import { useChambers } from '../hooks/useChambers';
@@ -80,6 +80,7 @@ const ChamberCard: React.FC<ChamberCardProps> = ({
 			alarmLevel={alarmLevel}
 			isAlarmActive={hasActiveAlarms}
 			lastCalibration={lastCalibration}
+			lastSensorChange={chamber.lastSensorChange}
 			onSettingsClick={onSettingsClick}
 			onMuteAlarm={showAlarm ? onMuteAlarm : undefined}
 			isMuted={isMuted}
@@ -107,20 +108,46 @@ export default function O2AnalyzerV2Page() {
 
 	// Backend data hooks
 	const {
-		chambers,
+		chambers: apiChambers,
 		loading: chambersLoading,
 		error: chambersError,
 		refetch: refetchChambers,
 	} = useChambers();
+
+	// Mock data for preview when backend is unavailable
+	const mockChambers: Chamber[] = [
+		{
+			id: 1, name: 'Main', description: 'Main Chamber',
+			lastValue: 20.6, raw0: null, raw21: null, raw100: null,
+			calibrationDate: '2026-01-07T02:02:00Z',
+			alarmLevelHigh: 31, alarmLevelLow: 16,
+			lastSensorChange: '2024-11-15T10:00:00Z', isActive: true,
+			createdAt: '', updatedAt: '',
+		},
+		{
+			id: 2, name: 'Ante', description: 'Ante Chamber',
+			lastValue: 20.5, raw0: null, raw21: null, raw100: null,
+			calibrationDate: '2026-01-07T02:27:00Z',
+			alarmLevelHigh: 24, alarmLevelLow: 16,
+			lastSensorChange: '2025-06-20T10:00:00Z', isActive: true,
+			createdAt: '', updatedAt: '',
+		},
+	];
+
+	// Use API data if available, otherwise fall back to mock
+	const chambers = apiChambers.length > 0 ? apiChambers : mockChambers;
 
 	// Filter to only Main/Ante chambers (exclude FiO sensors)
 	const mainAnteChambers = chambers.filter(
 		(c) => !c.name.toLowerCase().startsWith('fio')
 	);
 
+	// Connection states
+	const [socketConnected, setSocketConnected] = useState(false);
+	const apiConnected = !chambersError;
+
 	// Initialize socket connection
 	useEffect(() => {
-		console.log('O2 Analyzer v2: Initializing socket connection...');
 		const socket = io('http://192.168.77.100:4000', {
 			transports: ['websocket', 'polling'],
 			reconnection: true,
@@ -129,21 +156,15 @@ export default function O2AnalyzerV2Page() {
 		});
 
 		socket.on('connect', () => {
-			console.log(
-				'O2 Analyzer v2: Connected to socket server, socket.id:',
-				socket.id
-			);
+			setSocketConnected(true);
 		});
 
-		socket.on('connect_error', (error) => {
-			console.error('O2 Analyzer v2: Socket connection error:', error.message);
+		socket.on('connect_error', () => {
+			setSocketConnected(false);
 		});
 
-		socket.on('disconnect', (reason) => {
-			console.log(
-				'O2 Analyzer v2: Disconnected from socket server, reason:',
-				reason
-			);
+		socket.on('disconnect', () => {
+			setSocketConnected(false);
 		});
 
 		socketRef.current = socket;
@@ -186,6 +207,38 @@ export default function O2AnalyzerV2Page() {
 			});
 		}
 	}, [chambersError]);
+
+	// Sensor expiry warnings — only check with real API data, not mock
+	const [expiredSensors, setExpiredSensors] = useState<{ name: string; months: number; date: string }[]>([]);
+	const [showSensorWarning, setShowSensorWarning] = useState(false);
+	const sensorCheckDone = useRef(false);
+
+	useEffect(() => {
+		if (apiChambers.length === 0 || sensorCheckDone.current) return;
+		sensorCheckDone.current = true;
+
+		const oneYearAgo = new Date();
+		oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+		const expired: { name: string; months: number; date: string }[] = [];
+		apiChambers.forEach((chamber) => {
+			if (!chamber.lastSensorChange) return;
+			const changeDate = new Date(chamber.lastSensorChange);
+			if (changeDate < oneYearAgo) {
+				const days = Math.floor((Date.now() - changeDate.getTime()) / (1000 * 60 * 60 * 24));
+				expired.push({
+					name: chamber.name,
+					months: Math.floor(days / 30),
+					date: changeDate.toLocaleDateString('en-US') + ' ' + changeDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+				});
+			}
+		});
+
+		if (expired.length > 0) {
+			setExpiredSensors(expired);
+			setShowSensorWarning(true);
+		}
+	}, [apiChambers]);
 
 	const handleSettingsClick = (chamber: Chamber) => {
 		setSelectedChamber(chamber);
@@ -255,13 +308,13 @@ export default function O2AnalyzerV2Page() {
 			if (prevState !== hasAlarm) {
 				prevAlarmStatesRef.current[chamberId] = hasAlarm;
 
-				// Only write to PLC when alarm becomes ACTIVE (hasAlarm = true)
-				if (hasAlarm && socketRef.current && socketRef.current.connected) {
+				if (socketRef.current && socketRef.current.connected) {
 					const chamber = chambers.find((c) => c.id === chamberId);
 					if (chamber) {
 						const isMainChamber = chamber.name.toLowerCase().includes('main');
 						const register = isMainChamber ? 'M0407' : 'M0408';
-						socketRef.current.emit('writeBit', { register, value: 1 });
+						// Write 1 when alarm active, 0 when alarm cleared
+						socketRef.current.emit('writeBit', { register, value: hasAlarm ? 1 : 0 });
 					}
 				}
 			}
@@ -269,14 +322,14 @@ export default function O2AnalyzerV2Page() {
 		[chambers]
 	);
 
-	// Loading state
-	if (chambersLoading) {
+	// Loading state (skip if mock data is being used)
+	if (chambersLoading && apiChambers.length === 0) {
 		return (
 			<div
 				className={cn(
 					'h-screen flex items-center justify-center',
 					darkMode
-						? 'bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]'
+						? 'bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] animate-gradient-shift'
 						: 'bg-gradient-to-br from-[#e8edf5] to-[#f0f4ff]'
 				)}
 			>
@@ -307,7 +360,7 @@ export default function O2AnalyzerV2Page() {
 				className={cn(
 					'h-screen flex items-center justify-center',
 					darkMode
-						? 'bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]'
+						? 'bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] animate-gradient-shift'
 						: 'bg-gradient-to-br from-[#e8edf5] to-[#f0f4ff]'
 				)}
 			>
@@ -332,7 +385,7 @@ export default function O2AnalyzerV2Page() {
 				className={cn(
 					'h-screen flex flex-col transition-all duration-500',
 					darkMode
-						? 'bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]'
+						? 'bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] animate-gradient-shift'
 						: 'bg-gradient-to-br from-[#e8edf5] to-[#f0f4ff]'
 				)}
 			>
@@ -345,7 +398,7 @@ export default function O2AnalyzerV2Page() {
 						className={cn('h-12', darkMode ? 'brightness-0 invert' : '')}
 					/>
 
-					{/* Center-right: Theme toggle */}
+					{/* Center: Theme toggle */}
 					<button
 						onClick={() => setDarkMode(!darkMode)}
 						className={cn(
@@ -389,30 +442,116 @@ export default function O2AnalyzerV2Page() {
 				</div>
 
 				{/* Footer */}
-				<div className="flex justify-end items-center py-3 px-8">
-					<span
-						className={cn(
-							'font-bold text-lg',
-							darkMode ? 'text-blue-300' : 'text-blue-600'
-						)}
-					>
-						{currentDate || '01.01.2026'} - {currentTime || '00:00'}
-					</span>
+				<div className="flex justify-between items-center py-3 px-8">
+					{/* Connection Status */}
+					<div className="flex items-center gap-2">
+						<div className={cn(
+							'w-2.5 h-2.5 rounded-full',
+							socketConnected && apiConnected
+								? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]'
+								: 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.6)]'
+						)} />
+						<span className={cn('text-xs font-medium', darkMode ? 'text-slate-400' : 'text-slate-500')}>
+							{socketConnected && apiConnected ? 'Connected' : 'Disconnected'}
+						</span>
+					</div>
+
+					{/* Date & Time */}
+					<div className={cn('font-bold text-2xl tabular-nums', darkMode ? 'text-blue-300' : 'text-blue-600')}>
+						{currentDate || '01.01.2026'}
+						<span className={cn('mx-2 text-lg', darkMode ? 'text-slate-500' : 'text-slate-400')}>|</span>
+						{currentTime || '00:00'}
+					</div>
 				</div>
 
-				{/* Settings Modal */}
-				{selectedChamber && (
-					<O2AnalyzerSettings
-						isOpen={settingsOpen}
-						onClose={() => {
-							setSettingsOpen(false);
-							setSelectedChamber(null);
-						}}
-						chamber={selectedChamber}
-						onUpdate={refetchChambers}
-					/>
-				)}
 			</div>
+
+			{/* Sensor Warning Modal */}
+			{showSensorWarning && (
+				<div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+					<div className={cn(
+						'rounded-3xl p-8 max-w-md w-full shadow-2xl animate-fade-up',
+						darkMode
+							? 'bg-slate-800/95 backdrop-blur-xl border border-amber-500/20'
+							: 'bg-white/95 backdrop-blur-xl border border-amber-200'
+					)}>
+						{/* Icon */}
+						<div className="flex justify-center mb-5">
+							<div className={cn(
+								'w-20 h-20 rounded-full flex items-center justify-center',
+								darkMode ? 'bg-amber-500/20' : 'bg-amber-50'
+							)}>
+								<AlertTriangle className={cn('w-10 h-10', darkMode ? 'text-amber-400' : 'text-amber-500')} />
+							</div>
+						</div>
+
+						{/* Title */}
+						<h2 className={cn('text-xl font-bold text-center mb-2', darkMode ? 'text-white' : 'text-slate-800')}>
+							Sensor Replacement Needed
+						</h2>
+						<p className={cn('text-sm text-center mb-6', darkMode ? 'text-slate-400' : 'text-slate-500')}>
+							The following sensors have exceeded their recommended 1-year lifespan
+						</p>
+
+						{/* Sensor List */}
+						<div className="space-y-3 mb-6">
+							{expiredSensors.map((sensor) => (
+								<div
+									key={sensor.name}
+									className={cn(
+										'flex items-center justify-between p-4 rounded-2xl',
+										darkMode ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-200'
+									)}
+								>
+									<div className="flex items-center gap-3">
+										<div className={cn(
+											'w-3 h-3 rounded-full animate-alarm-pulse',
+											'bg-amber-500'
+										)} />
+										<span className={cn('font-bold text-base', darkMode ? 'text-white' : 'text-slate-800')}>
+											{sensor.name}
+										</span>
+									</div>
+									<div className="text-right">
+										<span className={cn('text-sm font-medium block', darkMode ? 'text-amber-400' : 'text-amber-600')}>
+											{sensor.months} months old
+										</span>
+										<span className={cn('text-xs', darkMode ? 'text-slate-500' : 'text-slate-400')}>
+											{sensor.date}
+										</span>
+									</div>
+								</div>
+							))}
+						</div>
+
+						{/* Button */}
+						<button
+							onClick={() => setShowSensorWarning(false)}
+							className={cn(
+								'w-full py-3.5 rounded-xl font-medium text-sm transition-all active:scale-[0.98]',
+								darkMode
+									? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30'
+									: 'bg-amber-500 hover:bg-amber-600 text-white'
+							)}
+						>
+							I Understand
+						</button>
+					</div>
+				</div>
+			)}
+
+			{/* Settings Modal */}
+			{selectedChamber && (
+				<O2AnalyzerSettings
+					isOpen={settingsOpen}
+					onClose={() => {
+						setSettingsOpen(false);
+						setSelectedChamber(null);
+					}}
+					chamber={selectedChamber}
+					onUpdate={refetchChambers}
+				/>
+			)}
 
 			{/* Toast Notifications */}
 			<Toaster

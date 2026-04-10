@@ -143,15 +143,15 @@
 	}
 
 	.fade-in {
-		@apply animate-in fade-in-0 duration-300;
+		animation: fadeIn 0.3s both;
 	}
 
 	.slide-up {
-		@apply animate-in slide-in-from-bottom-4 duration-300;
+		animation: slideUp 0.3s both;
 	}
 
 	.zoom-in {
-		@apply animate-in zoom-in-95 duration-300;
+		animation: zoomIn 0.3s both;
 	}
 
 	/* Focus visible */
@@ -257,6 +257,22 @@
 .led-off {
 	background-color: #ef4444;
 	box-shadow: 0 0 6px 2px rgba(239,68,68,0.4);
+}
+
+/* Base UI Animations (replacing tailwindcss-animate plugin) */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 /* O2 Analyzer v2 — Animations */

@@ -114,7 +114,10 @@ export const markCalibrationRequired = async (
 // Record sensor change
 export const recordSensorChange = async (chamberId: number): Promise<void> => {
 	try {
-		await api.post(`/settings/${chamberId}/sensor-changed`);
+		await api.post(`/settings/${chamberId}/sensor-changed`, {
+			sensorModel: 'Default',
+			sensorSerialNumber: `SN-${Date.now()}`,
+		});
 	} catch (error) {
 		console.error('Sensor change could not be recorded:', error);
 		throw error;
