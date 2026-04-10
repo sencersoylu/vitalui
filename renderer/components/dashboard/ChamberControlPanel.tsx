@@ -64,6 +64,7 @@ export function ChamberControlPanel({
 					]}
 					onValueChange={onVentilChange}
 					isDark={isDark}
+					disabled={!autoMode}
 				/>
 
 				<Button
