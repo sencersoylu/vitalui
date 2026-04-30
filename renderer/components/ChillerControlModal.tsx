@@ -115,7 +115,7 @@ export function ChillerControlModal({
 					<div className="text-center">
 						<div className="mb-2">
 							<span className="text-base text-slate-600 dark:text-slate-300 font-medium">
-								Current Temperature
+								Current Water Temperature
 							</span>
 						</div>
 						<div className="flex items-center justify-center gap-1">
@@ -132,7 +132,7 @@ export function ChillerControlModal({
 				{/* Target Temperature Setting */}
 				<div className="space-y-4">
 					<Slider
-						label="Target Temperature"
+						label="Target Water Temperature"
 						min={5}
 						max={35}
 						step={0.5}

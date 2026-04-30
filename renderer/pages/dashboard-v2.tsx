@@ -115,14 +115,12 @@ export default function HomePage() {
 
 			// Air Pressure & O2 Pressure calculation
 			const cal = techCalRef.current;
-			if (cal.tech_pressure_analog > 0) {
 				const airPressure = linearConversion(0, cal.tech_pressure_upper, cal.tech_pressure_offset, cal.tech_pressure_analog, errorData.data[8]);
 				setAirTankPressure(airPressure);
-			}
-			if (cal.tech_o_analog > 0) {
+			
 				const o2Pressure = linearConversion(0, cal.tech_o_upper, cal.tech_o_offset, cal.tech_o_analog, errorData.data[9], 1);
 				setPrimaryO2Pressure(o2Pressure);
-			}
+			
 
 			let errorArray = Number(errorData.data[19])
 				.toString(2)

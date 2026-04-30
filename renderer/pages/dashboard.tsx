@@ -204,7 +204,12 @@ export default function HomePage() {
 						setShowErrorModal(true);
 						setErrorMessage('Ante Chamber High O2 Level!');
 						playSound();
-					}
+					} else if (errorArray[9] === '1') {
+						if (!showErrorModal) {
+							setShowErrorModal(true);
+							setErrorMessage('Ante Chamber High O2 Level!');
+							playSound();
+						}
 				}
 			} else if (errorArray[1] == '0') {
 				setShowErrorModal(false);
