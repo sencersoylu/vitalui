@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import toast, { Toaster } from 'react-hot-toast';
 import io from 'socket.io-client';
+import { getSocketUrl } from '../config';
 import { Sun, Moon, AlertTriangle } from 'lucide-react';
 import { O2AnalyzerCardV2 } from '../components/O2AnalyzerCardV2';
 import { O2AnalyzerSettings } from '../components/O2AnalyzerSettings';
@@ -186,7 +187,7 @@ export default function O2AnalyzerV2Page() {
 
 	// Initialize socket connection
 	useEffect(() => {
-		const socket = io('http://192.168.77.100:4000', {
+		const socket = io(getSocketUrl(), {
 			transports: ['websocket', 'polling'],
 			reconnection: true,
 			reconnectionAttempts: 5,

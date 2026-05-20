@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useMemo } from 'react';
 import Head from 'next/head';
 import io from 'socket.io-client';
+import { getSocketUrl } from '../config';
 import { useDashboardStore } from '../store';
 import { ChillerControlModal } from '../components/ChillerControlModal';
 import { Header } from '../components/dashboard/Header';
@@ -87,7 +88,7 @@ export default function HomePage() {
 	};
 
 	useEffect(() => {
-		const socket = io('http://192.168.77.100:4000', {
+		const socket = io(getSocketUrl(), {
 			transports: ['websocket', 'polling'],
 			reconnection: true,
 			reconnectionAttempts: 10000,
