@@ -16,6 +16,9 @@ const handler = {
       ipcRenderer.removeListener(channel, subscription)
     }
   },
+  getServerIp(): string {
+    return ipcRenderer.sendSync('get-server-ip')
+  },
 }
 
 contextBridge.exposeInMainWorld('ipc', handler)
