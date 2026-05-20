@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getTechUrl } from '../config';
 
 interface CalibrationData {
 	tech_pressure_upper: number;
@@ -22,7 +23,7 @@ export function useTechCalibration() {
 	const [calibration, setCalibration] = useState<CalibrationData>(DEFAULT_CALIBRATION);
 
 	useEffect(() => {
-		fetch('http://192.168.77.100/json.php?i=tech')
+		fetch(getTechUrl())
 			.then((res) => res.json())
 			.then((data) => {
 				const cal = { ...DEFAULT_CALIBRATION };
