@@ -107,8 +107,11 @@ interface WindowConfig {
 }
 
 interface WindowsConfig {
+	serverIp?: string;
 	windows: WindowConfig[];
 }
+
+let serverIp = '192.168.77.100';
 
 function loadWindowsConfig(): WindowsConfig | null {
 	try {
@@ -138,6 +141,7 @@ function loadWindowsConfig(): WindowsConfig | null {
 	}, 5 * 60 * 1000);
 
 	const config = loadWindowsConfig();
+	serverIp = config?.serverIp || serverIp;
 
 	if (config) {
 		const displays = screen.getAllDisplays();
@@ -224,4 +228,8 @@ app.on('window-all-closed', () => {
 
 ipcMain.on('message', async (event, arg) => {
 	event.reply('message', `${arg} World!`);
+});
+
+ipcMain.on('get-server-ip', (event) => {
+	event.returnValue = serverIp;
 });
