@@ -7,7 +7,6 @@ import { ChillerControlModal } from '../components/ChillerControlModal';
 import { Header } from '../components/dashboard/Header';
 import { ChamberControlPanel } from '../components/dashboard/ChamberControlPanel';
 import { AuxiliaryOutputPanel } from '../components/dashboard/AuxiliaryOutputPanel';
-import { DetectorPanel } from '../components/dashboard/DetectorPanel';
 import { LightingPanel } from '../components/dashboard/LightingPanel';
 import { FanPanel } from '../components/dashboard/FanPanel';
 import { ErrorModal } from '../components/dashboard/ErrorModal';
@@ -22,8 +21,6 @@ export default function HomePage() {
 		connected,
 		currentTime,
 		currentTime2,
-		showAuxPanel,
-		setShowAuxPanel,
 		showCalibrationModal,
 		showErrorModal,
 		showSeatAlarmModal,
@@ -476,16 +473,11 @@ export default function HomePage() {
 
 						{/* Middle Column */}
 						<div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4">
-							{showAuxPanel ? (
-								<AuxiliaryOutputPanel
-									isDark={darkMode}
-									onValve1Toggle={setValve1}
-									onValve2Toggle={setValve2}
-									onHide={() => setShowAuxPanel(false)}
-								/>
-							) : (
-								<DetectorPanel isDark={darkMode} />
-							)}
+							<AuxiliaryOutputPanel
+								isDark={darkMode}
+								onValve1Toggle={setValve1}
+								onValve2Toggle={setValve2}
+							/>
 						</div>
 
 						{/* Right Column - Lighting & Fan */}
