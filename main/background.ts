@@ -113,10 +113,25 @@ interface WindowsConfig {
 
 let serverIp = '192.168.77.100';
 
+const DEFAULT_WINDOWS_CONFIG: WindowsConfig = {
+	serverIp: '192.168.77.100',
+	windows: [
+		{ id: 'o2-analyzer', page: '/o2-analyzer-v2', display: 0, fullscreen: true },
+	],
+};
+
 function loadWindowsConfig(): WindowsConfig | null {
 	try {
 		const configPath = path.join(app.getPath('userData'), 'windows-config.json');
-		if (!fs.existsSync(configPath)) return null;
+		if (!fs.existsSync(configPath)) {
+			// First run: write a default config so the technician has a file to edit.
+			fs.writeFileSync(
+				configPath,
+				JSON.stringify(DEFAULT_WINDOWS_CONFIG, null, 2) + '\n',
+				'utf-8'
+			);
+			console.log(`[multi-window] Created default windows-config.json at ${configPath}`);
+		}
 		const raw = fs.readFileSync(configPath, 'utf-8');
 		const config = JSON.parse(raw) as WindowsConfig;
 		if (!config.windows || !Array.isArray(config.windows) || config.windows.length === 0) return null;
