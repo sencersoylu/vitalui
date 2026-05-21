@@ -78,8 +78,9 @@ export default function HomePage() {
 		const socket = io('http://192.168.77.100:4000', {
 			transports: ['websocket', 'polling'],
 			reconnection: true,
-			reconnectionAttempts: 5,
+			reconnectionAttempts: Infinity,
 			reconnectionDelay: 1000,
+			reconnectionDelayMax: 5000,
 		});
 
 		// Add error handling
