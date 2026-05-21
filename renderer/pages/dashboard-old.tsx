@@ -68,7 +68,7 @@ export default function HomePage() {
 	useEffect(() => {
 		console.log('useEffect');
 		// Initialize socket connection
-		const socket = io('http://192.168.2.55:4000', {
+		const socket = io('http://192.168.77.100:4000', {
 			transports: ['websocket', 'polling'],
 			reconnection: true,
 			reconnectionAttempts: 5,
