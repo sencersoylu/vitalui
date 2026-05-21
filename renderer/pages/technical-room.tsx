@@ -66,7 +66,7 @@ export default function TechnicalRoomPage() {
 					{/* Pressure Lines */}
 					<div
 						className="absolute"
-						style={{ left: s(147), top: s(277), width: s(669), height: s(750) }}
+						style={{ left: s(147), top: s(277), width: s(889), height: s(752) }}
 					>
 						<img alt="" src="/external/pressure-line.svg" className="w-full h-full" draggable={false} />
 					</div>
@@ -155,7 +155,7 @@ export default function TechnicalRoomPage() {
 					{/* Air Tank */}
 					<div
 						className="absolute overflow-hidden"
-						style={{ left: s(809), top: 0, width: s(206), height: s(449) }}
+						style={{ left: s(1023), top: s(7), width: s(206), height: s(449) }}
 					>
 						<img
 							alt="Air Tank"
@@ -167,7 +167,7 @@ export default function TechnicalRoomPage() {
 					</div>
 					<div
 						className="absolute rounded-full bg-[rgba(37,78,126,0.8)] flex items-center justify-center"
-						style={{ left: s(798), top: s(174), width: s(227), height: s(77) }}
+						style={{ left: s(1012), top: s(181), width: s(227), height: s(77) }}
 					>
 						<span className="font-poppins font-bold text-white" style={{ fontSize: s(32) }}>
 							{airTankPressure} Bar
@@ -218,10 +218,10 @@ export default function TechnicalRoomPage() {
 						</span>
 					</div>
 
-					{/* Chiller */}
+					{/* Chiller — image scaled to 60% (40% smaller), anchored at bottom-center */}
 					<div
 						className="absolute overflow-hidden"
-						style={{ left: s(1012), top: s(509), width: s(252), height: s(387) }}
+						style={{ left: s(1062), top: s(664), width: s(151), height: s(232) }}
 					>
 						<img
 							alt="Chiller"
@@ -233,7 +233,7 @@ export default function TechnicalRoomPage() {
 					</div>
 					<div
 						className={`absolute rounded-full ${chillerRunning ? 'led-on' : 'led-off'}`}
-						style={{ left: s(1234), top: s(519), width: s(20), height: s(20) }}
+						style={{ left: s(1196), top: s(670), width: s(20), height: s(20) }}
 					/>
 					<div
 						className="absolute flex flex-col justify-center bg-[rgba(37,78,126,0.09)]"
