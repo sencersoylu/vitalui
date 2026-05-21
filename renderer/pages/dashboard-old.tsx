@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import io from 'socket.io-client';
 import { useDashboardStore } from '../store';
+import { ChillerControlModal } from '../components/ChillerControlModal';
 
 export default function HomePage() {
 	// Get state and actions from the store
@@ -14,6 +15,7 @@ export default function HomePage() {
 		showCalibrationModal,
 		showErrorModal,
 		showSeatAlarmModal,
+		showChillerModal,
 		calibrationProgress,
 		calibrationStatus,
 		errorMessage,
@@ -28,12 +30,15 @@ export default function HomePage() {
 		valve2Status,
 		playing,
 		activeSeatAlarm,
+		chillerRunning,
+		chillerCurrentTemp,
 		setConnected,
 		setCurrentTime,
 		setCurrentTime2,
 		setShowCalibrationModal,
 		setShowErrorModal,
 		setShowSeatAlarmModal,
+		setShowChillerModal,
 		setCalibrationProgress,
 		setCalibrationStatus,
 		setErrorMessage,
@@ -48,6 +53,8 @@ export default function HomePage() {
 		setValve2Status,
 		setPlaying,
 		setActiveSeatAlarm,
+		setChillerRunning,
+		setChillerCurrentTemp,
 	} = useDashboardStore();
 
 	// Socket reference
@@ -104,6 +111,8 @@ export default function HomePage() {
 		socket.on('data', (data) => {
 			const errorData = JSON.parse(data);
 			console.log('errorData', Number(errorData.data[19]).toString(2));
+			setChillerCurrentTemp(errorData.data[15] / 10);
+
 			let errorArray = Number(errorData.data[19])
 				.toString(2)
 				.padStart(16, '0')
@@ -161,6 +170,18 @@ export default function HomePage() {
 						setErrorMessage('Ante Chamber Smoke Detected!');
 						playSound();
 					}
+				} else if (errorArray[7] === '1') {
+					if (!showErrorModal) {
+						setShowErrorModal(true);
+						setErrorMessage('Main Chamber High O2 Level!');
+						playSound();
+					}
+				} else if (errorArray[8] === '1') {
+					if (!showErrorModal) {
+						setShowErrorModal(true);
+						setErrorMessage('Ante Chamber High O2 Level!');
+						playSound();
+					}
 				}
 			} else if (errorArray[1] == '0') {
 				setShowErrorModal(false);
@@ -198,6 +219,16 @@ export default function HomePage() {
 			} else {
 				setShowSeatAlarmModal(false);
 				setActiveSeatAlarm(null);
+			}
+		});
+
+		// Listen for chiller data updates
+		socket.on('chillerData', (data) => {
+			if (data.currentTemp !== undefined) {
+				setChillerCurrentTemp(data.currentTemp / 10); // Convert from 0.1°C units
+			}
+			if (data.running !== undefined) {
+				setChillerRunning(data.running === 1);
 			}
 		});
 
@@ -476,6 +507,21 @@ export default function HomePage() {
 										</span>
 									</div>
 								</button>
+								<button
+									className="vital-sign-home-frame-button-chiller"
+									onClick={() => setShowChillerModal(true)}
+									style={{
+										backgroundColor: chillerRunning ? '#06b6d4' : '#90a1b9',
+									}}>
+									<div className="vital-sign-home-container-chiller">
+										<span className="vital-sign-home-text-chiller">
+											Chiller{' '}
+											{chillerRunning
+												? `${chillerCurrentTemp.toFixed(1)}°C`
+												: 'Off'}
+										</span>
+									</div>
+								</button>
 							</div>
 						</div>
 						<div className="vital-sign-home-number-card2">
@@ -521,14 +567,14 @@ export default function HomePage() {
 									</div>
 									<div className="vital-sign-home-frame8">
 										<span className="vital-sign-home-text25">
-											Main Chamber
+											Main
 											<span
 												dangerouslySetInnerHTML={{
 													__html: ' ',
 												}}
 											/>
 										</span>
-										<span className="vital-sign-home-text26">Ante Chamber</span>
+										<span className="vital-sign-home-text26">Ante</span>
 									</div>
 								</div>
 								<div className="vital-sign-home-frame473">
@@ -677,11 +723,18 @@ export default function HomePage() {
 				</div>
 			)}
 
+			{/* Chiller Control Modal */}
+			<ChillerControlModal
+				isOpen={showChillerModal}
+				onClose={() => setShowChillerModal(false)}
+				socketRef={socketRef}
+			/>
+
 			<style jsx global>{`
 				@font-face {
 					font-family: 'Poppins';
-					src: url('/fonts/PlusJakartaSans-Regular.woff2') format('woff2'),
-						url('/fonts/PlusJakartaSans-Regular.woff') format('woff');
+					src: url('/fonts/plus-jakarta-sans-v8-latin-regular.woff2')
+						format('woff2');
 					font-weight: 400;
 					font-style: normal;
 					font-display: swap;
@@ -689,8 +742,8 @@ export default function HomePage() {
 
 				@font-face {
 					font-family: 'Poppins';
-					src: url('/fonts/PlusJakartaSans-Medium.woff2') format('woff2'),
-						url('/fonts/PlusJakartaSans-Medium.woff') format('woff');
+					src: url('/fonts/plus-jakarta-sans-v8-latin-500.woff2')
+						format('woff2');
 					font-weight: 500;
 					font-style: normal;
 					font-display: swap;
@@ -698,8 +751,8 @@ export default function HomePage() {
 
 				@font-face {
 					font-family: 'Poppins';
-					src: url('/fonts/PlusJakartaSans-SemiBold.woff2') format('woff2'),
-						url('/fonts/PlusJakartaSans-SemiBold.woff') format('woff');
+					src: url('/fonts/plus-jakarta-sans-v8-latin-600.woff2')
+						format('woff2');
 					font-weight: 600;
 					font-style: normal;
 					font-display: swap;
@@ -707,8 +760,8 @@ export default function HomePage() {
 
 				@font-face {
 					font-family: 'Poppins';
-					src: url('/fonts/PlusJakartaSans-Bold.woff2') format('woff2'),
-						url('/fonts/PlusJakartaSans-Bold.woff') format('woff');
+					src: url('/fonts/plus-jakarta-sans-v8-latin-700.woff2')
+						format('woff2');
 					font-weight: 700;
 					font-style: normal;
 					font-display: swap;
@@ -882,7 +935,7 @@ export default function HomePage() {
 				}
 
 				.vital-sign-home-number-card1 {
-					gap: 105px;
+					gap: 20px;
 					width: 300px;
 					height: 512px;
 					display: flex;
@@ -924,7 +977,7 @@ export default function HomePage() {
 
 				.vital-sign-home-group46 {
 					width: 235px;
-					height: 276px;
+					height: 381px;
 					display: flex;
 					position: relative;
 					align-items: flex-start;
@@ -1024,6 +1077,42 @@ export default function HomePage() {
 				}
 
 				.vital-sign-home-text13 {
+					color: rgba(255, 255, 255, 1);
+					height: auto;
+					font-size: 24px;
+					font-style: Medium;
+					text-align: center;
+					font-family: Plus Jakarta Sans;
+					font-weight: 500;
+					line-height: 20px;
+					font-stretch: normal;
+					text-decoration: none;
+				}
+
+				.vital-sign-home-frame-button-chiller {
+					top: 315px;
+					left: 0px;
+					width: 235px;
+					height: 66px;
+					display: flex;
+					padding: 0 12px;
+					position: absolute;
+					align-items: center;
+					flex-shrink: 0;
+					border-radius: 3px;
+					justify-content: center;
+					background-color: #90a1b9;
+					transition: background-color 0.3s ease;
+				}
+
+				.vital-sign-home-container-chiller {
+					gap: 4px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+
+				.vital-sign-home-text-chiller {
 					color: rgba(255, 255, 255, 1);
 					height: auto;
 					font-size: 24px;
@@ -1381,7 +1470,7 @@ export default function HomePage() {
 
 				.vital-sign-home-frame8 {
 					display: flex;
-					justify-content: space-between;
+					justify-content: space-around;
 					width: 100%;
 				}
 
@@ -1390,13 +1479,13 @@ export default function HomePage() {
 					height: auto;
 					font-size: 36px;
 					font-style: Regular;
-					text-align: left;
 					font-family: Plus Jakarta Sans;
 					font-weight: 400;
 					line-height: 35px;
 					font-stretch: normal;
 					text-decoration: none;
 					text-align: center;
+					width: 150px;
 				}
 
 				.vital-sign-home-text26 {
@@ -1404,13 +1493,13 @@ export default function HomePage() {
 					height: auto;
 					font-size: 36px;
 					font-style: Medium;
-					text-align: left;
 					font-family: Plus Jakarta Sans;
 					font-weight: 500;
 					line-height: 35px;
 					font-stretch: normal;
 					text-decoration: none;
 					text-align: center;
+					width: 150px;
 				}
 
 				.vital-sign-home-frame473 {
