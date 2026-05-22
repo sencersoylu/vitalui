@@ -134,9 +134,9 @@ export default function TechnicalRoomPage() {
 	}, []);
 
 	useEffect(() => {
-		// Figma design is light-only (#f8fafc)
-		document.documentElement.classList.remove('dark');
-		document.body.style.backgroundColor = '#f8fafc';
+		// Always dark — same as the compressor HMI page.
+		document.documentElement.classList.add('dark');
+		document.body.style.backgroundColor = '#000';
 
 		const updateScale = () => {
 			setScale(Math.min(window.innerWidth / CANVAS_W, window.innerHeight / CANVAS_H));
