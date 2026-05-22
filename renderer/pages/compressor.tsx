@@ -393,18 +393,16 @@ export default function CompressorPage() {
 										onClick={() => sendCommand('RESET')}
 									/>
 								</div>
+								{/* Reserves height so the buttons don't shift when a
+								    command result appears; empty until a button is pressed. */}
 								<div
 									className="mt-2.5 flex h-5 items-center justify-center text-[13px] font-medium"
 									role="status"
 									aria-live="polite"
 								>
-									{feedback ? (
+									{feedback && (
 										<span className={feedback.ok ? 'text-emerald-400' : 'text-rose-400'}>
 											{feedback.msg}
-										</span>
-									) : (
-										<span className="text-slate-500">
-											Pulse commands written to register 80
 										</span>
 									)}
 								</div>

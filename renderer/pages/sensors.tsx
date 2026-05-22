@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import io from 'socket.io-client';
-import { getSocketUrl } from '../config';
+import { getSocketUrl, getBControlUrl } from '../config';
 import { useDashboardStore } from '../store';
 import { SensorCard } from '../components/dashboard/SensorCard';
 import { ChamberSeatOverlay } from '../components/dashboard/ChamberSeatOverlay';
@@ -31,10 +31,10 @@ export default function SensorsPage() {
 		mainFssLevel,
 		anteFssPressure,
 		anteFssLevel,
-		lp1Status,
-		lp2Status,
 		hp1Status,
 		chillerRunning,
+		setHp1Status,
+		setChillerRunning,
 	} = useDashboardStore();
 
 	// Raw analog values from the socket "data" array.
@@ -96,19 +96,66 @@ export default function SensorsPage() {
 				.split('')
 				.reverse();
 
-			setMainFssAlarm(errorArray[2] === '1');
-			setAnteFssAlarm(errorArray[3] === '1');
-			setMainFlameDetected(errorArray[4] === '1');
-			setMainSmokeDetected(errorArray[5] === '1');
-			setAnteSmokeDetected(errorArray[6] === '1');
-			setMainHighO2(errorArray[7] === '1');
-			setAnteHighO2(errorArray[8] === '1');
+			// Fire/O2 bits are valid only while the master alarm bit (0) is set —
+			// same gate the dashboard uses. Each bit is read independently so every
+			// detector card reflects its own sensor (no priority masking).
+			if (errorArray[0] === '1') {
+				setMainFssAlarm(errorArray[2] === '1');
+				setAnteFssAlarm(errorArray[3] === '1');
+				setMainFlameDetected(errorArray[4] === '1');
+				setMainSmokeDetected(errorArray[5] === '1');
+				setAnteSmokeDetected(errorArray[6] === '1');
+				setMainHighO2(errorArray[7] === '1');
+				setAnteHighO2(errorArray[8] === '1');
+			} else {
+				setMainFssAlarm(false);
+				setAnteFssAlarm(false);
+				setMainFlameDetected(false);
+				setMainSmokeDetected(false);
+				setAnteSmokeDetected(false);
+				setMainHighO2(false);
+				setAnteHighO2(false);
+			}
+		});
+
+		// Chiller running state — same chillerData event the dashboard uses.
+		socket.on('chillerData', (cd: any) => {
+			if (cd?.running !== undefined) setChillerRunning(cd.running === 1);
 		});
 
 		return () => {
 			socket.off();
 			socket.disconnect();
 			setConnected(false);
+		};
+	}, []);
+
+	// HP 1 compressor status — B-Control Micro +NET bridge (not the PLC).
+	// Running when the operating table reports message no 3.
+	useEffect(() => {
+		const url = getBControlUrl();
+		console.log('[sensors] connecting B-Control bridge →', url);
+
+		const socket = io(url, {
+			transports: ['websocket', 'polling'],
+			reconnection: true,
+			reconnectionAttempts: Infinity,
+			reconnectionDelay: 3000,
+		});
+
+		socket.on('connect', () => console.log('[sensors] bcontrol connected:', socket.id));
+		socket.on('connect_error', (err: any) =>
+			console.warn('[sensors] bcontrol connect_error:', err?.message || err)
+		);
+
+		socket.on('telemetry', (data: any) => {
+			const operating = data?.status?.operating;
+			setHp1Status(Array.isArray(operating) && operating.some((m: any) => m?.no === 3));
+		});
+
+		return () => {
+			socket.removeAllListeners();
+			socket.disconnect();
 		};
 	}, []);
 
@@ -245,7 +292,6 @@ export default function SensorsPage() {
 										<SectionHeader title="Fire System" accent="orange" />
 										<div className="flex flex-col gap-1.5">
 											<SensorCard name="Fire Suppression (FSS)" location="Ante Chamber" isDark={darkMode} isAlarm={anteFssAlarm} isFire />
-											<SensorCard name="Flame Detector" location="Ante Chamber" isDark={darkMode} isFire />
 											<SensorCard name="Smoke Detector" location="Ante Chamber" isDark={darkMode} isAlarm={anteSmokeDetected} isFire />
 										</div>
 									</div>
@@ -257,8 +303,8 @@ export default function SensorsPage() {
 							<div className="shrink-0 pt-2 mt-2 border-t border-white/[0.06]">
 								<SectionHeader title="Technical Room" accent="cyan" />
 								<div className="grid grid-cols-3 gap-1.5">
-									<SensorCard name="LP 1 Compressor" location="Technical Room" isDark={darkMode} isAlarm={!lp1Status} />
-									<SensorCard name="LP 2 Compressor" location="Technical Room" isDark={darkMode} isAlarm={!lp2Status} />
+									{/* No digital source mapped yet — shows Error until LP 1 is wired. */}
+									<SensorCard name="LP 1 Compressor" location="Technical Room" isDark={darkMode} health="nok" />
 									<SensorCard name="HP 1 Compressor" location="Technical Room" isDark={darkMode} isAlarm={!hp1Status} />
 									<SensorCard name="Chiller" location="Technical Room" isDark={darkMode} isAlarm={!chillerRunning} />
 									<SensorCard name="Air Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(8)} />

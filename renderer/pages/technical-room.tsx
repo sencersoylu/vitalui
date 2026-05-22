@@ -1,30 +1,137 @@
 import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
+import io from 'socket.io-client';
+import { getSocketUrl, getBControlUrl } from '../config';
 import { useDashboardStore } from '../store';
+import { linearConversion } from '../utils/linearConversion';
 
 /** Figma frame 157:50 — 1280×720 (scaled from 1920×1080) */
 const CANVAS_W = 1280;
 const CANVAS_H = 720;
 const s = (n: number) => Math.round(n * (CANVAS_W / 1920));
 
+/**
+ * Raw 4-20mA analog reading → bar.
+ * O2 bank / nitrogen sensors: 0-400 bar, raw range 3240 (4mA) … 16383 (20mA).
+ */
+const toBar = (raw: number | undefined): string | number =>
+	typeof raw === 'number' ? linearConversion(0, 400, 3240, 16383, raw, 0) : '–';
+
+/**
+ * Raw 4-20mA analog reading → level percentage.
+ * FSS level sensors: 0-100 %, raw range 3240 (4mA) … 16383 (20mA).
+ */
+const toLevel = (raw: number | undefined): string | number =>
+	typeof raw === 'number' ? linearConversion(0, 100, 3240, 16383, raw, 0) : '–';
+
+/**
+ * Raw 4-20mA analog reading → air tank pressure.
+ * Air tank sensor: 0-16 bar, raw range 3280 (4mA) … 16383 (20mA).
+ */
+const toAirBar = (raw: number | undefined): string | number =>
+	typeof raw === 'number' ? linearConversion(0, 16, 3280, 16383, raw, 1) : '–';
+
 export default function TechnicalRoomPage() {
 	const {
 		lp1Status,
-		lp2Status,
-		hp1Status,
 		chillerRunning,
 		chillerSetTemp,
 		chillerCurrentTemp,
-		primaryO2Pressure,
-		secondaryO2Pressure,
-		airTankPressure,
-		nitrogen1Pressure,
-		nitrogen2Pressure,
-		mainFssLevel,
-		anteFssLevel,
+		setChillerRunning,
+		setChillerCurrentTemp,
 	} = useDashboardStore();
 
 	const [scale, setScale] = useState(1);
+
+	// Raw PLC values from the socket "data" event.
+	// The data[] index → screen-value mapping is wired once the field
+	// assignments are provided.
+	const [rawData, setRawData] = useState<number[]>([]);
+
+	// HP 1 compressor running state — sourced from the B-Control bridge.
+	const [hp1Running, setHp1Running] = useState(false);
+
+	// PLC socket.io connection.
+	useEffect(() => {
+		const url = getSocketUrl();
+		console.log('[technical-room] connecting PLC socket →', url);
+
+		const socket = io(url, {
+			transports: ['polling', 'websocket'],
+			reconnection: true,
+			reconnectionAttempts: 10000,
+			reconnectionDelay: 5000,
+		});
+
+		socket.on('connect', () => console.log('[technical-room] socket connected:', socket.id));
+		socket.on('disconnect', (reason) => console.warn('[technical-room] socket disconnected:', reason));
+		socket.on('connect_error', (err) => console.error('[technical-room] connect_error:', err?.message || err));
+
+		let logged = false;
+		socket.on('data', (raw) => {
+			let payload: any;
+			try {
+				payload = JSON.parse(raw);
+			} catch {
+				return;
+			}
+			const d = payload?.data;
+			if (!Array.isArray(d)) return;
+			if (!logged) {
+				logged = true;
+				console.log('[technical-room] first "data" payload:', payload);
+			}
+			setRawData(d);
+
+			// Chiller PV: raw data[15] is in 0.1 C units.
+			if (Number.isFinite(d[15])) setChillerCurrentTemp(d[15] / 10);
+
+			// Air Tank (data[8]), O2 banks & nitrogen (data[20]-[24]) and FSS
+			// levels (data[11]/[13]) render from rawData via the toAirBar /
+			// toBar / toLevel helpers.
+			// TODO (need mapping): LP1 status, Chiller SV.
+		});
+
+		// Chiller running state + PV — same as dashboard.tsx.
+		socket.on('chillerData', (cd: any) => {
+			if (cd?.currentTemp !== undefined) setChillerCurrentTemp(cd.currentTemp / 10);
+			if (cd?.running !== undefined) setChillerRunning(cd.running === 1);
+		});
+
+		return () => {
+			socket.off();
+			socket.disconnect();
+		};
+	}, []);
+
+	// HP 1 compressor status — B-Control Micro +NET bridge (not the PLC).
+	useEffect(() => {
+		const url = getBControlUrl();
+		console.log('[technical-room] connecting B-Control bridge →', url);
+
+		const socket = io(url, {
+			transports: ['websocket', 'polling'],
+			reconnection: true,
+			reconnectionAttempts: Infinity,
+			reconnectionDelay: 3000,
+		});
+
+		socket.on('connect', () => console.log('[technical-room] bcontrol connected:', socket.id));
+		socket.on('connect_error', (err: any) =>
+			console.warn('[technical-room] bcontrol connect_error:', err?.message || err)
+		);
+
+		// Compressor is running when the operating table reports message no 3.
+		socket.on('telemetry', (data: any) => {
+			const operating = data?.status?.operating;
+			setHp1Running(Array.isArray(operating) && operating.some((m: any) => m?.no === 3));
+		});
+
+		return () => {
+			socket.removeAllListeners();
+			socket.disconnect();
+		};
+	}, []);
 
 	useEffect(() => {
 		// Figma design is light-only (#f8fafc)
@@ -104,30 +211,6 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(242), top: s(139), width: s(20), height: s(20) }}
 					/>
 
-					{/* LP 2 */}
-					<div
-						className="absolute overflow-hidden"
-						style={{ left: s(296), top: s(129), width: s(248), height: s(272) }}
-					>
-						<img
-							alt="LP2 Compressor"
-							src="/external/lp-compressor.png"
-							className="absolute max-w-none"
-							style={{ width: '192.12%', height: '135.6%', left: '-51.45%', top: '-20.87%' }}
-							draggable={false}
-						/>
-					</div>
-					<p
-						className="absolute font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: s(355), top: s(212), fontSize: s(40) }}
-					>
-						LP 2
-					</p>
-					<div
-						className={`absolute rounded-full ${lp2Status ? 'led-on' : 'led-off'}`}
-						style={{ left: s(514), top: s(139), width: s(20), height: s(20) }}
-					/>
-
 					{/* HP 1 */}
 					<div
 						className="absolute overflow-hidden"
@@ -148,7 +231,7 @@ export default function TechnicalRoomPage() {
 						HP 1
 					</p>
 					<div
-						className={`absolute rounded-full ${hp1Status ? 'led-on' : 'led-off'}`}
+						className={`absolute rounded-full ${hp1Running ? 'led-on' : 'led-off'}`}
 						style={{ left: s(324), top: s(527), width: s(20), height: s(20) }}
 					/>
 
@@ -170,7 +253,7 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(1012), top: s(181), width: s(227), height: s(77) }}
 					>
 						<span className="font-poppins font-bold text-white" style={{ fontSize: s(32) }}>
-							{airTankPressure} Bar
+							{toAirBar(rawData[8])} Bar
 						</span>
 					</div>
 
@@ -192,7 +275,7 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(414), top: s(769), width: s(227), height: s(77) }}
 					>
 						<span className="font-poppins font-bold text-white" style={{ fontSize: s(32) }}>
-							{primaryO2Pressure} Bar
+							{toBar(rawData[20])} Bar
 						</span>
 					</div>
 
@@ -214,7 +297,7 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(666), top: s(769), width: s(227), height: s(77) }}
 					>
 						<span className="font-poppins font-bold text-white" style={{ fontSize: s(32) }}>
-							{secondaryO2Pressure} Bar
+							{toBar(rawData[21])} Bar
 						</span>
 					</div>
 
@@ -299,7 +382,7 @@ export default function TechnicalRoomPage() {
 						className="absolute text-center font-poppins font-bold text-white"
 						style={{ left: s(1570), top: s(210), width: s(106), fontSize: s(20) }}
 					>
-						Lvl: {mainFssLevel}%
+						Lvl: {toLevel(rawData[11])}%
 					</p>
 
 					<div
@@ -329,7 +412,7 @@ export default function TechnicalRoomPage() {
 						className="absolute text-center font-poppins font-bold text-[#1032bc]"
 						style={{ left: s(1470), top: s(370), width: s(64), fontSize: s(24) }}
 					>
-						{nitrogen1Pressure} Bar
+						{toBar(rawData[22])} Bar
 					</p>
 
 					<div
@@ -359,7 +442,7 @@ export default function TechnicalRoomPage() {
 						className="absolute text-center font-poppins font-bold text-[#1032bc]"
 						style={{ left: s(1706), top: s(370), width: s(64), fontSize: s(24) }}
 					>
-						{nitrogen2Pressure} Bar
+						{toBar(rawData[23])} Bar
 					</p>
 
 					{/* Ante Chamber FSS */}
@@ -396,7 +479,7 @@ export default function TechnicalRoomPage() {
 						className="absolute text-center font-poppins font-bold text-white"
 						style={{ left: s(1610), top: s(764), width: s(106), fontSize: s(20) }}
 					>
-						Lvl: {anteFssLevel}%
+						Lvl: {toLevel(rawData[13])}%
 					</p>
 
 					<div
@@ -426,7 +509,7 @@ export default function TechnicalRoomPage() {
 						className="absolute text-center font-poppins font-bold text-[#1032bc]"
 						style={{ left: s(1510), top: s(924), width: s(64), fontSize: s(24) }}
 					>
-						{nitrogen1Pressure} Bar
+						{toBar(rawData[24])} Bar
 					</p>
 				</div>
 			</div>
