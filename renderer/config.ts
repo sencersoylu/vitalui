@@ -30,3 +30,14 @@ export function getSocketUrl(): string {
 export function getTechUrl(): string {
 	return `http://${getServerIp()}/json.php?i=tech`;
 }
+
+// B-Control bridge socket.io URL.
+// The bcontrol-bridge process (Modbus TCP <-> socket.io) emits `telemetry` /
+// `status` and accepts `control`. It runs on the same machine as this HMI,
+// so the default is localhost:3001.
+// Override at runtime with NEXT_PUBLIC_BCONTROL_URL.
+const BCONTROL_URL = 'http://127.0.0.1:3001';
+
+export function getBControlUrl(): string {
+	return process.env.NEXT_PUBLIC_BCONTROL_URL || BCONTROL_URL;
+}

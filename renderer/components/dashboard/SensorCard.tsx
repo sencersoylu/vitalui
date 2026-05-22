@@ -10,6 +10,8 @@ interface SensorCardProps {
 	isPlaceholder?: boolean;
 	isDark?: boolean;
 	isFire?: boolean;
+	/** Sensor health from raw analog value: 'ok' when raw > threshold, 'nok' otherwise. */
+	health?: 'ok' | 'nok';
 	className?: string;
 }
 
@@ -22,11 +24,15 @@ export function SensorCard({
 	isPlaceholder = false,
 	isDark = true,
 	isFire = false,
+	health,
 	className,
 }: SensorCardProps) {
 	const hasValue = value !== undefined;
+	const isNok = health === 'nok';
+	// Red treatment applies to either an active alarm or an unhealthy sensor.
+	const danger = isAlarm || isNok;
 
-	const accentColor = isAlarm
+	const accentColor = danger
 		? 'bg-red-500'
 		: hasValue
 			? 'bg-blue-500'
@@ -34,7 +40,7 @@ export function SensorCard({
 				? 'bg-orange-500'
 				: 'bg-emerald-500';
 
-	const glowColor = isAlarm
+	const glowColor = danger
 		? 'shadow-red-500/20'
 		: hasValue
 			? 'shadow-blue-500/10'
@@ -45,12 +51,12 @@ export function SensorCard({
 	return (
 		<div
 			className={cn(
-				'group relative flex items-center gap-3 rounded-xl border pl-0 pr-4 py-3 transition-all duration-300 backdrop-blur-xl overflow-hidden',
+				'group relative flex items-center gap-2.5 rounded-xl border pl-0 pr-3 py-1.5 transition-all duration-300 backdrop-blur-xl overflow-hidden',
 				'hover:translate-x-1 hover:shadow-lg',
 				isDark
 					? 'bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.07]'
 					: 'bg-white/60 border-slate-200/80 hover:bg-white/90',
-				isAlarm && cn('border-red-500/30', isDark ? 'bg-red-500/[0.06]' : 'bg-red-50/80'),
+				danger && cn('border-red-500/30', isDark ? 'bg-red-500/[0.06]' : 'bg-red-50/80'),
 				`hover:${glowColor}`,
 				className
 			)}>
@@ -59,14 +65,14 @@ export function SensorCard({
 			<div className={cn(
 				'w-1 self-stretch rounded-r-full shrink-0 transition-all duration-300',
 				accentColor,
-				isAlarm ? 'opacity-100' : 'opacity-40 group-hover:opacity-80'
+				danger ? 'opacity-100' : 'opacity-40 group-hover:opacity-80'
 			)} />
 
 			{/* Status ring */}
 			<div className="relative shrink-0">
 				<div className={cn(
-					'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300',
-					isAlarm
+					'w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300',
+					danger
 						? 'bg-red-500/15'
 						: hasValue
 							? 'bg-blue-500/10'
@@ -76,7 +82,7 @@ export function SensorCard({
 				)}>
 					<div className={cn(
 						'w-2.5 h-2.5 rounded-full transition-all duration-300',
-						isAlarm
+						danger
 							? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]'
 							: hasValue
 								? 'bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.4)]'
@@ -85,8 +91,8 @@ export function SensorCard({
 									: 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.4)]'
 					)} />
 				</div>
-				{/* Pulse ring for alarm */}
-				{isAlarm && (
+				{/* Pulse ring for alarm / unhealthy sensor */}
+				{danger && (
 					<div className="absolute inset-0 rounded-full border-2 border-red-500/40 animate-ping" />
 				)}
 			</div>
@@ -96,18 +102,16 @@ export function SensorCard({
 				<h3 className={cn(
 					'font-medium text-[13px] leading-tight truncate transition-colors duration-300',
 					isDark
-						? isAlarm ? 'text-red-200' : 'text-white/90 group-hover:text-white'
-						: isAlarm ? 'text-red-800' : 'text-slate-800'
+						? danger ? 'text-red-200' : 'text-white/90 group-hover:text-white'
+						: danger ? 'text-red-800' : 'text-slate-800'
 				)}>
 					{name}
 				</h3>
 			</div>
 
-			{/* Right side: value or status label */}
+			{/* Right side: value, health status, or alarm/ok label */}
 			{hasValue ? (
-				<div className={cn(
-					'text-right shrink-0',
-				)}>
+				<div className="text-right shrink-0">
 					<span className={cn(
 						'text-sm font-bold tabular-nums',
 						isDark ? 'text-blue-300' : 'text-blue-600'
@@ -123,6 +127,15 @@ export function SensorCard({
 						</span>
 					)}
 				</div>
+			) : health ? (
+				<span className={cn(
+					'text-[10px] font-bold uppercase tracking-wider shrink-0 transition-colors duration-300',
+					danger
+						? 'text-red-400'
+						: isDark ? 'text-emerald-400' : 'text-emerald-600'
+				)}>
+					{isNok ? 'Error' : isAlarm ? 'ALARM' : 'OK'}
+				</span>
 			) : (
 				<span className={cn(
 					'text-[10px] font-semibold uppercase tracking-wider shrink-0 transition-colors duration-300',
@@ -136,8 +149,8 @@ export function SensorCard({
 				</span>
 			)}
 
-			{/* Alarm shimmer effect */}
-			{isAlarm && (
+			{/* Alarm / unhealthy shimmer effect */}
+			{danger && (
 				<div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
 					<div className="absolute -inset-full bg-gradient-to-r from-transparent via-red-500/[0.04] to-transparent animate-[shimmer_2s_ease-in-out_infinite]" />
 				</div>
