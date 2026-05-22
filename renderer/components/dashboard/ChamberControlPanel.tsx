@@ -74,7 +74,7 @@ export function ChamberControlPanel({
 					onClick={onOpenChiller}
 					leftIcon={<Monitor className="w-5 h-5" />}>
 					Chiller{' '}
-					{chillerRunning ? `${chillerCurrentTemp.toFixed(1)}°C` : 'Off'}
+					{chillerRunning ? `${(chillerCurrentTemp ?? 0).toFixed(1)}°C` : 'Off'}
 				</Button>
 			</div>
 		</Card>

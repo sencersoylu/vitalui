@@ -103,7 +103,7 @@ export const ChillerStatusPanel: React.FC<ChillerStatusPanelProps> = ({
 							'text-2xl font-bold',
 							isDark ? 'text-white' : 'text-slate-800'
 						)}>
-						{setTemp.toFixed(1)}°C
+						{(setTemp ?? 0).toFixed(1)}°C
 					</p>
 				</div>
 
@@ -125,7 +125,7 @@ export const ChillerStatusPanel: React.FC<ChillerStatusPanelProps> = ({
 							'text-2xl font-bold',
 							isDark ? 'text-cyan-400' : 'text-cyan-600'
 						)}>
-						{currentTemp.toFixed(1)}°C
+						{(currentTemp ?? 0).toFixed(1)}°C
 					</p>
 				</div>
 			</div>

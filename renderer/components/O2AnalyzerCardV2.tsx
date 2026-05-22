@@ -120,17 +120,17 @@ const Sparkline = React.memo(function Sparkline({
       {/* Min/Max labels on left */}
       <text x={padding.left - 4} y={padding.top + 4}
         fontSize="10" fill={labelColor} textAnchor="end" fontWeight="500">
-        {maxVal.toFixed(1)}
+        {(maxVal ?? 0).toFixed(1)}
       </text>
       <text x={padding.left - 4} y={height - padding.bottom}
         fontSize="10" fill={labelColor} textAnchor="end" fontWeight="500">
-        {minVal.toFixed(1)}
+        {(minVal ?? 0).toFixed(1)}
       </text>
 
       {/* Current value label on right */}
       <text x={width - padding.right + 4} y={points[points.length - 1].y + 4}
         fontSize="11" fill={lineColor} fontWeight="700">
-        {currentVal.toFixed(1)}%
+        {(currentVal ?? 0).toFixed(1)}%
       </text>
 
       {/* Current value dot — larger with glow */}
@@ -369,7 +369,7 @@ export const O2AnalyzerCardV2 = React.memo(function O2AnalyzerCardV2({
                 o2ValueColor
               )}
             >
-              {o2Level.toFixed(1)}
+              {(o2Level ?? 0).toFixed(1)}
             </span>
             <span
               className={cn(

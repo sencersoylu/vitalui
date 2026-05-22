@@ -252,7 +252,7 @@ export default function TechnicalRoomPage() {
 								SV :
 							</span>
 							<span className="font-poppins font-bold text-[#4a90e2]" style={{ fontSize: s(32) }}>
-								{chillerSetTemp.toFixed(1)} °C
+								{(chillerSetTemp ?? 0).toFixed(1)} °C
 							</span>
 						</div>
 						<div className="flex justify-between items-center">
@@ -260,7 +260,7 @@ export default function TechnicalRoomPage() {
 								PV :
 							</span>
 							<span className="font-poppins font-bold text-[#4a90e2]" style={{ fontSize: s(32) }}>
-								{chillerCurrentTemp.toFixed(1)} °C
+								{(chillerCurrentTemp ?? 0).toFixed(1)} °C
 							</span>
 						</div>
 					</div>

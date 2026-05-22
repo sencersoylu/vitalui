@@ -120,7 +120,7 @@ export function ChillerControlModal({
 						</div>
 						<div className="flex items-center justify-center gap-1">
 							<span className="text-7xl font-bold text-slate-600 dark:text-slate-300 tabular-nums">
-								{chillerCurrentTemp.toFixed(1)}
+								{(chillerCurrentTemp ?? 0).toFixed(1)}
 							</span>
 							<span className="text-4xl text-slate-600 dark:text-slate-300">
 								°C

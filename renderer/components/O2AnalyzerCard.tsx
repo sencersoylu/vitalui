@@ -94,7 +94,7 @@ export function O2AnalyzerCard({
 					<span className={`${showAlarm ? 'text-xl' : 'text-base'} text-slate-600 dark:text-slate-400`}>O2 Level</span>
 				</div>
 				<div className={`${showAlarm ? 'text-7xl' : 'text-5xl'} font-bold ${statusColor} ${showAlarm ? 'mb-3' : 'mb-1'}`}>
-					{o2Level.toFixed(1)}%
+					{(o2Level ?? 0).toFixed(1)}%
 				</div>
 			</div>
 

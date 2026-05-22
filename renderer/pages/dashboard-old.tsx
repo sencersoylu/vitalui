@@ -518,7 +518,7 @@ export default function HomePage() {
 										<span className="vital-sign-home-text-chiller">
 											Chiller{' '}
 											{chillerRunning
-												? `${chillerCurrentTemp.toFixed(1)}°C`
+												? `${(chillerCurrentTemp ?? 0).toFixed(1)}°C`
 												: 'Off'}
 										</span>
 									</div>

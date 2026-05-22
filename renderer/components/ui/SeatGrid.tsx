@@ -34,7 +34,7 @@ export const SeatGrid: React.FC<SeatGridProps> = ({
 				{seatNum}
 			</span>
 			<span className="text-[16px] font-poppins text-[#4a90e2]">
-				{pressure.toFixed(2)} Bar
+				{(pressure ?? 0).toFixed(2)} Bar
 			</span>
 		</div>
 	);
