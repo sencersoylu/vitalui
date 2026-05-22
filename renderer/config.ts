@@ -22,8 +22,16 @@ export function getServerIp(): string {
 }
 
 // Socket.io server URL — e.g. http://192.168.77.100:4000
+// Socket.io server URL.
+// Resolution order:
+//   1. NEXT_PUBLIC_SOCKET_URL env var (handy for `next dev` / tunnel testing)
+//   2. A full URL configured as the "server IP" (e.g. a Pinggy tunnel)
+//   3. http://<ip>:4000 — the normal LAN case
 export function getSocketUrl(): string {
-	return `http://${getServerIp()}:4000`;
+	if (process.env.NEXT_PUBLIC_SOCKET_URL) return process.env.NEXT_PUBLIC_SOCKET_URL;
+	const ip = getServerIp();
+	if (/^https?:\/\//i.test(ip)) return ip;
+	return `http://${ip}:4000`;
 }
 
 // Tech-calibration JSON endpoint — e.g. http://192.168.77.100/json.php?i=tech

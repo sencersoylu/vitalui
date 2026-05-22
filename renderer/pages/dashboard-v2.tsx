@@ -95,7 +95,7 @@ export default function HomePage() {
 	// Connection handlers
 	const handleConnect = useCallback(() => {
 		const socket = io(getSocketUrl(), {
-			transports: ['websocket', 'polling'],
+			transports: ['polling', 'websocket'],
 			reconnection: true,
 			reconnectionAttempts: 10000,
 			reconnectionDelay: 5000,

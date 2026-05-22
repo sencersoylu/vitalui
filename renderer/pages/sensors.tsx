@@ -56,7 +56,7 @@ export default function SensorsPage() {
 		console.log('[sensors] connecting socket →', url);
 
 		const socket = io(url, {
-			transports: ['websocket', 'polling'],
+			transports: ['polling', 'websocket'],
 			reconnection: true,
 			reconnectionAttempts: 10000,
 			reconnectionDelay: 5000,

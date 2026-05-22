@@ -138,11 +138,8 @@ export default function CompressorPage() {
 		const url = getBControlUrl();
 		console.log('[compressor] connecting to bcontrol-bridge →', url);
 
-		// Polling first: it survives HTTP tunnels (e.g. Pinggy) where a direct
-		// websocket upgrade may be blocked; socket.io upgrades to websocket
-		// afterwards when the transport allows it.
 		const socket = io(url, {
-			transports: ['polling', 'websocket'],
+			transports: ['websocket', 'polling'],
 			reconnection: true,
 			reconnectionAttempts: Infinity,
 			reconnectionDelay: 3000,
