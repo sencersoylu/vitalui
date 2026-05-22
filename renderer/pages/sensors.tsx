@@ -7,8 +7,11 @@ import { SensorCard } from '../components/dashboard/SensorCard';
 import { ChamberSeatOverlay } from '../components/dashboard/ChamberSeatOverlay';
 
 export default function SensorsPage() {
+	// This screen is always dark — same as the compressor HMI page. Control
+	// rooms run in low light and dark reduces eye strain over long shifts.
+	const darkMode = true;
+
 	const {
-		darkMode,
 		connected,
 		setConnected,
 		mainFssAlarm,
