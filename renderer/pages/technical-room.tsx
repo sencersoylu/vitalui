@@ -155,12 +155,14 @@ export default function TechnicalRoomPage() {
 				<title>Technical Room Monitoring</title>
 			</Head>
 
-			{/* Fill viewport; scale 1280×720 canvas to fit (Electron 1280×720 → scale 1) */}
+			{/* Fill viewport; scale 1280×720 canvas to fit (Electron 1280×720 → scale 1).
+			    Always dark — matches the compressor HMI page. */}
 			<div
-				className="flex items-center justify-center overflow-hidden"
-				style={{ width: '100vw', height: '100vh', backgroundColor: '#f8fafc' }}
+				className="flex items-center justify-center overflow-hidden bg-black"
+				style={{ width: '100vw', height: '100vh' }}
 			>
 				<div
+					className="bg-slate-950"
 					style={{
 						width: CANVAS_W,
 						height: CANVAS_H,
