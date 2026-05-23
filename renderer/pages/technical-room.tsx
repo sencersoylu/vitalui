@@ -296,8 +296,8 @@ export default function TechnicalRoomPage() {
 						</span>
 					</div>
 					<p
-						className="absolute text-center font-poppins font-semibold uppercase tracking-wider text-slate-400"
-						style={{ left: s(1023), top: s(465), width: s(206), fontSize: s(22) }}
+						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"
+						style={{ left: s(1023), top: s(465), width: s(206), fontSize: s(24) }}
 					>
 						Air Stock
 					</p>
@@ -372,8 +372,8 @@ export default function TechnicalRoomPage() {
 						{chillerRunning ? 'ON' : 'OFF'}
 					</span>
 					<p
-						className="absolute text-center font-poppins font-semibold uppercase tracking-wider text-slate-400"
-						style={{ left: s(1062), top: s(636), width: s(151), fontSize: s(22) }}
+						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"
+						style={{ left: s(1062), top: s(610), width: s(151), fontSize: s(24) }}
 					>
 						Chiller
 					</p>
