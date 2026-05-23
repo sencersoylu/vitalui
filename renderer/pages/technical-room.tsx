@@ -212,14 +212,14 @@ export default function TechnicalRoomPage() {
 						/>
 					</div>
 					<p
-						className="absolute font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: s(110), top: s(212), fontSize: s(40) }}
+						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"
+						style={{ left: s(24), top: s(212), width: s(248), fontSize: s(40) }}
 					>
 						LP
 					</p>
 					<p
-						className="absolute font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: s(110), top: s(258), fontSize: s(24) }}
+						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"
+						style={{ left: s(24), top: s(258), width: s(248), fontSize: s(24) }}
 					>
 						Compressor
 					</p>
@@ -250,14 +250,14 @@ export default function TechnicalRoomPage() {
 						/>
 					</div>
 					<p
-						className="absolute font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: s(150), top: s(658), fontSize: s(40) }}
+						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"
+						style={{ left: s(34), top: s(658), width: s(320), fontSize: s(40) }}
 					>
 						HP
 					</p>
 					<p
-						className="absolute font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: s(150), top: s(704), fontSize: s(24) }}
+						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"
+						style={{ left: s(34), top: s(704), width: s(320), fontSize: s(24) }}
 					>
 						Compressor
 					</p>
