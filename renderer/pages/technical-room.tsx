@@ -198,7 +198,12 @@ export default function TechnicalRoomPage() {
 						draggable={false}
 					/>
 
-					{/* LP 1 */}
+					{/* LP 1 — Figma frame (node 264:180): thin sky border, labels at
+					    upper-left (LP) and lower-left (Compressor), both left-aligned. */}
+					<div
+						className="absolute rounded-2xl border-2 border-sky-400/30"
+						style={{ left: s(8), top: s(118), width: s(282), height: s(300) }}
+					/>
 					<div
 						className="absolute overflow-hidden"
 						style={{ left: s(24), top: s(129), width: s(248), height: s(272) }}
@@ -212,14 +217,14 @@ export default function TechnicalRoomPage() {
 						/>
 					</div>
 					<p
-						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: s(24), top: s(212), width: s(248), fontSize: s(40) }}
+						className="absolute font-poppins font-bold text-white drop-shadow-md"
+						style={{ left: s(76), top: s(218), fontSize: s(40) }}
 					>
 						LP
 					</p>
 					<p
-						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: s(24), top: s(258), width: s(248), fontSize: s(24) }}
+						className="absolute font-poppins font-bold text-white drop-shadow-md"
+						style={{ left: s(52), top: s(340), fontSize: s(24) }}
 					>
 						Compressor
 					</p>
@@ -236,7 +241,11 @@ export default function TechnicalRoomPage() {
 						{lp1Status ? 'ON' : 'OFF'}
 					</span>
 
-					{/* HP 1 */}
+					{/* HP 1 — same Figma frame treatment as LP, scaled to the HP image. */}
+					<div
+						className="absolute rounded-2xl border-2 border-sky-400/30"
+						style={{ left: s(18), top: s(506), width: s(354), height: s(409) }}
+					/>
 					<div
 						className="absolute overflow-hidden"
 						style={{ left: s(34), top: s(517), width: s(320), height: s(381) }}
@@ -250,14 +259,14 @@ export default function TechnicalRoomPage() {
 						/>
 					</div>
 					<p
-						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: s(34), top: s(658), width: s(320), fontSize: s(40) }}
+						className="absolute font-poppins font-bold text-white drop-shadow-md"
+						style={{ left: s(101), top: s(643), fontSize: s(40) }}
 					>
 						HP
 					</p>
 					<p
-						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: s(34), top: s(704), width: s(320), fontSize: s(24) }}
+						className="absolute font-poppins font-bold text-white drop-shadow-md"
+						style={{ left: s(69), top: s(814), fontSize: s(24) }}
 					>
 						Compressor
 					</p>
