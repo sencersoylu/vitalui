@@ -527,7 +527,7 @@ export default function HomePage() {
 						</div>
 						<div className="vital-sign-home-number-card2">
 							<div className="vital-sign-home-frame4">
-								<span className="vital-sign-home-text14">Auxiliary Output</span>
+								<span className="vital-sign-home-text14">Auxiliary Decompression</span>
 							</div>
 							<span className="vital-sign-home-text15">Main Chamber</span>
 							<button

@@ -21,7 +21,7 @@ export function AuxiliaryOutputPanel({
 
 	return (
 		<Card
-			title="Auxiliary Output"
+			title="Auxiliary Decompression"
 			className="h-full"
 			isDark={isDark}
 			headerAction={onHide && (
