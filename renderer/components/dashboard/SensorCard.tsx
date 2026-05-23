@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '../utils';
 
 interface SensorCardProps {
-	name: string;
+	name: React.ReactNode;
 	location: string;
 	value?: string;
 	unit?: string;
@@ -100,7 +100,7 @@ export function SensorCard({
 			{/* Text */}
 			<div className="flex-1 min-w-0">
 				<h3 className={cn(
-					'font-medium text-[13px] leading-tight truncate transition-colors duration-300',
+					'font-medium text-[15px] leading-tight truncate transition-colors duration-300',
 					isDark
 						? danger ? 'text-red-200' : 'text-white/90 group-hover:text-white'
 						: danger ? 'text-red-800' : 'text-slate-800'

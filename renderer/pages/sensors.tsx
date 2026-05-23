@@ -271,7 +271,7 @@ export default function SensorsPage() {
 										<SensorCard name="Pressure" location="Main Chamber" isDark={darkMode} health={sensorHealth(0)} />
 										<SensorCard name="Temperature" location="Main Chamber" isDark={darkMode} health={sensorHealth(2)} />
 										<SensorCard name="Humidity" location="Main Chamber" isDark={darkMode} health={sensorHealth(7)} />
-										<SensorCard name="O₂ Level" location="Main Chamber" isDark={darkMode} isAlarm={mainHighO2} health={sensorHealth(1)} />
+										<SensorCard name={<>O<sub>2</sub> Level</>} location="Main Chamber" isDark={darkMode} isAlarm={mainHighO2} health={sensorHealth(1)} />
 									</div>
 									<div className="mt-2">
 										<SectionHeader title="Fire System" accent="orange" />
@@ -290,7 +290,7 @@ export default function SensorsPage() {
 										<SensorCard name="Pressure" location="Ante Chamber" isDark={darkMode} health={sensorHealth(4)} />
 										<SensorCard name="Temperature" location="Ante Chamber" isDark={darkMode} health={sensorHealth(6)} />
 										<SensorCard name="Humidity" location="Ante Chamber" isDark={darkMode} health={sensorHealth(7)} />
-										<SensorCard name="O₂ Level" location="Ante Chamber" isDark={darkMode} isAlarm={anteHighO2} health={sensorHealth(5)} />
+										<SensorCard name={<>O<sub>2</sub> Level</>} location="Ante Chamber" isDark={darkMode} isAlarm={anteHighO2} health={sensorHealth(5)} />
 									</div>
 									<div className="mt-2">
 										<SectionHeader title="Fire System" accent="orange" />
@@ -312,7 +312,7 @@ export default function SensorsPage() {
 									<SensorCard name="HP Compressor" location="Technical Room" isDark={darkMode} isAlarm={!hp1Status} />
 									<SensorCard name="Chiller" location="Technical Room" isDark={darkMode} isAlarm={!chillerRunning} />
 									<SensorCard name="Air Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(8)} />
-									<SensorCard name="O₂ Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(9)} />
+									<SensorCard name={<>O<sub>2</sub> Pressure</>} location="Technical Room" isDark={darkMode} health={sensorHealth(9)} />
 									<SensorCard name="Main FFS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(10)} />
 									<SensorCard name="Main FFS Level" location="Technical Room" isDark={darkMode} health={sensorHealth(11)} />
 									<SensorCard name="Ante FFS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(12)} />
