@@ -439,10 +439,11 @@ export default function TechnicalRoomPage() {
 						/>
 					</div>
 					<p
-						className="absolute text-center font-poppins font-bold text-white"
+						className="absolute text-center font-poppins font-bold text-white leading-tight"
 						style={{ left: s(1570), top: s(210), width: s(106), fontSize: s(20) }}
 					>
-						Lvl: {toLevel(rawData[11])}%
+						Level
+						<br />%{toLevel(rawData[11])}
 					</p>
 
 					<div
@@ -536,10 +537,11 @@ export default function TechnicalRoomPage() {
 						/>
 					</div>
 					<p
-						className="absolute text-center font-poppins font-bold text-white"
+						className="absolute text-center font-poppins font-bold text-white leading-tight"
 						style={{ left: s(1610), top: s(764), width: s(106), fontSize: s(20) }}
 					>
-						Lvl: {toLevel(rawData[13])}%
+						Level
+						<br />%{toLevel(rawData[13])}
 					</p>
 
 					<div
