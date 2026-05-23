@@ -258,7 +258,7 @@ export default function TechnicalRoomPage() {
 					</p>
 					<p
 						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: 20, top: 500, width: 117, fontSize: 16 }}
+						style={{ left: 20, top: 500, width: 117, fontSize: 15 }}
 					>
 						Compressor
 					</p>
