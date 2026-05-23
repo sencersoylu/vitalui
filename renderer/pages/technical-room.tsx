@@ -128,9 +128,11 @@ export default function TechnicalRoomPage() {
 	}, []);
 
 	useEffect(() => {
-		// Always dark — same as the compressor HMI page.
+		// Always dark — same Hipertech palette as the corporate dashboard
+		// (`hipertech_bilgi/index.html`): base #060E24 with a 135° navy gradient
+		// on the canvas itself.
 		document.documentElement.classList.add('dark');
-		document.body.style.backgroundColor = '#000';
+		document.body.style.backgroundColor = '#060E24';
 
 		const updateScale = () => {
 			setScale(Math.min(window.innerWidth / CANVAS_W, window.innerHeight / CANVAS_H));
@@ -150,13 +152,12 @@ export default function TechnicalRoomPage() {
 			</Head>
 
 			{/* Fill viewport; scale 1280×720 canvas to fit (Electron 1280×720 → scale 1).
-			    Always dark — matches the compressor HMI page. */}
+			    Hipertech navy palette — matches the corporate dashboard background. */}
 			<div
-				className="flex items-center justify-center overflow-hidden bg-black"
-				style={{ width: '100vw', height: '100vh' }}
+				className="flex items-center justify-center overflow-hidden"
+				style={{ width: '100vw', height: '100vh', backgroundColor: '#060E24' }}
 			>
 				<div
-					className="bg-slate-950"
 					style={{
 						width: CANVAS_W,
 						height: CANVAS_H,
@@ -164,8 +165,22 @@ export default function TechnicalRoomPage() {
 						transformOrigin: 'center center',
 						position: 'relative',
 						flexShrink: 0,
+						background:
+							'linear-gradient(135deg, #060E24 0%, #0B1A3E 35%, #132B5E 65%, #0D1F47 100%)',
 					}}
 				>
+					{/* Subtle 60×60 grid overlay — same as the Hipertech dashboard. */}
+					<div
+						className="absolute inset-0 pointer-events-none"
+						style={{
+							opacity: 0.04,
+							backgroundImage:
+								'linear-gradient(0deg, rgba(255,255,255,.5) 1px, transparent 1px),' +
+								'linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)',
+							backgroundSize: '60px 60px',
+						}}
+					/>
+
 					{/* Pressure Lines */}
 					<div
 						className="absolute"
@@ -174,12 +189,12 @@ export default function TechnicalRoomPage() {
 						<img alt="" src="/external/pressure-line.svg" className="w-full h-full" draggable={false} />
 					</div>
 
-					{/* Logo — native blue SVG, no brightness filter */}
+					{/* Logo — forced white via filter to read on the navy background. */}
 					<img
 						alt="Hipertech"
 						src="/external/hipertechlogo2501-ygje.svg"
 						className="absolute w-auto"
-						style={{ left: s(48), top: s(7), height: s(91) }}
+						style={{ left: s(48), top: s(7), height: s(91), filter: 'brightness(0) invert(1)' }}
 						draggable={false}
 					/>
 
