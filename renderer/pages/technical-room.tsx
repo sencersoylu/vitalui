@@ -321,7 +321,7 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(1196), top: s(670), width: s(20), height: s(20) }}
 					/>
 					<div
-						className="absolute flex flex-col justify-center bg-[rgba(37,78,126,0.09)]"
+						className="absolute flex flex-col justify-center bg-slate-900/70 border border-slate-800"
 						style={{
 							left: s(997),
 							top: s(914),
@@ -333,18 +333,18 @@ export default function TechnicalRoomPage() {
 						}}
 					>
 						<div className="flex justify-between items-center">
-							<span className="font-poppins font-bold text-[#4a90e2]" style={{ fontSize: s(32) }}>
-								SV :
+							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(30) }}>
+								SV
 							</span>
-							<span className="font-poppins font-bold text-[#4a90e2]" style={{ fontSize: s(32) }}>
+							<span className="font-poppins font-bold text-white tabular-nums" style={{ fontSize: s(32) }}>
 								{(chillerSetTemp ?? 0).toFixed(1)} °C
 							</span>
 						</div>
 						<div className="flex justify-between items-center">
-							<span className="font-poppins font-bold text-[#4a90e2]" style={{ fontSize: s(32) }}>
-								PV :
+							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(30) }}>
+								PV
 							</span>
-							<span className="font-poppins font-bold text-[#4a90e2]" style={{ fontSize: s(32) }}>
+							<span className="font-poppins font-bold text-white tabular-nums" style={{ fontSize: s(32) }}>
 								{(chillerCurrentTemp ?? 0).toFixed(1)} °C
 							</span>
 						</div>
@@ -352,7 +352,7 @@ export default function TechnicalRoomPage() {
 
 					{/* Main Chamber FFS */}
 					<div
-						className="absolute bg-[rgba(217,217,217,0.34)]"
+						className="absolute bg-slate-900/60 border border-slate-800"
 						style={{
 							left: s(1368),
 							top: s(20),
@@ -362,8 +362,8 @@ export default function TechnicalRoomPage() {
 						}}
 					/>
 					<p
-						className="absolute text-center font-poppins font-bold text-[#4a90e2]"
-						style={{ left: s(1436), top: s(46), width: s(366), fontSize: s(32) }}
+						className="absolute text-center font-poppins font-bold uppercase tracking-wider text-slate-200"
+						style={{ left: s(1436), top: s(46), width: s(366), fontSize: s(28) }}
 					>
 						Main Chamber FFS
 					</p>
@@ -411,7 +411,7 @@ export default function TechnicalRoomPage() {
 						</p>
 					</div>
 					<p
-						className="absolute text-center font-poppins font-bold text-[#1032bc]"
+						className="absolute text-center font-poppins font-bold text-sky-300 tabular-nums"
 						style={{ left: s(1470), top: s(370), width: s(64), fontSize: s(24) }}
 					>
 						{toBar(rawData[22])} Bar
@@ -441,7 +441,7 @@ export default function TechnicalRoomPage() {
 						</p>
 					</div>
 					<p
-						className="absolute text-center font-poppins font-bold text-[#1032bc]"
+						className="absolute text-center font-poppins font-bold text-sky-300 tabular-nums"
 						style={{ left: s(1706), top: s(370), width: s(64), fontSize: s(24) }}
 					>
 						{toBar(rawData[23])} Bar
@@ -449,7 +449,7 @@ export default function TechnicalRoomPage() {
 
 					{/* Ante Chamber FFS */}
 					<div
-						className="absolute bg-[rgba(217,217,217,0.34)]"
+						className="absolute bg-slate-900/60 border border-slate-800"
 						style={{
 							left: s(1368),
 							top: s(574),
@@ -459,8 +459,8 @@ export default function TechnicalRoomPage() {
 						}}
 					/>
 					<p
-						className="absolute text-center font-poppins font-bold text-[#4a90e2]"
-						style={{ left: s(1436), top: s(600), width: s(366), fontSize: s(32) }}
+						className="absolute text-center font-poppins font-bold uppercase tracking-wider text-slate-200"
+						style={{ left: s(1436), top: s(600), width: s(366), fontSize: s(28) }}
 					>
 						Ante Chamber FFS
 					</p>
@@ -508,7 +508,7 @@ export default function TechnicalRoomPage() {
 						</p>
 					</div>
 					<p
-						className="absolute text-center font-poppins font-bold text-[#1032bc]"
+						className="absolute text-center font-poppins font-bold text-sky-300 tabular-nums"
 						style={{ left: s(1510), top: s(924), width: s(64), fontSize: s(24) }}
 					>
 						{toBar(rawData[24])} Bar
