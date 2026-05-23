@@ -198,12 +198,8 @@ export default function TechnicalRoomPage() {
 						draggable={false}
 					/>
 
-					{/* LP 1 — Figma frame (node 264:180): thin sky border, labels at
-					    upper-left (LP) and lower-left (Compressor), both left-aligned. */}
-					<div
-						className="absolute rounded-2xl border-2 border-sky-400/30"
-						style={{ left: s(8), top: s(118), width: s(282), height: s(300) }}
-					/>
+					{/* LP 1 — labels at upper-left (LP) and lower-left (Compressor),
+					    both left-aligned per Figma 264:180. */}
 					<div
 						className="absolute overflow-hidden"
 						style={{ left: s(24), top: s(129), width: s(248), height: s(272) }}
@@ -241,11 +237,7 @@ export default function TechnicalRoomPage() {
 						{lp1Status ? 'ON' : 'OFF'}
 					</span>
 
-					{/* HP 1 — same Figma frame treatment as LP, scaled to the HP image. */}
-					<div
-						className="absolute rounded-2xl border-2 border-sky-400/30"
-						style={{ left: s(18), top: s(506), width: s(354), height: s(409) }}
-					/>
+					{/* HP 1 — same label layout as LP. */}
 					<div
 						className="absolute overflow-hidden"
 						style={{ left: s(34), top: s(517), width: s(320), height: s(381) }}
