@@ -24,12 +24,6 @@ const toBar = (raw: number | undefined): string | number =>
 const toLevel = (raw: number | undefined): string | number =>
 	typeof raw === 'number' ? linearConversion(0, 100, 3240, 16383, raw, 0) : '–';
 
-/**
- * Raw 4-20mA analog reading → air tank pressure.
- * Air tank sensor: 0-16 bar, raw range 3280 (4mA) … 16383 (20mA).
- */
-const toAirBar = (raw: number | undefined): string | number =>
-	typeof raw === 'number' ? linearConversion(0, 16, 3280, 16383, raw, 1) : '–';
 
 export default function TechnicalRoomPage() {
 	const {
@@ -86,9 +80,9 @@ export default function TechnicalRoomPage() {
 			// Chiller PV: raw data[15] is in 0.1 C units.
 			if (Number.isFinite(d[15])) setChillerCurrentTemp(d[15] / 10);
 
-			// Air Tank (data[8]), O2 banks & nitrogen (data[20]-[24]) and FFS
-			// levels (data[11]/[13]) render from rawData via the toAirBar /
-			// toBar / toLevel helpers.
+			// Air Tank (data[30]), O2 banks & nitrogen (data[20]-[24]) and FFS
+			// levels (data[11]/[13]) render from rawData via the toBar /
+			// toLevel helpers.
 			// TODO (need mapping): LP1 status, Chiller SV.
 		});
 
@@ -255,7 +249,7 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(1012), top: s(181), width: s(227), height: s(77) }}
 					>
 						<span className="font-poppins font-bold text-white" style={{ fontSize: s(32) }}>
-							{toAirBar(rawData[8])} Bar
+							{toBar(rawData[30])} Bar
 						</span>
 					</div>
 
