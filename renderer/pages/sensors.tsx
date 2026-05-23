@@ -185,23 +185,23 @@ export default function SensorsPage() {
 			</Head>
 
 			<div
-				className={`min-h-screen overflow-hidden transition-all duration-500 ${
-					darkMode
-						? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
-						: 'bg-gradient-to-br from-sky-100 via-slate-100 to-amber-50'
-				}`}>
-				{/* Decorative background */}
-				<div className="absolute inset-0 overflow-hidden pointer-events-none">
-					<div className={`absolute -top-40 -right-40 w-80 h-80 rounded-full blur-3xl transition-all duration-500 ${
-						darkMode ? 'bg-blue-500/10' : 'bg-sky-400/20'
-					}`} />
-					<div className={`absolute -bottom-40 -left-40 w-80 h-80 rounded-full blur-3xl transition-all duration-500 ${
-						darkMode ? 'bg-emerald-500/10' : 'bg-amber-400/20'
-					}`} />
-					<div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl transition-all duration-500 ${
-						darkMode ? 'bg-indigo-500/5' : 'bg-violet-300/10'
-					}`} />
-				</div>
+				className="min-h-screen overflow-hidden relative"
+				style={{
+					background:
+						'linear-gradient(135deg, #060E24 0%, #0B1A3E 35%, #132B5E 65%, #0D1F47 100%)',
+				}}
+			>
+				{/* Subtle 60×60 grid overlay — matches the Hipertech corporate dashboard. */}
+				<div
+					className="absolute inset-0 pointer-events-none"
+					style={{
+						opacity: 0.04,
+						backgroundImage:
+							'linear-gradient(0deg, rgba(255,255,255,.5) 1px, transparent 1px),' +
+							'linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)',
+						backgroundSize: '60px 60px',
+					}}
+				/>
 
 				{/* Content */}
 				<div className="relative z-10 px-6 py-4 flex flex-col h-screen">
@@ -210,7 +210,8 @@ export default function SensorsPage() {
 						<img
 							alt="Hipertech Logo"
 							src="/external/hipertechlogo2501-ygje.svg"
-							className={`h-12 w-auto transition-all duration-500 ${!darkMode && 'brightness-0'}`}
+							className="h-12 w-auto"
+							style={{ filter: 'brightness(0) invert(1)' }}
 						/>
 						<h1 className={`text-xl font-bold transition-all duration-500 ${
 							darkMode ? 'text-white' : 'text-slate-900'
@@ -270,12 +271,12 @@ export default function SensorsPage() {
 										<SensorCard name="Pressure" location="Main Chamber" isDark={darkMode} health={sensorHealth(0)} />
 										<SensorCard name="Temperature" location="Main Chamber" isDark={darkMode} health={sensorHealth(2)} />
 										<SensorCard name="Humidity" location="Main Chamber" isDark={darkMode} health={sensorHealth(7)} />
-										<SensorCard name="O2 Level" location="Main Chamber" isDark={darkMode} isAlarm={mainHighO2} health={sensorHealth(1)} />
+										<SensorCard name="O₂ Level" location="Main Chamber" isDark={darkMode} isAlarm={mainHighO2} health={sensorHealth(1)} />
 									</div>
 									<div className="mt-2">
 										<SectionHeader title="Fire System" accent="orange" />
 										<div className="flex flex-col gap-1.5">
-											<SensorCard name="Fire Suppression (FFS)" location="Main Chamber" isDark={darkMode} isAlarm={mainFssAlarm} isFire />
+											<SensorCard name="Fire Fighting System (FFS)" location="Main Chamber" isDark={darkMode} isAlarm={mainFssAlarm} isFire />
 											<SensorCard name="Flame Detector" location="Main Chamber" isDark={darkMode} isAlarm={mainFlameDetected} isFire />
 											<SensorCard name="Smoke Detector" location="Main Chamber" isDark={darkMode} isAlarm={mainSmokeDetected} isFire />
 										</div>
@@ -289,12 +290,12 @@ export default function SensorsPage() {
 										<SensorCard name="Pressure" location="Ante Chamber" isDark={darkMode} health={sensorHealth(4)} />
 										<SensorCard name="Temperature" location="Ante Chamber" isDark={darkMode} health={sensorHealth(6)} />
 										<SensorCard name="Humidity" location="Ante Chamber" isDark={darkMode} health={sensorHealth(7)} />
-										<SensorCard name="O2 Level" location="Ante Chamber" isDark={darkMode} isAlarm={anteHighO2} health={sensorHealth(5)} />
+										<SensorCard name="O₂ Level" location="Ante Chamber" isDark={darkMode} isAlarm={anteHighO2} health={sensorHealth(5)} />
 									</div>
 									<div className="mt-2">
 										<SectionHeader title="Fire System" accent="orange" />
 										<div className="flex flex-col gap-1.5">
-											<SensorCard name="Fire Suppression (FFS)" location="Ante Chamber" isDark={darkMode} isAlarm={anteFssAlarm} isFire />
+											<SensorCard name="Fire Fighting System (FFS)" location="Ante Chamber" isDark={darkMode} isAlarm={anteFssAlarm} isFire />
 											<SensorCard name="Smoke Detector" location="Ante Chamber" isDark={darkMode} isAlarm={anteSmokeDetected} isFire />
 										</div>
 									</div>
@@ -306,12 +307,12 @@ export default function SensorsPage() {
 							<div className="shrink-0 pt-2 mt-2 border-t border-white/[0.06]">
 								<SectionHeader title="Technical Room" accent="cyan" />
 								<div className="grid grid-cols-3 gap-1.5">
-									{/* No digital source mapped yet — shows Error until LP 1 is wired. */}
-									<SensorCard name="LP 1 Compressor" location="Technical Room" isDark={darkMode} health="nok" />
-									<SensorCard name="HP 1 Compressor" location="Technical Room" isDark={darkMode} isAlarm={!hp1Status} />
+									{/* No digital source mapped yet — shows Error until LP is wired. */}
+									<SensorCard name="LP Compressor" location="Technical Room" isDark={darkMode} health="nok" />
+									<SensorCard name="HP Compressor" location="Technical Room" isDark={darkMode} isAlarm={!hp1Status} />
 									<SensorCard name="Chiller" location="Technical Room" isDark={darkMode} isAlarm={!chillerRunning} />
 									<SensorCard name="Air Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(8)} />
-									<SensorCard name="O2 Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(9)} />
+									<SensorCard name="O₂ Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(9)} />
 									<SensorCard name="Main FFS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(10)} />
 									<SensorCard name="Main FFS Level" location="Technical Room" isDark={darkMode} health={sensorHealth(11)} />
 									<SensorCard name="Ante FFS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(12)} />
