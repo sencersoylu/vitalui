@@ -252,13 +252,13 @@ export default function TechnicalRoomPage() {
 					</div>
 					<p
 						className="absolute font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: s(101), top: s(675), fontSize: s(40) }}
+						style={{ left: 60, top: s(675), fontSize: s(40) }}
 					>
 						HP
 					</p>
 					<p
 						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: s(34), top: s(790), width: s(176), fontSize: s(24) }}
+						style={{ left: 20, top: 500, width: 117, fontSize: 16 }}
 					>
 						Compressor
 					</p>
