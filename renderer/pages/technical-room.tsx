@@ -218,8 +218,8 @@ export default function TechnicalRoomPage() {
 						LP
 					</p>
 					<p
-						className="absolute text-center font-poppins font-semibold uppercase tracking-wider text-slate-400"
-						style={{ left: s(24), top: s(410), width: s(248), fontSize: s(22) }}
+						className="absolute font-poppins font-bold text-white drop-shadow-md"
+						style={{ left: s(110), top: s(258), fontSize: s(24) }}
 					>
 						Compressor
 					</p>
@@ -256,8 +256,8 @@ export default function TechnicalRoomPage() {
 						HP
 					</p>
 					<p
-						className="absolute text-center font-poppins font-semibold uppercase tracking-wider text-slate-400"
-						style={{ left: s(34), top: s(910), width: s(320), fontSize: s(22) }}
+						className="absolute font-poppins font-bold text-white drop-shadow-md"
+						style={{ left: s(150), top: s(704), fontSize: s(24) }}
 					>
 						Compressor
 					</p>
