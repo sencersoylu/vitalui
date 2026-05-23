@@ -198,14 +198,28 @@ export default function TechnicalRoomPage() {
 					</div>
 					<p
 						className="absolute font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: s(72), top: s(212), fontSize: s(40) }}
+						style={{ left: s(110), top: s(212), fontSize: s(40) }}
 					>
-						LP 1
+						LP
+					</p>
+					<p
+						className="absolute text-center font-poppins font-semibold uppercase tracking-wider text-slate-400"
+						style={{ left: s(24), top: s(410), width: s(248), fontSize: s(22) }}
+					>
+						Compressor
 					</p>
 					<div
 						className={`absolute rounded-full ${lp1Status ? 'led-on' : 'led-off'}`}
 						style={{ left: s(242), top: s(139), width: s(20), height: s(20) }}
 					/>
+					<span
+						className={`absolute font-poppins font-bold uppercase tracking-wider drop-shadow ${
+							lp1Status ? 'text-emerald-400' : 'text-rose-400'
+						}`}
+						style={{ left: s(272), top: s(132), fontSize: s(24) }}
+					>
+						{lp1Status ? 'ON' : 'OFF'}
+					</span>
 
 					{/* HP 1 */}
 					<div
@@ -222,14 +236,28 @@ export default function TechnicalRoomPage() {
 					</div>
 					<p
 						className="absolute font-poppins font-bold text-white drop-shadow-md"
-						style={{ left: s(82), top: s(658), fontSize: s(40) }}
+						style={{ left: s(150), top: s(658), fontSize: s(40) }}
 					>
-						HP 1
+						HP
+					</p>
+					<p
+						className="absolute text-center font-poppins font-semibold uppercase tracking-wider text-slate-400"
+						style={{ left: s(34), top: s(910), width: s(320), fontSize: s(22) }}
+					>
+						Compressor
 					</p>
 					<div
 						className={`absolute rounded-full ${hp1Running ? 'led-on' : 'led-off'}`}
 						style={{ left: s(324), top: s(527), width: s(20), height: s(20) }}
 					/>
+					<span
+						className={`absolute font-poppins font-bold uppercase tracking-wider drop-shadow ${
+							hp1Running ? 'text-emerald-400' : 'text-rose-400'
+						}`}
+						style={{ left: s(354), top: s(520), fontSize: s(24) }}
+					>
+						{hp1Running ? 'ON' : 'OFF'}
+					</span>
 
 					{/* Air Tank */}
 					<div
@@ -248,10 +276,16 @@ export default function TechnicalRoomPage() {
 						className="absolute rounded-full bg-[rgba(37,78,126,0.8)] flex items-center justify-center"
 						style={{ left: s(1012), top: s(181), width: s(227), height: s(77) }}
 					>
-						<span className="font-poppins font-bold text-white" style={{ fontSize: s(32) }}>
+						<span className="font-poppins font-bold text-white tabular-nums" style={{ fontSize: s(32) }}>
 							{toBar(rawData[30])} Bar
 						</span>
 					</div>
+					<p
+						className="absolute text-center font-poppins font-semibold uppercase tracking-wider text-slate-400"
+						style={{ left: s(1023), top: s(465), width: s(206), fontSize: s(22) }}
+					>
+						Air Stock
+					</p>
 
 					{/* Cylinder Bank 1 */}
 					<div
@@ -314,6 +348,20 @@ export default function TechnicalRoomPage() {
 						className={`absolute rounded-full ${chillerRunning ? 'led-on' : 'led-off'}`}
 						style={{ left: s(1196), top: s(670), width: s(20), height: s(20) }}
 					/>
+					<span
+						className={`absolute font-poppins font-bold uppercase tracking-wider drop-shadow ${
+							chillerRunning ? 'text-emerald-400' : 'text-rose-400'
+						}`}
+						style={{ left: s(1226), top: s(663), fontSize: s(24) }}
+					>
+						{chillerRunning ? 'ON' : 'OFF'}
+					</span>
+					<p
+						className="absolute text-center font-poppins font-semibold uppercase tracking-wider text-slate-400"
+						style={{ left: s(1062), top: s(636), width: s(151), fontSize: s(22) }}
+					>
+						Chiller
+					</p>
 					<div
 						className="absolute flex flex-col justify-center bg-slate-900/70 border border-slate-800"
 						style={{
