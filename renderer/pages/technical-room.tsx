@@ -19,7 +19,7 @@ const toBar = (raw: number | undefined): string | number =>
 
 /**
  * Raw 4-20mA analog reading → level percentage.
- * FSS level sensors: 0-100 %, raw range 3240 (4mA) … 16383 (20mA).
+ * FFS level sensors: 0-100 %, raw range 3240 (4mA) … 16383 (20mA).
  */
 const toLevel = (raw: number | undefined): string | number =>
 	typeof raw === 'number' ? linearConversion(0, 100, 3240, 16383, raw, 0) : '–';
@@ -86,7 +86,7 @@ export default function TechnicalRoomPage() {
 			// Chiller PV: raw data[15] is in 0.1 C units.
 			if (Number.isFinite(d[15])) setChillerCurrentTemp(d[15] / 10);
 
-			// Air Tank (data[8]), O2 banks & nitrogen (data[20]-[24]) and FSS
+			// Air Tank (data[8]), O2 banks & nitrogen (data[20]-[24]) and FFS
 			// levels (data[11]/[13]) render from rawData via the toAirBar /
 			// toBar / toLevel helpers.
 			// TODO (need mapping): LP1 status, Chiller SV.
@@ -350,7 +350,7 @@ export default function TechnicalRoomPage() {
 						</div>
 					</div>
 
-					{/* Main Chamber FSS */}
+					{/* Main Chamber FFS */}
 					<div
 						className="absolute bg-[rgba(217,217,217,0.34)]"
 						style={{
@@ -365,7 +365,7 @@ export default function TechnicalRoomPage() {
 						className="absolute text-center font-poppins font-bold text-[#4a90e2]"
 						style={{ left: s(1436), top: s(46), width: s(366), fontSize: s(32) }}
 					>
-						Main Chamber FSS
+						Main Chamber FFS
 					</p>
 
 					<div
@@ -373,7 +373,7 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(1558), top: s(104), width: s(130), height: s(331) }}
 					>
 						<img
-							alt="Main FSS Tank"
+							alt="Main FFS Tank"
 							src="/external/fss-tank.png"
 							className="absolute max-w-none"
 							style={{ width: '401.18%', height: '121.92%', left: '-182.66%', top: '-13.21%' }}
@@ -447,7 +447,7 @@ export default function TechnicalRoomPage() {
 						{toBar(rawData[23])} Bar
 					</p>
 
-					{/* Ante Chamber FSS */}
+					{/* Ante Chamber FFS */}
 					<div
 						className="absolute bg-[rgba(217,217,217,0.34)]"
 						style={{
@@ -462,7 +462,7 @@ export default function TechnicalRoomPage() {
 						className="absolute text-center font-poppins font-bold text-[#4a90e2]"
 						style={{ left: s(1436), top: s(600), width: s(366), fontSize: s(32) }}
 					>
-						Ante Chamber FSS
+						Ante Chamber FFS
 					</p>
 
 					<div
@@ -470,7 +470,7 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(1598), top: s(658), width: s(130), height: s(331) }}
 					>
 						<img
-							alt="Ante FSS Tank"
+							alt="Ante FFS Tank"
 							src="/external/fss-tank.png"
 							className="absolute max-w-none"
 							style={{ width: '401.18%', height: '121.92%', left: '-182.66%', top: '-13.21%' }}

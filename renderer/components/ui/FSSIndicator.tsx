@@ -31,7 +31,7 @@ export const FSSIndicator: React.FC<FSSIndicatorProps> = ({
 			<p className="text-[16px] font-poppins text-[#4a90e2] text-center mb-1">
 				{label}
 				<br />
-				FSS
+				FFS
 			</p>
 
 			{/* Status indicator */}

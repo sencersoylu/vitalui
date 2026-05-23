@@ -275,7 +275,7 @@ export default function SensorsPage() {
 									<div className="mt-2">
 										<SectionHeader title="Fire System" accent="orange" />
 										<div className="flex flex-col gap-1.5">
-											<SensorCard name="Fire Suppression (FSS)" location="Main Chamber" isDark={darkMode} isAlarm={mainFssAlarm} isFire />
+											<SensorCard name="Fire Suppression (FFS)" location="Main Chamber" isDark={darkMode} isAlarm={mainFssAlarm} isFire />
 											<SensorCard name="Flame Detector" location="Main Chamber" isDark={darkMode} isAlarm={mainFlameDetected} isFire />
 											<SensorCard name="Smoke Detector" location="Main Chamber" isDark={darkMode} isAlarm={mainSmokeDetected} isFire />
 										</div>
@@ -294,7 +294,7 @@ export default function SensorsPage() {
 									<div className="mt-2">
 										<SectionHeader title="Fire System" accent="orange" />
 										<div className="flex flex-col gap-1.5">
-											<SensorCard name="Fire Suppression (FSS)" location="Ante Chamber" isDark={darkMode} isAlarm={anteFssAlarm} isFire />
+											<SensorCard name="Fire Suppression (FFS)" location="Ante Chamber" isDark={darkMode} isAlarm={anteFssAlarm} isFire />
 											<SensorCard name="Smoke Detector" location="Ante Chamber" isDark={darkMode} isAlarm={anteSmokeDetected} isFire />
 										</div>
 									</div>
@@ -312,10 +312,10 @@ export default function SensorsPage() {
 									<SensorCard name="Chiller" location="Technical Room" isDark={darkMode} isAlarm={!chillerRunning} />
 									<SensorCard name="Air Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(8)} />
 									<SensorCard name="O2 Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(9)} />
-									<SensorCard name="Main FSS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(10)} />
-									<SensorCard name="Main FSS Level" location="Technical Room" isDark={darkMode} health={sensorHealth(11)} />
-									<SensorCard name="Ante FSS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(12)} />
-									<SensorCard name="Ante FSS Level" location="Technical Room" isDark={darkMode} health={sensorHealth(13)} />
+									<SensorCard name="Main FFS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(10)} />
+									<SensorCard name="Main FFS Level" location="Technical Room" isDark={darkMode} health={sensorHealth(11)} />
+									<SensorCard name="Ante FFS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(12)} />
+									<SensorCard name="Ante FFS Level" location="Technical Room" isDark={darkMode} health={sensorHealth(13)} />
 								</div>
 							</div>
 						</div>
