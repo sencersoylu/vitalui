@@ -11,7 +11,11 @@ import { createWindow } from './helpers';
 const isProd = process.env.NODE_ENV === 'production';
 
 if (process.platform === 'linux') {
-	app.commandLine.appendSwitch('disable-gpu-compositing');
+	// `disable-gpu-compositing` removed 2026-05-24 — it was forcing
+	// software compositing and causing animation jank on RPi 5. The
+	// system Chromium on the Pi runs hardware compositing fine (verified
+	// via chrome://gpu). If the renderer starts crashing or showing white
+	// after this change, put the flag back.
 	app.commandLine.appendSwitch('in-process-gpu');
 	app.commandLine.appendSwitch('js-flags', '--max-old-space-size=384');
 }
