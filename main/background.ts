@@ -11,16 +11,8 @@ import { createWindow } from './helpers';
 const isProd = process.env.NODE_ENV === 'production';
 
 if (process.platform === 'linux') {
-	// Align with Raspberry Pi OS Chromium's flags (verified via chrome://gpu
-	// on the target Pi panel): native Wayland, GLES via ANGLE, hardware
-	// rasterization. The old `disable-gpu-compositing` + `in-process-gpu`
-	// flags were a workaround for an Electron 34 crash that was actually
-	// caused by the 16KB kernel page size — fixed at the kernel level
-	// (kernel=kernel8.img), so the bandage flags are no longer needed.
-	app.commandLine.appendSwitch('ozone-platform', 'wayland');
-	app.commandLine.appendSwitch('enable-features', 'UseOzonePlatform');
-	app.commandLine.appendSwitch('use-angle', 'gles');
-	app.commandLine.appendSwitch('enable-gpu-rasterization');
+	app.commandLine.appendSwitch('disable-gpu-compositing');
+	app.commandLine.appendSwitch('in-process-gpu');
 	app.commandLine.appendSwitch('js-flags', '--max-old-space-size=384');
 }
 
