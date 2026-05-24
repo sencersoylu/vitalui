@@ -264,13 +264,13 @@ export default function TechnicalRoomPage() {
 					</p>
 					<div
 						className={`absolute rounded-full ${hp1Running ? 'led-on' : 'led-off'}`}
-						style={{ left: s(320), top: s(540), width: s(20), height: s(20) }}
+						style={{ left: s(320), top: s(535), width: s(20), height: s(20) }}
 					/>
 					<span
 						className={`absolute font-poppins font-bold uppercase tracking-wider drop-shadow ${
 							hp1Running ? 'text-emerald-400' : 'text-rose-400'
 						}`}
-						style={{ left: s(350), top: s(533), fontSize: s(24) }}
+						style={{ left: s(350), top: s(528), fontSize: s(24) }}
 					>
 						{hp1Running ? 'ON' : 'OFF'}
 					</span>
