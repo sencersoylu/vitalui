@@ -20,6 +20,7 @@ export function Header() {
 				alt="Hipertech Logo"
 				src="/external/hipertechlogo2501-ygje.svg"
 				className="h-16 w-auto transition-all duration-500"
+				style={darkMode ? { filter: 'brightness(0) invert(1)' } : undefined}
 			/>
 
 			<div className="flex items-center gap-4">
