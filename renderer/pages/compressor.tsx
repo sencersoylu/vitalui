@@ -250,7 +250,7 @@ export default function CompressorPage() {
 					/>
 					{/* ---------------- Header ---------------- */}
 					<header
-						className="relative flex shrink-0 items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900 px-5"
+						className="relative flex shrink-0 items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm px-5"
 						style={{ height: 78 }}
 					>
 						<div className="flex items-center gap-3.5">
@@ -318,7 +318,7 @@ export default function CompressorPage() {
 							{GROUPS.map((group) => (
 								<div
 									key={group.title}
-									className="flex min-h-0 flex-1 flex-col rounded-2xl border border-slate-800 bg-slate-900 p-3.5"
+									className="flex min-h-0 flex-1 flex-col rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm p-3.5"
 								>
 									<h2 className="mb-2.5 flex shrink-0 items-center gap-2 text-[14px] font-bold uppercase tracking-wider text-slate-300">
 										<group.icon size={17} className={group.tint} />
@@ -344,7 +344,7 @@ export default function CompressorPage() {
 
 						{/* Status messages + controls */}
 						<aside className="flex min-h-0 flex-col gap-3.5">
-							<div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-slate-800 bg-slate-900 p-3.5">
+							<div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm p-3.5">
 								<div className="mb-2.5 flex shrink-0 items-center justify-between">
 									<h2 className="text-[14px] font-bold uppercase tracking-wider text-slate-300">
 										System Messages
@@ -377,7 +377,7 @@ export default function CompressorPage() {
 							</div>
 
 							{/* Control panel */}
-							<div className="shrink-0 rounded-2xl border border-slate-800 bg-slate-900 p-3.5">
+							<div className="shrink-0 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm p-3.5">
 								<h2 className="mb-2.5 text-[14px] font-bold uppercase tracking-wider text-slate-300">
 									Control
 								</h2>
