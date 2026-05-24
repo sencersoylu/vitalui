@@ -244,7 +244,7 @@ export default function CompressorPage() {
 								src="/external/hipertechlogo2501-ygje.svg"
 								alt="Hipertech"
 								className="w-auto"
-								style={{ height: 36 }}
+								style={{ height: 48 }}
 								draggable={false}
 							/>
 							<div className="h-10 w-px bg-slate-700" />
