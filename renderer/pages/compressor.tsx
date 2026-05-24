@@ -218,13 +218,14 @@ export default function CompressorPage() {
 				<title>B-Control Micro +NET — Compressor Monitor</title>
 			</Head>
 
-			{/* Viewport filler — centers and scales the fixed HMI canvas. */}
+			{/* Viewport filler — centers and scales the fixed HMI canvas.
+			    Hipertech navy palette — matches technical-room and sensors. */}
 			<div
-				className="flex items-center justify-center overflow-hidden bg-black"
-				style={{ width: '100vw', height: '100vh' }}
+				className="flex items-center justify-center overflow-hidden"
+				style={{ width: '100vw', height: '100vh', backgroundColor: '#060E24' }}
 			>
 				<div
-					className="flex flex-col gap-3.5 bg-slate-950 font-poppins text-white"
+					className="relative flex flex-col gap-3.5 font-poppins text-white"
 					style={{
 						width: CANVAS_W,
 						height: CANVAS_H,
@@ -232,11 +233,24 @@ export default function CompressorPage() {
 						transform: `scale(${scale})`,
 						transformOrigin: 'center center',
 						flexShrink: 0,
+						background:
+							'linear-gradient(135deg, #060E24 0%, #0B1A3E 35%, #132B5E 65%, #0D1F47 100%)',
 					}}
 				>
+					{/* Subtle 60×60 grid overlay — same Hipertech corporate look. */}
+					<div
+						className="absolute inset-0 pointer-events-none"
+						style={{
+							opacity: 0.04,
+							backgroundImage:
+								'linear-gradient(0deg, rgba(255,255,255,.5) 1px, transparent 1px),' +
+								'linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)',
+							backgroundSize: '60px 60px',
+						}}
+					/>
 					{/* ---------------- Header ---------------- */}
 					<header
-						className="flex shrink-0 items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900 px-5"
+						className="relative flex shrink-0 items-center justify-between gap-4 rounded-2xl border border-slate-800 bg-slate-900 px-5"
 						style={{ height: 78 }}
 					>
 						<div className="flex items-center gap-3.5">
@@ -296,7 +310,7 @@ export default function CompressorPage() {
 
 					{/* ---------------- Body ---------------- */}
 					<main
-						className="grid min-h-0 flex-1 gap-3.5"
+						className="relative grid min-h-0 flex-1 gap-3.5"
 						style={{ gridTemplateColumns: '1fr 400px' }}
 					>
 						{/* Metrics — three group cards */}
