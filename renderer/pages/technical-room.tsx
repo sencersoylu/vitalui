@@ -194,7 +194,7 @@ export default function TechnicalRoomPage() {
 						alt="Hipertech"
 						src="/external/hipertechlogo2501-ygje.svg"
 						className="absolute w-auto"
-						style={{ left: s(48), top: s(7), height: s(72), filter: 'brightness(0) invert(1)' }}
+						style={{ left: 24, top: 16, height: 48, filter: 'brightness(0) invert(1)' }}
 						draggable={false}
 					/>
 

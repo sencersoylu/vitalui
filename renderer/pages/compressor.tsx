@@ -229,7 +229,11 @@ export default function CompressorPage() {
 					style={{
 						width: CANVAS_W,
 						height: CANVAS_H,
-						padding: 18,
+						// Asymmetric: top/left tightened so the logo (inside the
+						// header card, which itself has px-5 = 20 and a 78px
+						// height centering the 48px logo) lands at exactly
+						// (24, 16) — same as sensors and technical-room.
+						padding: '1px 18px 18px 4px',
 						transform: `scale(${scale})`,
 						transformOrigin: 'center center',
 						flexShrink: 0,
