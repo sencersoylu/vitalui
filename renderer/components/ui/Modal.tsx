@@ -80,9 +80,15 @@ export const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 			};
 		}, [isOpen, closeOnEscape, onClose]);
 
-		// Handle backdrop click
+		// Handle backdrop click — close if the click is anywhere outside the
+		// modal content (including the absolute backdrop div sibling, which
+		// the old `e.target === e.currentTarget` check missed).
 		const handleBackdropClick = (e: React.MouseEvent) => {
-			if (e.target === e.currentTarget && closeOnBackdropClick) {
+			if (
+				closeOnBackdropClick &&
+				modalRef.current &&
+				!modalRef.current.contains(e.target as Node)
+			) {
 				onClose();
 			}
 		};
