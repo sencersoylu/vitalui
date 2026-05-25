@@ -62,7 +62,7 @@ export function AuxiliaryOutputPanel({
 						value={valve1Status ? 1 : 0}
 						states={[
 							{ label: t('closed'), color: TOGGLE_COLORS.grey },
-							{ label: t('open'), color: TOGGLE_COLORS.emerald },
+							{ label: t('open'), color: TOGGLE_COLORS.blue },
 						]}
 						onClick={onValve1Toggle}
 						isDark={isDark}
@@ -91,7 +91,7 @@ export function AuxiliaryOutputPanel({
 						value={valve2Status ? 1 : 0}
 						states={[
 							{ label: t('closed'), color: TOGGLE_COLORS.grey },
-							{ label: t('open'), color: TOGGLE_COLORS.emerald },
+							{ label: t('open'), color: TOGGLE_COLORS.blue },
 						]}
 						onClick={onValve2Toggle}
 						isDark={isDark}
