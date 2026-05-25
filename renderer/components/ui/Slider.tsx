@@ -67,12 +67,12 @@ export const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
 		};
 
 		const trackBgColors = {
-			blue: 'bg-blue-100 dark:bg-slate-800',
-			emerald: 'bg-emerald-100 dark:bg-slate-800',
-			amber: 'bg-amber-100 dark:bg-slate-800',
-			rose: 'bg-rose-100 dark:bg-slate-800',
-			indigo: 'bg-indigo-100 dark:bg-slate-800',
-			cyan: 'bg-cyan-100 dark:bg-slate-800',
+			blue: 'bg-blue-100 dark:bg-slate-600',
+			emerald: 'bg-emerald-100 dark:bg-slate-600',
+			amber: 'bg-amber-100 dark:bg-slate-600',
+			rose: 'bg-rose-100 dark:bg-slate-600',
+			indigo: 'bg-indigo-100 dark:bg-slate-600',
+			cyan: 'bg-cyan-100 dark:bg-slate-600',
 		};
 
 		const sizeClasses = {
