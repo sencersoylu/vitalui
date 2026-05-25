@@ -21,8 +21,8 @@ export function LightingPanel({
 	const lightStates = [
 		{ label: t('off'), color: TOGGLE_COLORS.grey },
 		{ label: t('low'), color: TOGGLE_COLORS.blue },
-		{ label: t('med'), color: TOGGLE_COLORS.amber },
-		{ label: t('high'), color: TOGGLE_COLORS.red },
+		{ label: t('med'), color: TOGGLE_COLORS.blue },
+		{ label: t('high'), color: TOGGLE_COLORS.blue },
 	];
 
 	const labelCls = `text-base font-semibold whitespace-nowrap transition-colors duration-500 ${
