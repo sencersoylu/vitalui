@@ -49,8 +49,8 @@ export function ChamberControlPanel({
 				<ToggleSwitch
 					value={airMode ? 1 : 0}
 					states={[
-						{ label: t('air'), color: TOGGLE_COLORS.emerald },
-						{ label: t('oxygen'), color: TOGGLE_COLORS.blue },
+						{ label: t('air'), color: TOGGLE_COLORS.blue },
+						{ label: t('oxygen'), color: TOGGLE_COLORS.emerald },
 					]}
 					onClick={onAirToggle}
 					isDark={isDark}
