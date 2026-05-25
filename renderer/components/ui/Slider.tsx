@@ -72,7 +72,7 @@ export const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
 			amber: 'bg-amber-100 dark:bg-slate-600',
 			rose: 'bg-rose-100 dark:bg-slate-600',
 			indigo: 'bg-indigo-100 dark:bg-slate-600',
-			cyan: 'bg-cyan-100 dark:bg-slate-600',
+			cyan: 'bg-slate-200 dark:bg-slate-600',
 		};
 
 		const sizeClasses = {
