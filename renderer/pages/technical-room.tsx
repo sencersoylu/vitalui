@@ -451,7 +451,7 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(1479), top: s(130), width: s(46), height: s(221) }}
 					>
 						<img
-							alt="Nitrogen #1"
+							alt="Air #1"
 							src="/external/nitrogen-cylinder.png"
 							className="absolute max-w-none"
 							style={{ width: '407.2%', height: '119.73%', left: '-137.32%', top: '-11.06%' }}
@@ -466,7 +466,7 @@ export default function TechnicalRoomPage() {
 							className="font-poppins font-bold text-white drop-shadow-md whitespace-nowrap origin-center -rotate-90"
 							style={{ fontSize: s(24) }}
 						>
-							Nitrogen #1
+							Air #1
 						</p>
 					</div>
 					<p
@@ -481,7 +481,7 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(1715), top: s(130), width: s(46), height: s(221) }}
 					>
 						<img
-							alt="Nitrogen #2"
+							alt="Air #2"
 							src="/external/nitrogen-cylinder.png"
 							className="absolute max-w-none"
 							style={{ width: '407.2%', height: '119.73%', left: '-137.32%', top: '-11.06%' }}
@@ -496,7 +496,7 @@ export default function TechnicalRoomPage() {
 							className="font-poppins font-bold text-white drop-shadow-md whitespace-nowrap origin-center -rotate-90"
 							style={{ fontSize: s(24) }}
 						>
-							Nitrogen #2
+							Air #2
 						</p>
 					</div>
 					<p
@@ -549,7 +549,7 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(1519), top: s(684), width: s(46), height: s(221) }}
 					>
 						<img
-							alt="Nitrogen #1"
+							alt="Air #1"
 							src="/external/nitrogen-cylinder.png"
 							className="absolute max-w-none"
 							style={{ width: '407.2%', height: '119.73%', left: '-137.32%', top: '-11.06%' }}
@@ -564,7 +564,7 @@ export default function TechnicalRoomPage() {
 							className="font-poppins font-bold text-white drop-shadow-md whitespace-nowrap origin-center -rotate-90"
 							style={{ fontSize: s(24) }}
 						>
-							Nitrogen #1
+							Air #1
 						</p>
 					</div>
 					<p
