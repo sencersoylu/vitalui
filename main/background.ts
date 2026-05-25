@@ -210,12 +210,17 @@ function loadWindowsConfig(): WindowsConfig | null {
 			attachWindowLogging(win, winConfig.id);
 
 			const pageUrl = winConfig.page.startsWith('/') ? winConfig.page.slice(1) : winConfig.page;
+			// If the page config already carries its own query string
+			// (e.g. "dashboard?lang=it"), use `&` instead of `?` so we
+			// don't end up with `?lang=it?windowId=...` (which would
+			// fold `windowId` into the value of `lang`).
+			const querySep = pageUrl.includes('?') ? '&' : '?';
 
 			if (isProd) {
-				await win.loadURL(`app://./${pageUrl}?windowId=${winConfig.id}`);
+				await win.loadURL(`app://./${pageUrl}${querySep}windowId=${winConfig.id}`);
 			} else {
 				const port = process.argv[2];
-				await win.loadURL(`http://localhost:${port}/${pageUrl}?windowId=${winConfig.id}`);
+				await win.loadURL(`http://localhost:${port}/${pageUrl}${querySep}windowId=${winConfig.id}`);
 				win.webContents.openDevTools();
 			}
 		}
