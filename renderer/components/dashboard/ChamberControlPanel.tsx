@@ -61,8 +61,8 @@ export function ChamberControlPanel({
 					value={ventilMode}
 					states={[
 						{ label: <span className="flex flex-col items-center leading-tight"><span className="text-[10px] opacity-70">{t('ventil')}</span><span>{t('off')}</span></span>, color: TOGGLE_COLORS.grey },
-						{ label: t('low'), color: TOGGLE_COLORS.red },
-						{ label: t('high'), color: TOGGLE_COLORS.amber },
+						{ label: t('low'), color: TOGGLE_COLORS.blue },
+						{ label: t('high'), color: TOGGLE_COLORS.blue },
 					]}
 					onValueChange={onVentilChange}
 					isDark={isDark}
