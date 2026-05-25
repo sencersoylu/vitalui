@@ -63,7 +63,7 @@ export const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
 			amber: 'accent-amber-500 focus-visible:accent-amber-600',
 			rose: 'accent-rose-500 focus-visible:accent-rose-600',
 			indigo: 'accent-indigo-500 focus-visible:accent-indigo-600',
-			cyan: 'accent-cyan-500 focus-visible:accent-cyan-600',
+			cyan: 'accent-slate-500 focus-visible:accent-slate-600',
 		};
 
 		const trackBgColors = {
