@@ -25,40 +25,31 @@ export function LightingPanel({
 		{ label: t('high'), color: TOGGLE_COLORS.red },
 	];
 
+	const labelCls = `text-base font-semibold uppercase tracking-wider whitespace-nowrap transition-colors duration-500 ${
+		isDark ? 'text-white/60' : 'text-slate-500'
+	}`;
+
 	return (
 		<Card title={t('lighting')} className="flex-1" isDark={isDark}>
-			<div className="flex flex-col justify-center h-full gap-6">
-				{/* Main Light */}
-				<div className="flex items-center gap-3">
-					<span
-						className={`text-base font-semibold uppercase tracking-wider w-14 shrink-0 transition-colors duration-500 ${
-							isDark ? 'text-white/60' : 'text-slate-500'
-						}`}>
-						{t('mainShort')}
-					</span>
-					<ToggleSwitch
-						value={lightStatus}
-						states={lightStates}
-						onValueChange={onMainLightChange}
-						isDark={isDark}
-					/>
-				</div>
+			{/* 2-col grid: col 1 (auto) sizes to the longest label across both
+			    rows, so Main/Ante stay column-aligned even when the localised
+			    label is much wider (e.g. "Principale"). */}
+			<div className="grid h-full grid-cols-[auto_1fr] items-center justify-center gap-x-3 gap-y-6">
+				<span className={labelCls}>{t('mainShort')}</span>
+				<ToggleSwitch
+					value={lightStatus}
+					states={lightStates}
+					onValueChange={onMainLightChange}
+					isDark={isDark}
+				/>
 
-				{/* Ante Light */}
-				<div className="flex items-center gap-3">
-					<span
-						className={`text-base font-semibold uppercase tracking-wider w-14 shrink-0 transition-colors duration-500 ${
-							isDark ? 'text-white/60' : 'text-slate-500'
-						}`}>
-						{t('anteShort')}
-					</span>
-					<ToggleSwitch
-						value={light2Status}
-						states={lightStates}
-						onValueChange={onAnteLightChange}
-						isDark={isDark}
-					/>
-				</div>
+				<span className={labelCls}>{t('anteShort')}</span>
+				<ToggleSwitch
+					value={light2Status}
+					states={lightStates}
+					onValueChange={onAnteLightChange}
+					isDark={isDark}
+				/>
 			</div>
 		</Card>
 	);
