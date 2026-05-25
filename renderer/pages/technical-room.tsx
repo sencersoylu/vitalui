@@ -463,8 +463,8 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(1489), top: s(154), width: s(27), height: s(221) }}
 					>
 						<p
-							className="font-poppins font-bold text-white whitespace-nowrap origin-center -rotate-90"
-							style={{ fontSize: s(20) }}
+							className="font-poppins font-bold text-white drop-shadow-md whitespace-nowrap origin-center -rotate-90"
+							style={{ fontSize: s(24) }}
 						>
 							Nitrogen #1
 						</p>
@@ -493,8 +493,8 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(1725), top: s(154), width: s(27), height: s(221) }}
 					>
 						<p
-							className="font-poppins font-bold text-white whitespace-nowrap origin-center -rotate-90"
-							style={{ fontSize: s(20) }}
+							className="font-poppins font-bold text-white drop-shadow-md whitespace-nowrap origin-center -rotate-90"
+							style={{ fontSize: s(24) }}
 						>
 							Nitrogen #2
 						</p>
@@ -561,8 +561,8 @@ export default function TechnicalRoomPage() {
 						style={{ left: s(1529), top: s(708), width: s(27), height: s(221) }}
 					>
 						<p
-							className="font-poppins font-bold text-white whitespace-nowrap origin-center -rotate-90"
-							style={{ fontSize: s(20) }}
+							className="font-poppins font-bold text-white drop-shadow-md whitespace-nowrap origin-center -rotate-90"
+							style={{ fontSize: s(24) }}
 						>
 							Nitrogen #1
 						</p>
