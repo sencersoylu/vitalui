@@ -391,16 +391,16 @@ export default function TechnicalRoomPage() {
 						}}
 					>
 						<div className="flex justify-between items-center">
-							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(30) }}>
-								SV
+							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(28) }}>
+								SET
 							</span>
 							<span className="font-poppins font-bold text-white tabular-nums" style={{ fontSize: s(32) }}>
 								{(chillerSetTemp ?? 0).toFixed(1)} °C
 							</span>
 						</div>
 						<div className="flex justify-between items-center">
-							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(30) }}>
-								PV
+							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(28) }}>
+								Current
 							</span>
 							<span className="font-poppins font-bold text-white tabular-nums" style={{ fontSize: s(32) }}>
 								{(chillerCurrentTemp ?? 0).toFixed(1)} °C
