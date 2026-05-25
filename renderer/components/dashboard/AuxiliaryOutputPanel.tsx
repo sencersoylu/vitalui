@@ -43,7 +43,10 @@ export function AuxiliaryOutputPanel({
 				</button>
 			)}
 		>
-			<div className="flex flex-col justify-center h-full space-y-6">
+			<div className="flex flex-col h-full">
+				{/* Top spacer — guarantees equal whitespace above/below content */}
+				<div className="flex-1" />
+
 				{/* Main Chamber */}
 				<div className="space-y-3">
 					<div className="flex items-center justify-center gap-3">
@@ -68,7 +71,7 @@ export function AuxiliaryOutputPanel({
 
 				{/* Divider */}
 				<div
-					className={`border-t transition-colors duration-500 ${
+					className={`border-t my-6 transition-colors duration-500 ${
 						isDark ? 'border-white/10' : 'border-slate-200'
 					}`}
 				/>
@@ -94,6 +97,9 @@ export function AuxiliaryOutputPanel({
 						isDark={isDark}
 					/>
 				</div>
+
+				{/* Bottom spacer — mirrors the top spacer */}
+				<div className="flex-1" />
 			</div>
 		</Card>
 	);
