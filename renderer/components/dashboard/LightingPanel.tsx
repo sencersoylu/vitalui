@@ -25,7 +25,7 @@ export function LightingPanel({
 		{ label: t('high'), color: TOGGLE_COLORS.red },
 	];
 
-	const labelCls = `text-base font-semibold uppercase tracking-wider whitespace-nowrap transition-colors duration-500 ${
+	const labelCls = `text-base font-semibold whitespace-nowrap transition-colors duration-500 ${
 		isDark ? 'text-white/60' : 'text-slate-500'
 	}`;
 

@@ -21,7 +21,7 @@ export function FanPanel({ isDark, onFanChange }: { isDark: boolean; onFanChange
 		<Card title={t('fan')} className="flex-1" isDark={isDark}>
 			<div className="flex items-center justify-center h-full gap-3">
 				<span
-					className={`text-base font-semibold uppercase tracking-wider shrink-0 whitespace-nowrap transition-colors duration-500 ${
+					className={`text-base font-semibold shrink-0 whitespace-nowrap transition-colors duration-500 ${
 						isDark ? 'text-white/60' : 'text-slate-500'
 					}`}>
 					{t('mainShort')}
