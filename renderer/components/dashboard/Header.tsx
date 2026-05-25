@@ -34,7 +34,7 @@ export function Header() {
 						transition-all duration-500 hover:scale-110 active:scale-95
 						${
 							darkMode
-								? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30'
+								? 'bg-amber-500/20 text-white border border-amber-500/30 hover:bg-amber-500/30'
 								: 'bg-indigo-500/20 text-indigo-600 border border-indigo-500/30 hover:bg-indigo-500/30'
 						}
 					`}
@@ -52,7 +52,7 @@ export function Header() {
 						flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
 						${
 							connected
-								? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+								? 'bg-emerald-500/20 text-white border border-emerald-500/30'
 								: 'bg-red-500/20 text-red-400 border border-red-500/30'
 						}
 					`}>
