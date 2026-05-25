@@ -12,11 +12,11 @@ const isProd = process.env.NODE_ENV === 'production';
 
 if (process.platform === 'linux') {
 	// `disable-gpu-compositing` removed 2026-05-24 — it was forcing
-	// software compositing and causing animation jank on RPi 5. The
-	// system Chromium on the Pi runs hardware compositing fine (verified
-	// via chrome://gpu). If the renderer starts crashing or showing white
-	// after this change, put the flag back.
-	app.commandLine.appendSwitch('in-process-gpu');
+	// software compositing and causing animation jank on RPi 5.
+	// `in-process-gpu` removed 2026-05-26 — the Pi's system Chromium
+	// runs the GPU process out-of-process (verified via chrome://gpu)
+	// and so should we, so the main process isn't blocked by GPU work.
+	// If renderer crashes or white screens appear, put either flag back.
 	app.commandLine.appendSwitch('js-flags', '--max-old-space-size=384');
 }
 
