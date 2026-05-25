@@ -16,9 +16,14 @@ import { linearConversion } from '../utils/linearConversion';
 import { I18nProvider, getLangFromUrl, useT } from '../i18n/dashboardI18n';
 
 export default function HomePage() {
-	// Read ?lang=it once on mount. The provider is set below; child components
-	// pick up the language via useT(). English is the default.
-	const [lang] = React.useState(getLangFromUrl);
+	// Read ?lang=it AFTER mount so the SSR/static HTML (which has no `window`)
+	// and the first client render agree on the default 'en' — otherwise React
+	// flags a hydration mismatch. The URL-driven switch happens one render
+	// later, which is acceptable for an HMI panel.
+	const [lang, setLang] = React.useState<'en' | 'it'>('en');
+	React.useEffect(() => {
+		setLang(getLangFromUrl());
+	}, []);
 
 	return (
 		<I18nProvider lang={lang}>
