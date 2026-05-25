@@ -1,7 +1,9 @@
 import React from 'react';
 import { useDashboardStore } from '../../store';
 import { ToggleSwitch, TOGGLE_COLORS } from '../ui/ToggleSwitch';
+import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
+import { Monitor } from 'lucide-react';
 import { useT } from '../../i18n/dashboardI18n';
 
 /**
@@ -67,20 +69,19 @@ export function ChamberControlPanel({
 					disabled={autoMode}
 				/>
 
-				{/* Chiller — pill toggle, same shape as Manual/Automatic. Click
-				    opens the chiller control modal (does not toggle on/off). */}
-				<ToggleSwitch
-					value={chillerRunning ? 1 : 0}
-					states={[
-						{ label: t('off'), color: TOGGLE_COLORS.grey },
-						{
-							label: `${(chillerCurrentTemp ?? 0).toFixed(1)}°C`,
-							color: TOGGLE_COLORS.blue,
-						},
-					]}
+				{/* Chiller — pill-shaped (rounded-full) like the toggles above,
+				    but still a Button with Monitor icon and label so it reads
+				    as the "open settings" action. */}
+				<Button
+					variant={chillerRunning ? 'info' : 'muted'}
+					size="lg"
+					fullWidth
 					onClick={onOpenChiller}
-					isDark={isDark}
-				/>
+					leftIcon={<Monitor className="w-5 h-5" />}
+					className="!rounded-full">
+					{t('chiller')}{' '}
+					{chillerRunning ? `${(chillerCurrentTemp ?? 0).toFixed(1)}°C` : t('off')}
+				</Button>
 			</div>
 		</Card>
 	);
