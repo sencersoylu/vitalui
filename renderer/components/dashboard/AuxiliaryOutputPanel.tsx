@@ -49,11 +49,10 @@ export function AuxiliaryOutputPanel({
 
 				{/* Main Chamber */}
 				<div className="space-y-3">
-					<div className="flex items-center justify-center gap-3">
-						<div className="w-3 h-3 rounded-full bg-indigo-500" />
+					<div className="flex items-center justify-center">
 						<h3
 							className={`text-lg font-semibold transition-colors duration-500 ${
-								isDark ? 'text-indigo-300' : 'text-indigo-600'
+								isDark ? 'text-white' : 'text-slate-800'
 							}`}>
 							{t('mainShort')}
 						</h3>
@@ -78,11 +77,10 @@ export function AuxiliaryOutputPanel({
 
 				{/* Ante Chamber */}
 				<div className="space-y-3">
-					<div className="flex items-center justify-center gap-3">
-						<div className="w-3 h-3 rounded-full bg-violet-500" />
+					<div className="flex items-center justify-center">
 						<h3
 							className={`text-lg font-semibold transition-colors duration-500 ${
-								isDark ? 'text-violet-300' : 'text-violet-600'
+								isDark ? 'text-white' : 'text-slate-800'
 							}`}>
 							{t('anteShort')}
 						</h3>
