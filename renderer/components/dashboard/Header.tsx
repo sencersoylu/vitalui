@@ -1,11 +1,13 @@
 import React from 'react';
 import { useDashboardStore } from '../../store';
 import { Moon, Sun, Wifi, WifiOff, Calendar, Clock } from 'lucide-react';
+import { useT } from '../../i18n/dashboardI18n';
 
 /**
  * Header - Top navigation bar with logo, theme toggle, and status
  */
 export function Header() {
+	const t = useT();
 	const {
 		darkMode,
 		setDarkMode,
@@ -60,7 +62,7 @@ export function Header() {
 						<WifiOff className="w-4 h-4" />
 					)}
 					<span className="ml-1">
-						{connected ? 'Connected' : 'Disconnected'}
+						{connected ? t('connected') : t('disconnected')}
 					</span>
 				</div>
 

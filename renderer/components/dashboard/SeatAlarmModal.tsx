@@ -3,11 +3,13 @@ import { useDashboardStore } from '../../store';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { Armchair } from 'lucide-react';
+import { useT } from '../../i18n/dashboardI18n';
 
 /**
  * SeatAlarmModal - Displays seat alarm information
  */
 export function SeatAlarmModal({ socketRef, onClose }: { socketRef: any; onClose: () => void }) {
+	const t = useT();
 	const { showSeatAlarmModal, activeSeatAlarm } = useDashboardStore();
 
 	const handleClose = () => {
@@ -30,7 +32,7 @@ export function SeatAlarmModal({ socketRef, onClose }: { socketRef: any; onClose
 
 				{/* Title */}
 				<h2 className="text-3xl font-bold text-red-600 dark:text-red-400">
-					Seat Alarm
+					{t('seatAlarm')}
 				</h2>
 
 				{/* Seat Number */}
@@ -40,7 +42,7 @@ export function SeatAlarmModal({ socketRef, onClose }: { socketRef: any; onClose
 
 				{/* Close Button */}
 				<Button variant="danger" size="lg" fullWidth onClick={handleClose}>
-					Close Alarm
+					{t('closeAlarm')}
 				</Button>
 			</div>
 		</Modal>

@@ -13,8 +13,22 @@ import { ErrorModal } from '../components/dashboard/ErrorModal';
 import { SeatAlarmModal } from '../components/dashboard/SeatAlarmModal';
 import { useTechCalibration } from '../hooks/useTechCalibration';
 import { linearConversion } from '../utils/linearConversion';
+import { I18nProvider, getLangFromUrl, useT } from '../i18n/dashboardI18n';
 
 export default function HomePage() {
+	// Read ?lang=it once on mount. The provider is set below; child components
+	// pick up the language via useT(). English is the default.
+	const [lang] = React.useState(getLangFromUrl);
+
+	return (
+		<I18nProvider lang={lang}>
+			<HomeContent />
+		</I18nProvider>
+	);
+}
+
+function HomeContent() {
+	const t = useT();
 	const {
 		darkMode,
 		setDarkMode,
@@ -140,16 +154,16 @@ export default function HomePage() {
 				if (errorArray[1] === '1') {
 					if (!showSeatAlarmModal) {
 						if (errorData.data[16] === 21) {
-							setActiveSeatAlarm({ seatNumber: 'Nurse' });
+							setActiveSeatAlarm({ seatNumber: t('seatNurse') });
 							setShowSeatAlarmModal(true);
 						} else if (errorData.data[16] === 22) {
-							setActiveSeatAlarm({ seatNumber: 'Ante 1' });
+							setActiveSeatAlarm({ seatNumber: t('seatAnte1') });
 							setShowSeatAlarmModal(true);
 						} else if (errorData.data[16] === 23) {
-							setActiveSeatAlarm({ seatNumber: 'Ante 2' });
+							setActiveSeatAlarm({ seatNumber: t('seatAnte2') });
 							setShowSeatAlarmModal(true);
 						} else if (errorData.data[16] === 24) {
-							setActiveSeatAlarm({ seatNumber: 'Ante Nurse' });
+							setActiveSeatAlarm({ seatNumber: t('seatAnteNurse') });
 							setShowSeatAlarmModal(true);
 						} else {
 							setActiveSeatAlarm({ seatNumber: errorData.data[16] });
@@ -161,52 +175,52 @@ export default function HomePage() {
 				if (errorArray[2] === '1') {
 					if (!showErrorModal) {
 						setShowErrorModal(true);
-						setErrorMessage('Main Chamber Fire Suppression System Activated!');
+						setErrorMessage(t('mainFssActivated'));
 						playSound();
 					}
 				} else if (errorArray[3] === '1') {
 					if (!showErrorModal) {
 						setShowErrorModal(true);
-						setErrorMessage('Ante Chamber Fire Suppression System Activated!');
+						setErrorMessage(t('anteFssActivated'));
 						playSound();
 					}
 				} else if (errorArray[4] === '1') {
 					setMainFlameDetected(true);
 					if (!showErrorModal) {
 						setShowErrorModal(true);
-						setErrorMessage('Main Chamber Flame Detected!');
+						setErrorMessage(t('mainFlameDetected'));
 						playSound();
 					}
 				} else if (errorArray[5] === '1') {
 					setMainSmokeDetected(true);
 					if (!showErrorModal) {
 						setShowErrorModal(true);
-						setErrorMessage('Main Chamber Smoke Detected!');
+						setErrorMessage(t('mainSmokeDetected'));
 						playSound();
 					}
 				} else if (errorArray[6] === '1') {
 					setAnteSmokeDetected(true);
 					if (!showErrorModal) {
 						setShowErrorModal(true);
-						setErrorMessage('Ante Chamber Smoke Detected!');
+						setErrorMessage(t('anteSmokeDetected'));
 						playSound();
 					}
 				} else if (errorArray[7] === '1') {
 					if (!showErrorModal) {
 						setShowErrorModal(true);
-						setErrorMessage('Main Chamber High O2 Level!');
+						setErrorMessage(t('mainHighO2'));
 						playSound();
 					}
 				} else if (errorArray[8] === '1') {
 					if (!showErrorModal) {
 						setShowErrorModal(true);
-						setErrorMessage('Ante Chamber High O2 Level!');
+						setErrorMessage(t('anteHighO2'));
 						playSound();
 					}
 				} else if (errorArray[9] === '1') {
 					if (!showErrorModal) {
 						setShowErrorModal(true);
-						setErrorMessage('Ante Chamber High O2 Level!');
+						setErrorMessage(t('anteHighO2'));
 						playSound();
 					}
 				}
@@ -423,7 +437,7 @@ export default function HomePage() {
 	return (
 		<>
 			<Head>
-				<title>Dashboard - Chamber Control</title>
+				<title>{t('pageTitle')}</title>
 			</Head>
 
 			{/* Main Container */}

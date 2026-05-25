@@ -3,11 +3,13 @@ import { useDashboardStore } from '../../store';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { AlertTriangle } from 'lucide-react';
+import { useT } from '../../i18n/dashboardI18n';
 
 /**
  * ErrorModal - Displays error messages with close button
  */
 export function ErrorModal({ socketRef, onClose }: { socketRef: any; onClose: () => void }) {
+	const t = useT();
 	const { showErrorModal, errorMessage } = useDashboardStore();
 
 	const handleClose = () => {
@@ -29,7 +31,7 @@ export function ErrorModal({ socketRef, onClose }: { socketRef: any; onClose: ()
 
 				{/* Title */}
 				<h2 className="text-3xl font-bold text-red-600 dark:text-red-400">
-					Warning
+					{t('warning')}
 				</h2>
 
 				{/* Message */}
@@ -39,7 +41,7 @@ export function ErrorModal({ socketRef, onClose }: { socketRef: any; onClose: ()
 
 				{/* Close Button */}
 				<Button variant="danger" size="lg" fullWidth onClick={handleClose}>
-					Close
+					{t('close')}
 				</Button>
 			</div>
 		</Modal>

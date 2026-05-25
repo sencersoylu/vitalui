@@ -4,6 +4,7 @@ import { useDashboardStore } from '../store';
 import { Button } from './ui/Button';
 import { Slider } from './ui/Slider';
 import { Modal } from './ui/Modal';
+import { useT } from '../i18n/dashboardI18n';
 
 interface ChillerControlModalProps {
 	isOpen: boolean;
@@ -16,6 +17,7 @@ export function ChillerControlModal({
 	onClose,
 	socketRef,
 }: ChillerControlModalProps) {
+	const t = useT();
 	const {
 		chillerRunning,
 		chillerCurrentTemp,
@@ -89,7 +91,7 @@ export function ChillerControlModal({
 						<div className="flex items-center gap-3">
 							<Snowflake className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
 							<span className="text-lg font-semibold text-slate-700 dark:text-slate-200">
-								Chiller Status
+								{t('chillerStatus')}
 							</span>
 						</div>
 						<span
@@ -101,10 +103,10 @@ export function ChillerControlModal({
 							{chillerRunning ? (
 								<>
 									<span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-									Running
+									{t('running')}
 								</>
 							) : (
-								<span className="font-medium">Stopped</span>
+								<span className="font-medium">{t('stopped')}</span>
 							)}
 						</span>
 					</div>
@@ -115,7 +117,7 @@ export function ChillerControlModal({
 					<div className="text-center">
 						<div className="mb-2">
 							<span className="text-base text-slate-600 dark:text-slate-300 font-medium">
-								Current Water Temperature
+								{t('currentWaterTemp')}
 							</span>
 						</div>
 						<div className="flex items-center justify-center gap-1">
@@ -132,7 +134,7 @@ export function ChillerControlModal({
 				{/* Target Temperature Setting */}
 				<div className="space-y-4">
 					<Slider
-						label="Target Water Temperature"
+						label={t('targetWaterTemp')}
 						min={5}
 						max={35}
 						step={0.5}
@@ -154,14 +156,14 @@ export function ChillerControlModal({
 						fullWidth
 						leftIcon={<Power className="w-6 h-6" />}
 						onClick={handleToggleChiller}>
-						{chillerRunning ? 'Stop Chiller' : 'Start Chiller'}
+						{chillerRunning ? t('stopChiller') : t('startChiller')}
 					</Button>
 					<Button
 						variant="muted"
 						size="md"
 						fullWidth
 						onClick={onClose}>
-						Close
+						{t('close')}
 					</Button>
 				</div>
 			</div>

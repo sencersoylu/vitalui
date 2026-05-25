@@ -4,6 +4,7 @@ import { ToggleSwitch, TOGGLE_COLORS } from '../ui/ToggleSwitch';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Monitor } from 'lucide-react';
+import { useT } from '../../i18n/dashboardI18n';
 
 /**
  * ChamberControlPanel - Controls for chamber automation and modes
@@ -23,6 +24,7 @@ export function ChamberControlPanel({
 	onVentilChange: (mode: number) => void;
 	onOpenChiller: () => void;
 }) {
+	const t = useT();
 	const {
 		autoMode,
 		airMode,
@@ -32,13 +34,13 @@ export function ChamberControlPanel({
 	} = useDashboardStore();
 
 	return (
-		<Card title="Chamber Control" className="h-full" isDark={isDark}>
+		<Card title={t('chamberControl')} className="h-full" isDark={isDark}>
 			<div className="flex flex-col justify-between h-full gap-4">
 				<ToggleSwitch
 					value={autoMode ? 0 : 1}
 					states={[
-						{ label: 'Manual', color: TOGGLE_COLORS.red },
-						{ label: 'Automatic', color: TOGGLE_COLORS.emerald },
+						{ label: t('manual'), color: TOGGLE_COLORS.red },
+						{ label: t('automatic'), color: TOGGLE_COLORS.emerald },
 					]}
 					onClick={onAutoToggle}
 					isDark={isDark}
@@ -47,8 +49,8 @@ export function ChamberControlPanel({
 				<ToggleSwitch
 					value={airMode ? 1 : 0}
 					states={[
-						{ label: 'Air', color: TOGGLE_COLORS.emerald },
-						{ label: 'Oxygen', color: TOGGLE_COLORS.blue },
+						{ label: t('air'), color: TOGGLE_COLORS.emerald },
+						{ label: t('oxygen'), color: TOGGLE_COLORS.blue },
 					]}
 					onClick={onAirToggle}
 					isDark={isDark}
@@ -58,9 +60,9 @@ export function ChamberControlPanel({
 				<ToggleSwitch
 					value={ventilMode}
 					states={[
-						{ label: <span className="flex flex-col items-center leading-tight"><span className="text-[10px] opacity-70">Ventil</span><span>Off</span></span>, color: TOGGLE_COLORS.grey },
-						{ label: 'Low', color: TOGGLE_COLORS.red },
-						{ label: 'High', color: TOGGLE_COLORS.amber },
+						{ label: <span className="flex flex-col items-center leading-tight"><span className="text-[10px] opacity-70">{t('ventil')}</span><span>{t('off')}</span></span>, color: TOGGLE_COLORS.grey },
+						{ label: t('low'), color: TOGGLE_COLORS.red },
+						{ label: t('high'), color: TOGGLE_COLORS.amber },
 					]}
 					onValueChange={onVentilChange}
 					isDark={isDark}
@@ -73,8 +75,8 @@ export function ChamberControlPanel({
 					fullWidth
 					onClick={onOpenChiller}
 					leftIcon={<Monitor className="w-5 h-5" />}>
-					Chiller{' '}
-					{chillerRunning ? `${(chillerCurrentTemp ?? 0).toFixed(1)}°C` : 'Off'}
+					{t('chiller')}{' '}
+					{chillerRunning ? `${(chillerCurrentTemp ?? 0).toFixed(1)}°C` : t('off')}
 				</Button>
 			</div>
 		</Card>
