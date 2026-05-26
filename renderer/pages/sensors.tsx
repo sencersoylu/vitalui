@@ -6,6 +6,7 @@ import { useDashboardStore } from '../store';
 import { SensorCard } from '../components/dashboard/SensorCard';
 import { ChamberSeatOverlay } from '../components/dashboard/ChamberSeatOverlay';
 import { linearConversion } from '../utils/linearConversion';
+import { useTechCalibration } from '../hooks/useTechCalibration';
 
 export default function SensorsPage() {
 	// This screen is always dark — same as the compressor HMI page. Control
@@ -40,6 +41,10 @@ export default function SensorsPage() {
 		setHp1Status,
 		setChillerRunning,
 	} = useDashboardStore();
+
+	// Tech calibration (REST json.php?i=tech) — needed for FFS line pressures
+	// because each install has its own 4–20 mA range for those sensors.
+	const techCal = useTechCalibration();
 
 	// Raw analog values from the socket "data" array.
 	// A sensor is healthy ('ok') when its raw value is above this threshold.
@@ -87,14 +92,19 @@ export default function SensorsPage() {
 		return typeof pct === 'number' && pct >= FFS_LEVEL_MIN ? 'ok' : 'nok';
 	};
 
-	// FFS Line pressure health: data[10] (Main) / data[12] (Ante). Treated as
-	// fixed 4–20 mA → 0–400 bar like the other technical-room pressures.
+	// FFS Line pressure health: data[10] (Main, tech_yssp_main / ANAYSS) and
+	// data[12] (Ante, tech_yssp_entry / ARAYSS). Uses per-install calibration
+	// from json.php?i=tech — same conversion the legacy hipertech_bilgi UI runs.
 	// Healthy when line pressure stays at or above 6 bar.
 	const FFS_PRESSURE_MIN = 6;
-	const ffsPressureHealth = (i: number): 'ok' | 'nok' => {
+	const ffsPressureHealth = (i: 10 | 12): 'ok' | 'nok' => {
 		const raw = rawData[i];
 		if (typeof raw !== 'number') return 'nok';
-		const bar = linearConversion(0, 400, 3240, 16383, raw, 0);
+		const upper = i === 10 ? techCal.tech_yssp_main_upper : techCal.tech_yssp_entry_upper;
+		const analog = i === 10 ? techCal.tech_yssp_main_analog : techCal.tech_yssp_entry_analog;
+		const offset = i === 10 ? techCal.tech_yssp_main_offset : techCal.tech_yssp_entry_offset;
+		if (!(analog > 0)) return 'nok';
+		const bar = linearConversion(0, upper, offset, analog, raw, 1);
 		return typeof bar === 'number' && bar >= FFS_PRESSURE_MIN ? 'ok' : 'nok';
 	};
 
