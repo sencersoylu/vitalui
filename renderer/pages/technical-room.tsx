@@ -392,28 +392,28 @@ export default function TechnicalRoomPage() {
 					<div
 						className="absolute flex flex-col justify-center bg-slate-900/70 border border-slate-800"
 						style={{
-							left: s(997),
+							left: s(899),
 							top: s(914),
-							width: s(282),
+							width: s(380),
 							height: s(143),
 							borderRadius: s(20),
-							paddingLeft: s(28),
-							paddingRight: s(28),
+							paddingLeft: s(24),
+							paddingRight: s(24),
 						}}
 					>
-						<div className="flex justify-between items-center">
-							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(28) }}>
+						<div className="flex justify-between items-center gap-3">
+							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(26) }}>
 								Set
 							</span>
-							<span className="font-poppins font-bold text-white tabular-nums" style={{ fontSize: s(32) }}>
+							<span className="font-poppins font-bold text-white tabular-nums whitespace-nowrap" style={{ fontSize: s(32) }}>
 								{(chillerSetTemp ?? 0).toFixed(1)} °C
 							</span>
 						</div>
-						<div className="flex justify-between items-center">
-							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(28) }}>
+						<div className="flex justify-between items-center gap-3">
+							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(26) }}>
 								Current
 							</span>
-							<span className="font-poppins font-bold text-white tabular-nums" style={{ fontSize: s(32) }}>
+							<span className="font-poppins font-bold text-white tabular-nums whitespace-nowrap" style={{ fontSize: s(32) }}>
 								{(chillerCurrentTemp ?? 0).toFixed(1)} °C
 							</span>
 						</div>
