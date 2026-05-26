@@ -55,12 +55,12 @@ export default function SensorsPage() {
 	const sensorHealth = (i: number): 'ok' | 'nok' => (rawData[i] > RAW_HEALTH_MIN ? 'ok' : 'nok');
 
 	// LP Compressor health: derived from Air Stock pressure (data[30], 0–400 bar).
-	// Healthy when stock pressure stays above 6 bar — matches the technical-room reading.
+	// Healthy when stock pressure stays above 5 bar — matches the technical-room reading.
 	const lpHealth = (): 'ok' | 'nok' => {
 		const raw = rawData[30];
 		if (typeof raw !== 'number') return 'nok';
 		const bar = linearConversion(0, 400, 3240, 16383, raw, 0);
-		return typeof bar === 'number' && bar > 6 ? 'ok' : 'nok';
+		return typeof bar === 'number' && bar > 5 ? 'ok' : 'nok';
 	};
 
 	// FFS Air cylinder low-pressure check — < 50 bar mirrors the technical-room
