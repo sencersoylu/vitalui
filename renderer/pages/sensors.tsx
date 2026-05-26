@@ -69,6 +69,20 @@ export default function SensorsPage() {
 	const mainFfsLowPressure = isFfsAirLow(22) || isFfsAirLow(23);
 	const anteFfsLowPressure = isFfsAirLow(24);
 
+	// O2 Pressure health: derived from primaryO2Pressure (bar). >= 4 bar = OK,
+	// matches the DetectorPanel threshold.
+	const o2PressureHealth = (): 'ok' | 'nok' =>
+		typeof primaryO2Pressure === 'number' && primaryO2Pressure >= 4 ? 'ok' : 'nok';
+
+	// FFS Level health: data[11] / data[13] in 0–100 %. Healthy when level > 70 %.
+	const FFS_LEVEL_MIN = 70;
+	const ffsLevelHealth = (i: number): 'ok' | 'nok' => {
+		const raw = rawData[i];
+		if (typeof raw !== 'number') return 'nok';
+		const pct = linearConversion(0, 100, 3240, 16383, raw, 0);
+		return typeof pct === 'number' && pct >= FFS_LEVEL_MIN ? 'ok' : 'nok';
+	};
+
 	useEffect(() => {
 		if (darkMode) {
 			document.documentElement.classList.add('dark');
@@ -329,11 +343,11 @@ export default function SensorsPage() {
 									<SensorCard name="HP Compressor" location="Technical Room" isDark={darkMode} isAlarm={!hp1Status} />
 									<SensorCard name="Chiller" location="Technical Room" isDark={darkMode} />
 									<SensorCard name="Air Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(8)} />
-									<SensorCard name={<>O<sub>2</sub> Pressure</>} location="Technical Room" isDark={darkMode} health={sensorHealth(9)} />
+									<SensorCard name={<>O<sub>2</sub> Pressure</>} location="Technical Room" isDark={darkMode} health={o2PressureHealth()} />
 									<SensorCard name="Main FFS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(10)} />
-									<SensorCard name="Main FFS Level" location="Technical Room" isDark={darkMode} health={sensorHealth(11)} />
+									<SensorCard name="Main FFS Level" location="Technical Room" isDark={darkMode} health={ffsLevelHealth(11)} />
 									<SensorCard name="Ante FFS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(12)} />
-									<SensorCard name="Ante FFS Level" location="Technical Room" isDark={darkMode} health={sensorHealth(13)} />
+									<SensorCard name="Ante FFS Level" location="Technical Room" isDark={darkMode} health={ffsLevelHealth(13)} />
 								</div>
 							</div>
 						</div>
