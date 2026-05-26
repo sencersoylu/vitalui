@@ -37,37 +37,66 @@ export function useTechCalibration() {
 	const [calibration, setCalibration] = useState<CalibrationData>(DEFAULT_CALIBRATION);
 
 	useEffect(() => {
-		fetch(getTechUrl())
-			.then((res) => res.json())
-			.then((data) => {
-				const cal = { ...DEFAULT_CALIBRATION };
-				for (const user of data.users) {
-					if (user.sensor_name === 'tech_pressure') {
-						cal.tech_pressure_upper = Number(user.sensor_upper_value);
-						cal.tech_pressure_analog = Number(user.sensor_analog_value);
-						cal.tech_pressure_offset = Number(user.offset);
+		let cancelled = false;
+		let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+		const attempt = (delayMs: number) => {
+			if (cancelled) return;
+			fetch(getTechUrl())
+				.then((res) => res.json())
+				.then((data) => {
+					if (cancelled) return;
+					if (!data || !Array.isArray(data.users)) throw new Error('bad payload');
+
+					const cal = { ...DEFAULT_CALIBRATION };
+					for (const user of data.users) {
+						if (user.sensor_name === 'tech_pressure') {
+							cal.tech_pressure_upper = Number(user.sensor_upper_value);
+							cal.tech_pressure_analog = Number(user.sensor_analog_value);
+							cal.tech_pressure_offset = Number(user.offset);
+						}
+						if (user.sensor_name === 'tech_o') {
+							cal.tech_o_upper = Number(user.sensor_upper_value);
+							cal.tech_o_analog = Number(user.sensor_analog_value);
+							cal.tech_o_offset = Number(user.offset);
+						}
+						if (user.sensor_name === 'tech_yssp_main') {
+							cal.tech_yssp_main_upper = Number(user.sensor_upper_value);
+							cal.tech_yssp_main_analog = Number(user.sensor_analog_value);
+							cal.tech_yssp_main_offset = Number(user.offset);
+						}
+						if (user.sensor_name === 'tech_yssp_entry') {
+							cal.tech_yssp_entry_upper = Number(user.sensor_upper_value);
+							cal.tech_yssp_entry_analog = Number(user.sensor_analog_value);
+							cal.tech_yssp_entry_offset = Number(user.offset);
+						}
 					}
-					if (user.sensor_name === 'tech_o') {
-						cal.tech_o_upper = Number(user.sensor_upper_value);
-						cal.tech_o_analog = Number(user.sensor_analog_value);
-						cal.tech_o_offset = Number(user.offset);
-					}
-					if (user.sensor_name === 'tech_yssp_main') {
-						cal.tech_yssp_main_upper = Number(user.sensor_upper_value);
-						cal.tech_yssp_main_analog = Number(user.sensor_analog_value);
-						cal.tech_yssp_main_offset = Number(user.offset);
-					}
-					if (user.sensor_name === 'tech_yssp_entry') {
-						cal.tech_yssp_entry_upper = Number(user.sensor_upper_value);
-						cal.tech_yssp_entry_analog = Number(user.sensor_analog_value);
-						cal.tech_yssp_entry_offset = Number(user.offset);
-					}
-				}
-				setCalibration(cal);
-			})
-			.catch((err) => {
-				console.error('Failed to fetch tech calibration:', err);
-			});
+
+					// If none of the expected sensors came back, treat it as a soft
+					// failure and retry — the backend may not have served the tech
+					// calibration set yet.
+					const gotAny =
+						cal.tech_pressure_analog > 0 ||
+						cal.tech_o_analog > 0 ||
+						cal.tech_yssp_main_analog > 0 ||
+						cal.tech_yssp_entry_analog > 0;
+					if (!gotAny) throw new Error('empty calibration');
+
+					setCalibration(cal);
+				})
+				.catch((err) => {
+					if (cancelled) return;
+					console.warn(`[useTechCalibration] retry in ${delayMs / 1000}s:`, err?.message || err);
+					retryTimer = setTimeout(() => attempt(Math.min(delayMs * 2, 30000)), delayMs);
+				});
+		};
+
+		attempt(2000);
+
+		return () => {
+			cancelled = true;
+			if (retryTimer) clearTimeout(retryTimer);
+		};
 	}, []);
 
 	return calibration;

@@ -103,7 +103,9 @@ export default function SensorsPage() {
 		const upper = i === 10 ? techCal.tech_yssp_main_upper : techCal.tech_yssp_entry_upper;
 		const analog = i === 10 ? techCal.tech_yssp_main_analog : techCal.tech_yssp_entry_analog;
 		const offset = i === 10 ? techCal.tech_yssp_main_offset : techCal.tech_yssp_entry_offset;
-		if (!(analog > 0)) return 'nok';
+		// Calibration not yet loaded → assume OK (don't false-positive while the
+		// REST fetch is still in flight / retrying).
+		if (!(analog > 0)) return 'ok';
 		const bar = linearConversion(0, upper, offset, analog, raw, 1);
 		return typeof bar === 'number' && bar >= FFS_PRESSURE_MIN ? 'ok' : 'nok';
 	};
