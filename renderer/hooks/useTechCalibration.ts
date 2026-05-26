@@ -40,7 +40,11 @@ export function useTechCalibration() {
 		let cancelled = false;
 		let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
-		const attempt = (delayMs: number) => {
+		// Retry every 3s until the REST endpoint returns at least one calibrated
+		// sensor. Stops once the calibration is populated (or the component unmounts).
+		const RETRY_MS = 3000;
+
+		const attempt = () => {
 			if (cancelled) return;
 			fetch(getTechUrl())
 				.then((res) => res.json())
@@ -72,9 +76,6 @@ export function useTechCalibration() {
 						}
 					}
 
-					// If none of the expected sensors came back, treat it as a soft
-					// failure and retry — the backend may not have served the tech
-					// calibration set yet.
 					const gotAny =
 						cal.tech_pressure_analog > 0 ||
 						cal.tech_o_analog > 0 ||
@@ -86,12 +87,12 @@ export function useTechCalibration() {
 				})
 				.catch((err) => {
 					if (cancelled) return;
-					console.warn(`[useTechCalibration] retry in ${delayMs / 1000}s:`, err?.message || err);
-					retryTimer = setTimeout(() => attempt(Math.min(delayMs * 2, 30000)), delayMs);
+					console.warn('[useTechCalibration] retry in 3s:', err?.message || err);
+					retryTimer = setTimeout(attempt, RETRY_MS);
 				});
 		};
 
-		attempt(2000);
+		attempt();
 
 		return () => {
 			cancelled = true;
