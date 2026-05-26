@@ -56,6 +56,19 @@ export default function SensorsPage() {
 		return typeof bar === 'number' && bar > 6 ? 'ok' : 'nok';
 	};
 
+	// FFS Air cylinder low-pressure check — < 50 bar mirrors the technical-room
+	// 'Low Pressure' warning. Used to flag the chamber FFS cards as CHECK when any
+	// of the chamber's air bottles drops below threshold.
+	const FFS_LOW_BAR = 50;
+	const isFfsAirLow = (i: number): boolean => {
+		const raw = rawData[i];
+		if (typeof raw !== 'number') return false;
+		const bar = linearConversion(0, 400, 3240, 16383, raw, 0);
+		return typeof bar === 'number' && bar < FFS_LOW_BAR;
+	};
+	const mainFfsLowPressure = isFfsAirLow(22) || isFfsAirLow(23);
+	const anteFfsLowPressure = isFfsAirLow(24);
+
 	useEffect(() => {
 		if (darkMode) {
 			document.documentElement.classList.add('dark');
@@ -286,7 +299,7 @@ export default function SensorsPage() {
 										<SensorCard name="Temperature" location="Main Chamber" isDark={darkMode} health={sensorHealth(2)} />
 										<SensorCard name="Humidity" location="Main Chamber" isDark={darkMode} health={sensorHealth(7)} />
 										<SensorCard name={<>O<sub>2</sub> Level</>} location="Main Chamber" isDark={darkMode} isAlarm={mainHighO2} health={sensorHealth(1)} />
-										<SensorCard name="Fire Fighting System (FFS)" location="Main Chamber" isDark={darkMode} isAlarm={mainFssAlarm} />
+										<SensorCard name="Fire Fighting System (FFS)" location="Main Chamber" isDark={darkMode} isAlarm={mainFssAlarm || mainFfsLowPressure} />
 										<SensorCard name="Flame Detector" location="Main Chamber" isDark={darkMode} isAlarm={mainFlameDetected} />
 										<SensorCard name="Smoke Detector" location="Main Chamber" isDark={darkMode} isAlarm={mainSmokeDetected} />
 									</div>
@@ -300,7 +313,7 @@ export default function SensorsPage() {
 										<SensorCard name="Temperature" location="Ante Chamber" isDark={darkMode} health={sensorHealth(6)} />
 										<SensorCard name="Humidity" location="Ante Chamber" isDark={darkMode} health={sensorHealth(7)} />
 										<SensorCard name={<>O<sub>2</sub> Level</>} location="Ante Chamber" isDark={darkMode} isAlarm={anteHighO2} health={sensorHealth(5)} />
-										<SensorCard name="Fire Fighting System (FFS)" location="Ante Chamber" isDark={darkMode} isAlarm={anteFssAlarm} />
+										<SensorCard name="Fire Fighting System (FFS)" location="Ante Chamber" isDark={darkMode} isAlarm={anteFssAlarm || anteFfsLowPressure} />
 										<SensorCard name="Smoke Detector" location="Ante Chamber" isDark={darkMode} isAlarm={anteSmokeDetected} />
 									</div>
 								</div>
