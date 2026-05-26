@@ -74,6 +74,10 @@ export default function SensorsPage() {
 	const o2PressureHealth = (): 'ok' | 'nok' =>
 		typeof primaryO2Pressure === 'number' && primaryO2Pressure >= 4 ? 'ok' : 'nok';
 
+	// Air Pressure health: derived from airTankPressure (bar). >= 4 bar = OK.
+	const airPressureHealth = (): 'ok' | 'nok' =>
+		typeof airTankPressure === 'number' && airTankPressure >= 4 ? 'ok' : 'nok';
+
 	// FFS Level health: data[11] / data[13] in 0–100 %. Healthy when level > 70 %.
 	const FFS_LEVEL_MIN = 70;
 	const ffsLevelHealth = (i: number): 'ok' | 'nok' => {
@@ -342,7 +346,7 @@ export default function SensorsPage() {
 									<SensorCard name="LP Compressor" location="Technical Room" isDark={darkMode} health={lpHealth()} />
 									<SensorCard name="HP Compressor" location="Technical Room" isDark={darkMode} isAlarm={!hp1Status} />
 									<SensorCard name="Chiller" location="Technical Room" isDark={darkMode} />
-									<SensorCard name="Air Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(8)} />
+									<SensorCard name="Air Pressure" location="Technical Room" isDark={darkMode} health={airPressureHealth()} />
 									<SensorCard name={<>O<sub>2</sub> Pressure</>} location="Technical Room" isDark={darkMode} health={o2PressureHealth()} />
 									<SensorCard name="Main FFS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(10)} />
 									<SensorCard name="Main FFS Level" location="Technical Room" isDark={darkMode} health={ffsLevelHealth(11)} />
