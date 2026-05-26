@@ -482,21 +482,22 @@ export default function TechnicalRoomPage() {
 							Air #1
 						</p>
 					</div>
-					{isLowPressure(rawData[22]) ? (
+					{isLowPressure(rawData[22]) && (
 						<p
 							className="absolute text-center font-poppins font-bold text-red-500 animate-pulse whitespace-nowrap drop-shadow-md"
-							style={{ left: s(1430), top: s(370), width: s(144), fontSize: s(18) }}
+							style={{ left: s(1430), top: s(346), width: s(144), fontSize: s(18) }}
 						>
 							Low Pressure
 						</p>
-					) : (
-						<p
-							className="absolute text-center font-poppins font-bold text-sky-300 tabular-nums"
-							style={{ left: s(1470), top: s(370), width: s(64), fontSize: s(24) }}
-						>
-							{toBar(rawData[22])} Bar
-						</p>
 					)}
+					<p
+						className={`absolute text-center font-poppins font-bold tabular-nums ${
+							isLowPressure(rawData[22]) ? 'text-red-400' : 'text-sky-300'
+						}`}
+						style={{ left: s(1470), top: s(376), width: s(64), fontSize: s(24) }}
+					>
+						{toBar(rawData[22])} Bar
+					</p>
 
 					<div
 						className="absolute overflow-hidden"
@@ -521,21 +522,22 @@ export default function TechnicalRoomPage() {
 							Air #2
 						</p>
 					</div>
-					{isLowPressure(rawData[23]) ? (
+					{isLowPressure(rawData[23]) && (
 						<p
 							className="absolute text-center font-poppins font-bold text-red-500 animate-pulse whitespace-nowrap drop-shadow-md"
-							style={{ left: s(1666), top: s(370), width: s(144), fontSize: s(18) }}
+							style={{ left: s(1666), top: s(346), width: s(144), fontSize: s(18) }}
 						>
 							Low Pressure
 						</p>
-					) : (
-						<p
-							className="absolute text-center font-poppins font-bold text-sky-300 tabular-nums"
-							style={{ left: s(1706), top: s(370), width: s(64), fontSize: s(24) }}
-						>
-							{toBar(rawData[23])} Bar
-						</p>
 					)}
+					<p
+						className={`absolute text-center font-poppins font-bold tabular-nums ${
+							isLowPressure(rawData[23]) ? 'text-red-400' : 'text-sky-300'
+						}`}
+						style={{ left: s(1706), top: s(376), width: s(64), fontSize: s(24) }}
+					>
+						{toBar(rawData[23])} Bar
+					</p>
 
 					{/* Ante Chamber FFS */}
 					<div
@@ -598,21 +600,22 @@ export default function TechnicalRoomPage() {
 							Air #1
 						</p>
 					</div>
-					{isLowPressure(rawData[24]) ? (
+					{isLowPressure(rawData[24]) && (
 						<p
 							className="absolute text-center font-poppins font-bold text-red-500 animate-pulse whitespace-nowrap drop-shadow-md"
-							style={{ left: s(1470), top: s(924), width: s(144), fontSize: s(18) }}
+							style={{ left: s(1470), top: s(900), width: s(144), fontSize: s(18) }}
 						>
 							Low Pressure
 						</p>
-					) : (
-						<p
-							className="absolute text-center font-poppins font-bold text-sky-300 tabular-nums"
-							style={{ left: s(1510), top: s(924), width: s(64), fontSize: s(24) }}
-						>
-							{toBar(rawData[24])} Bar
-						</p>
 					)}
+					<p
+						className={`absolute text-center font-poppins font-bold tabular-nums ${
+							isLowPressure(rawData[24]) ? 'text-red-400' : 'text-sky-300'
+						}`}
+						style={{ left: s(1510), top: s(930), width: s(64), fontSize: s(24) }}
+					>
+						{toBar(rawData[24])} Bar
+					</p>
 				</div>
 			</div>
 		</>
