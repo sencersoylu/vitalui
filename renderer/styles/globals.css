@@ -259,6 +259,12 @@
 	box-shadow: 0 0 6px 2px rgba(239,68,68,0.4);
 }
 
+.led-warn {
+	background-color: #f59e0b;
+	box-shadow: 0 0 6px 2px rgba(245,158,11,0.5);
+	animation: ledPulse 1.4s ease-in-out infinite;
+}
+
 /* Base UI Animations (replacing tailwindcss-animate plugin) */
 @keyframes fadeIn {
   from { opacity: 0; }

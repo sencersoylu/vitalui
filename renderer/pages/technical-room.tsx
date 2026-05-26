@@ -44,6 +44,8 @@ export default function TechnicalRoomPage() {
 		chillerCurrentTemp,
 		setChillerRunning,
 		setChillerCurrentTemp,
+		setChillerCommError,
+		chillerCommError,
 	} = useDashboardStore();
 
 	const [scale, setScale] = useState(1);
@@ -91,16 +93,25 @@ export default function TechnicalRoomPage() {
 			// Chiller PV: raw data[15] is in 0.1 C units.
 			if (Number.isFinite(d[15])) setChillerCurrentTemp(d[15] / 10);
 
+			// Chiller comm / run state (see CLAUDE.md notes):
+			//   data[28] === 10 → bridge unreachable / device off
+			//   data[29] bit 0  → Run flag (Status flag 1)
+			const commErr = Number(d[28]) === 10;
+			setChillerCommError(commErr);
+			if (!commErr && Number.isFinite(d[29])) {
+				setChillerRunning((Number(d[29]) & 1) === 1);
+			}
+
 			// Air Tank (data[30]), O2 banks & nitrogen (data[20]-[24]) and FFS
 			// levels (data[11]/[13]) render from rawData via the toBar /
 			// toLevel helpers.
 			// TODO (need mapping): LP1 status, Chiller SV.
 		});
 
-		// Chiller running state + PV — same as dashboard.tsx.
+		// Chiller PV from chillerData — running state now comes from data[29]
+		// bit 0 (so Comm Error vs Stop can be distinguished via data[28] === 10).
 		socket.on('chillerData', (cd: any) => {
 			if (cd?.currentTemp !== undefined) setChillerCurrentTemp(cd.currentTemp / 10);
-			if (cd?.running !== undefined) setChillerRunning(cd.running === 1);
 		});
 
 		return () => {
@@ -372,16 +383,22 @@ export default function TechnicalRoomPage() {
 						/>
 					</div>
 					<div
-						className={`absolute rounded-full ${chillerRunning ? 'led-on' : 'led-off'}`}
+						className={`absolute rounded-full ${
+							chillerCommError ? 'led-warn' : chillerRunning ? 'led-on' : 'led-off'
+						}`}
 						style={{ left: s(1196), top: s(670), width: s(20), height: s(20) }}
 					/>
 					<span
 						className={`absolute font-poppins font-bold uppercase tracking-wider drop-shadow ${
-							chillerRunning ? 'text-emerald-400' : 'text-rose-400'
+							chillerCommError
+								? 'text-amber-400'
+								: chillerRunning
+									? 'text-emerald-400'
+									: 'text-rose-400'
 						}`}
 						style={{ left: s(1226), top: s(663), fontSize: s(24) }}
 					>
-						{chillerRunning ? 'ON' : 'OFF'}
+						{chillerCommError ? 'COMM' : chillerRunning ? 'ON' : 'OFF'}
 					</span>
 					<p
 						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"

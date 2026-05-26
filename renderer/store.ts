@@ -53,9 +53,12 @@ interface DashboardState {
   chillerRunning: boolean
   chillerCurrentTemp: number
   chillerSetTemp: number
+  /** True when data[28] === 10 — chiller bridge is unreachable / device is off. */
+  chillerCommError: boolean
   setChillerRunning: (running: boolean) => void
   setChillerCurrentTemp: (temp: number) => void
   setChillerSetTemp: (temp: number) => void
+  setChillerCommError: (err: boolean) => void
 
   // Calibration states
   calibrationProgress: number
@@ -190,6 +193,7 @@ export const useDashboardStore = create<DashboardState>()(
       chillerRunning: false,
       chillerCurrentTemp: 20.0,
       chillerSetTemp: 20.0,
+      chillerCommError: false,
 
       // Technical Room Initial States
       lp1Status: true,
@@ -236,6 +240,7 @@ export const useDashboardStore = create<DashboardState>()(
       setChillerRunning: (running) => set({ chillerRunning: running }),
       setChillerCurrentTemp: (temp) => set({ chillerCurrentTemp: temp }),
       setChillerSetTemp: (temp) => set({ chillerSetTemp: temp }),
+      setChillerCommError: (err) => set({ chillerCommError: err }),
       setCalibrationProgress: (progress) => set({ calibrationProgress: progress }),
       setCalibrationStatus: (status) => set({ calibrationStatus: status }),
       setErrorMessage: (message) => set({ errorMessage: message }),

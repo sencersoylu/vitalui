@@ -38,8 +38,10 @@ export default function SensorsPage() {
 		anteFssLevel,
 		hp1Status,
 		chillerRunning,
+		chillerCommError,
 		setHp1Status,
 		setChillerRunning,
+		setChillerCommError,
 	} = useDashboardStore();
 
 	// Tech calibration (REST json.php?i=tech) — needed for FFS line pressures
@@ -157,6 +159,17 @@ export default function SensorsPage() {
 			// Store the raw analog array — drives per-sensor health (raw > 2500 = OK).
 			setRawData(Array.isArray(errorData.data) ? errorData.data : []);
 
+			// Chiller comm / run state:
+			//   data[28] === 10 → bridge unreachable / device off
+			//   data[29] bit 0  → Run flag (Status flag 1)
+			const d28 = errorData.data?.[28];
+			const d29 = errorData.data?.[29];
+			const commErr = Number(d28) === 10;
+			setChillerCommError(commErr);
+			if (!commErr && Number.isFinite(d29)) {
+				setChillerRunning((Number(d29) & 1) === 1);
+			}
+
 			const errorArray = Number(errorData.data[19])
 				.toString(2)
 				.padStart(16, '0')
@@ -185,10 +198,8 @@ export default function SensorsPage() {
 			}
 		});
 
-		// Chiller running state — same chillerData event the dashboard uses.
-		socket.on('chillerData', (cd: any) => {
-			if (cd?.running !== undefined) setChillerRunning(cd.running === 1);
-		});
+		// Chiller running state now derived from data[28]/data[29] above so
+		// chillerData.running is no longer subscribed here.
 
 		return () => {
 			socket.off();
@@ -368,7 +379,7 @@ export default function SensorsPage() {
 									{/* LP Compressor: derived from Air Stock pressure (data[30] > 6 bar). */}
 									<SensorCard name="LP Compressor" location="Technical Room" isDark={darkMode} health={lpHealth()} />
 									<SensorCard name="HP Compressor" location="Technical Room" isDark={darkMode} isAlarm={!hp1Status} />
-									<SensorCard name="Chiller" location="Technical Room" isDark={darkMode} />
+									<SensorCard name="Chiller" location="Technical Room" isDark={darkMode} isAlarm={chillerCommError} />
 									<SensorCard name="Air Pressure" location="Technical Room" isDark={darkMode} health={airPressureHealth()} />
 									<SensorCard name={<>O<sub>2</sub> Pressure</>} location="Technical Room" isDark={darkMode} health={o2PressureHealth()} />
 									<SensorCard name="Main FFS Pressure" location="Technical Room" isDark={darkMode} health={ffsPressureHealth(10)} />

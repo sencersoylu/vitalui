@@ -57,6 +57,7 @@ function HomeContent() {
 		playing,
 		chillerRunning,
 		chillerCurrentTemp,
+		chillerCommError,
 		setConnected,
 		setCurrentTime,
 		setCurrentTime2,
@@ -80,6 +81,7 @@ function HomeContent() {
 		setActiveSeatAlarm,
 		setChillerRunning,
 		setChillerCurrentTemp,
+		setChillerCommError,
 		setMainFlameDetected,
 		setMainSmokeDetected,
 		setAnteSmokeDetected,
@@ -137,6 +139,17 @@ function HomeContent() {
 		socket.on('data', (data) => {
 			const errorData = JSON.parse(data);
 			setChillerCurrentTemp(errorData.data[15] / 10);
+
+			// Chiller comm / run state.
+			//   data[28] === 10  → bridge unreachable / device powered off
+			//   data[29] bit 0   → Run flag (Status flag 1): 1 = Run, 0 = Stop
+			const d28 = errorData.data?.[28];
+			const d29 = errorData.data?.[29];
+			const commErr = Number(d28) === 10;
+			setChillerCommError(commErr);
+			if (!commErr && Number.isFinite(d29)) {
+				setChillerRunning((Number(d29) & 1) === 1);
+			}
 
 			// Air Pressure & O2 Pressure calculation
 			const cal = techCalRef.current;
@@ -268,12 +281,12 @@ function HomeContent() {
 			}
 		});
 
+		// chillerData event — keep PV updates here (running state now comes from
+		// data[29] bit 0 in the main 'data' event so we can distinguish Stop
+		// from a Comm Error / device-off condition).
 		socket.on('chillerData', (data) => {
 			if (data.currentTemp !== undefined) {
 				setChillerCurrentTemp(data.currentTemp / 10);
-			}
-			if (data.running !== undefined) {
-				setChillerRunning(data.running === 1);
 			}
 		});
 
@@ -486,7 +499,12 @@ function HomeContent() {
 								onAirToggle={setAir}
 								onVentilToggle={setVentil}
 								onVentilChange={setVentilDirect}
-								onOpenChiller={() => setShowChillerModal(true)}
+								onOpenChiller={() => {
+									// Block the modal when the chiller bridge can't be reached —
+									// commands would be lost.
+									if (chillerCommError) return;
+									setShowChillerModal(true);
+								}}
 							/>
 						</div>
 
@@ -527,9 +545,9 @@ function HomeContent() {
 				}}
 			/>
 
-			{/* Chiller Control Modal */}
+			{/* Chiller Control Modal — force-closed while the bridge is unreachable. */}
 			<ChillerControlModal
-				isOpen={showChillerModal}
+				isOpen={showChillerModal && !chillerCommError}
 				onClose={() => setShowChillerModal(false)}
 				socketRef={socketRef}
 			/>
