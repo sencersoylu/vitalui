@@ -93,6 +93,10 @@ export default function SensorsPage() {
 			// Store the raw analog array — drives per-sensor health (raw > 2500 = OK).
 			setRawData(Array.isArray(errorData.data) ? errorData.data : []);
 
+			// Chiller Run flag — Status flag 1, bit 0 of data[29] (0=Stop, 1=Run).
+			const d29 = errorData.data?.[29];
+			if (Number.isFinite(d29)) setChillerRunning((d29 & 1) === 1);
+
 			const errorArray = Number(errorData.data[19])
 				.toString(2)
 				.padStart(16, '0')
@@ -121,10 +125,7 @@ export default function SensorsPage() {
 			}
 		});
 
-		// Chiller running state — same chillerData event the dashboard uses.
-		socket.on('chillerData', (cd: any) => {
-			if (cd?.running !== undefined) setChillerRunning(cd.running === 1);
-		});
+		// Chiller running state now comes from data[29] bit 0 (Status flag 1, Run flag).
 
 		return () => {
 			socket.off();
@@ -170,7 +171,7 @@ export default function SensorsPage() {
 		};
 		return (
 			<div className="flex items-center gap-3 mb-2">
-				<h2 className={`text-xs font-bold uppercase tracking-[0.15em] ${colors[accent]?.split(' ')[0]}`}>
+				<h2 className={`text-base font-bold lowercase first-letter:uppercase tracking-wide ${darkMode ? 'text-white' : 'text-slate-900'}`}>
 					{title}
 				</h2>
 				<div className={`flex-1 h-px ${colors[accent]?.split(' ')[1]} border-t border-dashed`} />
@@ -205,6 +206,15 @@ export default function SensorsPage() {
 
 				{/* Content */}
 				<div className="relative z-10 px-6 py-4 flex flex-col h-screen">
+					{/* Dynamic Island — notch attached to top edge, extends downward */}
+					<div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 z-20">
+						<div className="pointer-events-auto rounded-b-[28px] bg-black/90 backdrop-blur-xl border border-t-0 border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.6)] px-12 py-4">
+							<h1 className="text-2xl font-semibold tracking-wide text-white/95">
+								Chamber Sensor Monitoring
+							</h1>
+						</div>
+					</div>
+
 					{/* Header */}
 					<header className="flex items-center justify-between mb-4">
 						<img
@@ -213,11 +223,6 @@ export default function SensorsPage() {
 							className="h-12 w-auto"
 							style={{ filter: 'brightness(0) invert(1)' }}
 						/>
-						<h1 className={`text-xl font-bold transition-all duration-500 ${
-							darkMode ? 'text-white' : 'text-slate-900'
-						}`}>
-							Chamber Sensor Monitoring
-						</h1>
 						{/* Socket connection status */}
 						<div
 							className={`flex items-center gap-2 rounded-full border px-3 py-1.5 transition-all duration-300 ${

@@ -22,7 +22,6 @@ export function ChillerControlModal({
 		chillerRunning,
 		chillerCurrentTemp,
 		chillerSetTemp,
-		setChillerRunning,
 		setChillerSetTemp,
 	} = useDashboardStore();
 
@@ -71,13 +70,13 @@ export function ChillerControlModal({
 	const handleToggleChiller = () => {
 		if (socketRef) {
 			const newState = !chillerRunning;
-			// Write run command to register 0x0006 (0=Stop, 1=Run)
+			// Write run command to D00208 (0=Stop, 1=Run).
+			// UI state is NOT flipped optimistically — `chillerRunning`
+			// follows data[29] bit 0 (Status flag 1, Run flag) from the PLC.
 			socketRef.emit('writeRegister', {
 				register: 'D00208',
 				value: newState ? 1 : 0,
 			});
-
-			setChillerRunning(newState);
 		}
 	};
 

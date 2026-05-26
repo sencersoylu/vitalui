@@ -36,17 +36,13 @@ export function SensorCard({
 		? 'bg-red-500'
 		: hasValue
 			? 'bg-blue-500'
-			: isFire
-				? 'bg-orange-500'
-				: 'bg-emerald-500';
+			: 'bg-emerald-500';
 
 	const glowColor = danger
 		? 'shadow-red-500/20'
 		: hasValue
 			? 'shadow-blue-500/10'
-			: isFire
-				? 'shadow-orange-500/10'
-				: 'shadow-emerald-500/10';
+			: 'shadow-emerald-500/10';
 
 	return (
 		<div
@@ -76,9 +72,7 @@ export function SensorCard({
 						? 'bg-red-500/15'
 						: hasValue
 							? 'bg-blue-500/10'
-							: isFire
-								? 'bg-orange-500/10'
-								: 'bg-emerald-500/10'
+							: 'bg-emerald-500/10'
 				)}>
 					<div className={cn(
 						'w-2.5 h-2.5 rounded-full transition-all duration-300',
@@ -86,9 +80,7 @@ export function SensorCard({
 							? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]'
 							: hasValue
 								? 'bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.4)]'
-								: isFire
-									? 'bg-orange-400 shadow-[0_0_6px_rgba(251,146,60,0.4)]'
-									: 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.4)]'
+								: 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.4)]'
 					)} />
 				</div>
 				{/* Pulse ring for alarm / unhealthy sensor */}
@@ -132,18 +124,16 @@ export function SensorCard({
 					'text-[10px] font-bold uppercase tracking-wider shrink-0 transition-colors duration-300',
 					danger
 						? 'text-red-400'
-						: isDark ? 'text-emerald-400' : 'text-emerald-600'
+						: isDark ? 'text-emerald-300' : 'text-emerald-600'
 				)}>
-					{isNok ? 'Error' : isAlarm ? 'ALARM' : 'OK'}
+					{isNok ? 'CHECK' : isAlarm ? 'ALARM' : 'OK'}
 				</span>
 			) : (
 				<span className={cn(
-					'text-[10px] font-semibold uppercase tracking-wider shrink-0 transition-colors duration-300',
+					'text-[10px] font-bold uppercase tracking-wider shrink-0 transition-colors duration-300',
 					isAlarm
 						? 'text-red-400'
-						: isDark
-							? 'text-white/25 group-hover:text-white/40'
-							: 'text-slate-400'
+						: isDark ? 'text-emerald-300' : 'text-emerald-600'
 				)}>
 					{isAlarm ? 'ALARM' : 'OK'}
 				</span>
