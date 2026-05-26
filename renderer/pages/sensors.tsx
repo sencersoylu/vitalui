@@ -93,10 +93,6 @@ export default function SensorsPage() {
 			// Store the raw analog array — drives per-sensor health (raw > 2500 = OK).
 			setRawData(Array.isArray(errorData.data) ? errorData.data : []);
 
-			// Chiller Run flag — Status flag 1, bit 0 of data[29] (0=Stop, 1=Run).
-			const d29 = errorData.data?.[29];
-			if (Number.isFinite(d29)) setChillerRunning((d29 & 1) === 1);
-
 			const errorArray = Number(errorData.data[19])
 				.toString(2)
 				.padStart(16, '0')
@@ -125,7 +121,10 @@ export default function SensorsPage() {
 			}
 		});
 
-		// Chiller running state now comes from data[29] bit 0 (Status flag 1, Run flag).
+		// Chiller running state — same chillerData event the dashboard uses.
+		socket.on('chillerData', (cd: any) => {
+			if (cd?.running !== undefined) setChillerRunning(cd.running === 1);
+		});
 
 		return () => {
 			socket.off();
