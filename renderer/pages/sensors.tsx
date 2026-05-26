@@ -5,6 +5,7 @@ import { getSocketUrl, getBControlUrl } from '../config';
 import { useDashboardStore } from '../store';
 import { SensorCard } from '../components/dashboard/SensorCard';
 import { ChamberSeatOverlay } from '../components/dashboard/ChamberSeatOverlay';
+import { linearConversion } from '../utils/linearConversion';
 
 export default function SensorsPage() {
 	// This screen is always dark — same as the compressor HMI page. Control
@@ -45,6 +46,15 @@ export default function SensorsPage() {
 	const RAW_HEALTH_MIN = 2500;
 	const [rawData, setRawData] = useState<number[]>([]);
 	const sensorHealth = (i: number): 'ok' | 'nok' => (rawData[i] > RAW_HEALTH_MIN ? 'ok' : 'nok');
+
+	// LP Compressor health: derived from Air Stock pressure (data[30], 0–400 bar).
+	// Healthy when stock pressure stays above 6 bar — matches the technical-room reading.
+	const lpHealth = (): 'ok' | 'nok' => {
+		const raw = rawData[30];
+		if (typeof raw !== 'number') return 'nok';
+		const bar = linearConversion(0, 400, 3240, 16383, raw, 0);
+		return typeof bar === 'number' && bar > 6 ? 'ok' : 'nok';
+	};
 
 	useEffect(() => {
 		if (darkMode) {
@@ -301,8 +311,8 @@ export default function SensorsPage() {
 							<div className="shrink-0 pt-2 mt-2 border-t border-white/[0.06]">
 								<SectionHeader title="Technical Room" accent="cyan" />
 								<div className="grid grid-cols-3 gap-1.5">
-									{/* No digital source mapped yet — shows Error until LP is wired. */}
-									<SensorCard name="LP Compressor" location="Technical Room" isDark={darkMode} health="nok" />
+									{/* LP Compressor: derived from Air Stock pressure (data[30] > 6 bar). */}
+									<SensorCard name="LP Compressor" location="Technical Room" isDark={darkMode} health={lpHealth()} />
 									<SensorCard name="HP Compressor" location="Technical Room" isDark={darkMode} isAlarm={!hp1Status} />
 									<SensorCard name="Chiller" location="Technical Room" isDark={darkMode} />
 									<SensorCard name="Air Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(8)} />
