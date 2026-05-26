@@ -126,7 +126,7 @@ export function SensorCard({
 						? 'text-red-400'
 						: isDark ? 'text-emerald-300' : 'text-emerald-600'
 				)}>
-					{isNok ? 'CHECK' : isAlarm ? 'ALARM' : 'OK'}
+					{isNok ? 'CHECK' : isAlarm ? 'CHECK' : 'OK'}
 				</span>
 			) : (
 				<span className={cn(
@@ -135,7 +135,7 @@ export function SensorCard({
 						? 'text-red-400'
 						: isDark ? 'text-emerald-300' : 'text-emerald-600'
 				)}>
-					{isAlarm ? 'ALARM' : 'OK'}
+					{isAlarm ? 'CHECK' : 'OK'}
 				</span>
 			)}
 
