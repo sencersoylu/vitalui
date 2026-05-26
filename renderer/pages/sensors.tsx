@@ -305,7 +305,7 @@ export default function SensorsPage() {
 									{/* No digital source mapped yet — shows Error until LP is wired. */}
 									<SensorCard name="LP Compressor" location="Technical Room" isDark={darkMode} health="nok" />
 									<SensorCard name="HP Compressor" location="Technical Room" isDark={darkMode} isAlarm={!hp1Status} />
-									<SensorCard name="Chiller" location="Technical Room" isDark={darkMode} isAlarm={!chillerRunning} />
+									<SensorCard name="Chiller" location="Technical Room" isDark={darkMode} />
 									<SensorCard name="Air Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(8)} />
 									<SensorCard name={<>O<sub>2</sub> Pressure</>} location="Technical Room" isDark={darkMode} health={sensorHealth(9)} />
 									<SensorCard name="Main FFS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(10)} />
