@@ -392,7 +392,7 @@ export default function TechnicalRoomPage() {
 					<div
 						className="absolute flex flex-col justify-center bg-slate-900/70 border border-slate-800"
 						style={{
-							left: s(959),
+							left: s(978),
 							top: s(914),
 							width: s(320),
 							height: s(143),
