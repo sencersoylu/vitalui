@@ -272,14 +272,9 @@ export default function SensorsPage() {
 										<SensorCard name="Temperature" location="Main Chamber" isDark={darkMode} health={sensorHealth(2)} />
 										<SensorCard name="Humidity" location="Main Chamber" isDark={darkMode} health={sensorHealth(7)} />
 										<SensorCard name={<>O<sub>2</sub> Level</>} location="Main Chamber" isDark={darkMode} isAlarm={mainHighO2} health={sensorHealth(1)} />
-									</div>
-									<div className="mt-2">
-										<SectionHeader title="Fire System" accent="orange" />
-										<div className="flex flex-col gap-1.5">
-											<SensorCard name="Fire Fighting System (FFS)" location="Main Chamber" isDark={darkMode} isAlarm={mainFssAlarm} isFire />
-											<SensorCard name="Flame Detector" location="Main Chamber" isDark={darkMode} isAlarm={mainFlameDetected} isFire />
-											<SensorCard name="Smoke Detector" location="Main Chamber" isDark={darkMode} isAlarm={mainSmokeDetected} isFire />
-										</div>
+										<SensorCard name="Fire Fighting System (FFS)" location="Main Chamber" isDark={darkMode} isAlarm={mainFssAlarm} />
+										<SensorCard name="Flame Detector" location="Main Chamber" isDark={darkMode} isAlarm={mainFlameDetected} />
+										<SensorCard name="Smoke Detector" location="Main Chamber" isDark={darkMode} isAlarm={mainSmokeDetected} />
 									</div>
 								</div>
 
@@ -291,13 +286,8 @@ export default function SensorsPage() {
 										<SensorCard name="Temperature" location="Ante Chamber" isDark={darkMode} health={sensorHealth(6)} />
 										<SensorCard name="Humidity" location="Ante Chamber" isDark={darkMode} health={sensorHealth(7)} />
 										<SensorCard name={<>O<sub>2</sub> Level</>} location="Ante Chamber" isDark={darkMode} isAlarm={anteHighO2} health={sensorHealth(5)} />
-									</div>
-									<div className="mt-2">
-										<SectionHeader title="Fire System" accent="orange" />
-										<div className="flex flex-col gap-1.5">
-											<SensorCard name="Fire Fighting System (FFS)" location="Ante Chamber" isDark={darkMode} isAlarm={anteFssAlarm} isFire />
-											<SensorCard name="Smoke Detector" location="Ante Chamber" isDark={darkMode} isAlarm={anteSmokeDetected} isFire />
-										</div>
+										<SensorCard name="Fire Fighting System (FFS)" location="Ante Chamber" isDark={darkMode} isAlarm={anteFssAlarm} />
+										<SensorCard name="Smoke Detector" location="Ante Chamber" isDark={darkMode} isAlarm={anteSmokeDetected} />
 									</div>
 								</div>
 
