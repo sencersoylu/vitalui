@@ -392,28 +392,28 @@ export default function TechnicalRoomPage() {
 					<div
 						className="absolute flex flex-col justify-center bg-slate-900/70 border border-slate-800"
 						style={{
-							left: s(899),
+							left: s(959),
 							top: s(914),
-							width: s(380),
+							width: s(320),
 							height: s(143),
 							borderRadius: s(20),
-							paddingLeft: s(24),
-							paddingRight: s(24),
+							paddingLeft: s(22),
+							paddingRight: s(22),
 						}}
 					>
-						<div className="flex justify-between items-center gap-3">
-							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(26) }}>
+						<div className="flex justify-between items-center gap-2">
+							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(24) }}>
 								Set
 							</span>
-							<span className="font-poppins font-bold text-white tabular-nums whitespace-nowrap" style={{ fontSize: s(32) }}>
+							<span className="font-poppins font-bold text-white tabular-nums whitespace-nowrap" style={{ fontSize: s(28) }}>
 								{(chillerSetTemp ?? 0).toFixed(1)} °C
 							</span>
 						</div>
-						<div className="flex justify-between items-center gap-3">
-							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(26) }}>
+						<div className="flex justify-between items-center gap-2">
+							<span className="font-poppins font-semibold text-slate-400" style={{ fontSize: s(24) }}>
 								Current
 							</span>
-							<span className="font-poppins font-bold text-white tabular-nums whitespace-nowrap" style={{ fontSize: s(32) }}>
+							<span className="font-poppins font-bold text-white tabular-nums whitespace-nowrap" style={{ fontSize: s(28) }}>
 								{(chillerCurrentTemp ?? 0).toFixed(1)} °C
 							</span>
 						</div>
