@@ -423,7 +423,7 @@ export default function TechnicalRoomPage() {
 								Set
 							</span>
 							<span className="font-poppins font-bold text-white tabular-nums whitespace-nowrap" style={{ fontSize: s(28) }}>
-								{(chillerSetTemp ?? 0).toFixed(1)} °C
+								{chillerCommError ? '--- °C' : `${(chillerSetTemp ?? 0).toFixed(1)} °C`}
 							</span>
 						</div>
 						<div className="flex justify-between items-center gap-2">
@@ -431,7 +431,7 @@ export default function TechnicalRoomPage() {
 								Current
 							</span>
 							<span className="font-poppins font-bold text-white tabular-nums whitespace-nowrap" style={{ fontSize: s(28) }}>
-								{(chillerCurrentTemp ?? 0).toFixed(1)} °C
+								{chillerCommError ? '--- °C' : `${(chillerCurrentTemp ?? 0).toFixed(1)} °C`}
 							</span>
 						</div>
 					</div>
