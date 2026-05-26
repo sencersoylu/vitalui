@@ -87,6 +87,17 @@ export default function SensorsPage() {
 		return typeof pct === 'number' && pct >= FFS_LEVEL_MIN ? 'ok' : 'nok';
 	};
 
+	// FFS Line pressure health: data[10] (Main) / data[12] (Ante). Treated as
+	// fixed 4–20 mA → 0–400 bar like the other technical-room pressures.
+	// Healthy when line pressure stays at or above 6 bar.
+	const FFS_PRESSURE_MIN = 6;
+	const ffsPressureHealth = (i: number): 'ok' | 'nok' => {
+		const raw = rawData[i];
+		if (typeof raw !== 'number') return 'nok';
+		const bar = linearConversion(0, 400, 3240, 16383, raw, 0);
+		return typeof bar === 'number' && bar >= FFS_PRESSURE_MIN ? 'ok' : 'nok';
+	};
+
 	useEffect(() => {
 		if (darkMode) {
 			document.documentElement.classList.add('dark');
@@ -348,9 +359,9 @@ export default function SensorsPage() {
 									<SensorCard name="Chiller" location="Technical Room" isDark={darkMode} />
 									<SensorCard name="Air Pressure" location="Technical Room" isDark={darkMode} health={airPressureHealth()} />
 									<SensorCard name={<>O<sub>2</sub> Pressure</>} location="Technical Room" isDark={darkMode} health={o2PressureHealth()} />
-									<SensorCard name="Main FFS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(10)} />
+									<SensorCard name="Main FFS Pressure" location="Technical Room" isDark={darkMode} health={ffsPressureHealth(10)} />
 									<SensorCard name="Main FFS Level" location="Technical Room" isDark={darkMode} health={ffsLevelHealth(11)} />
-									<SensorCard name="Ante FFS Pressure" location="Technical Room" isDark={darkMode} health={sensorHealth(12)} />
+									<SensorCard name="Ante FFS Pressure" location="Technical Room" isDark={darkMode} health={ffsPressureHealth(12)} />
 									<SensorCard name="Ante FFS Level" location="Technical Room" isDark={darkMode} health={ffsLevelHealth(13)} />
 								</div>
 							</div>
