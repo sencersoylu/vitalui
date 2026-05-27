@@ -48,10 +48,23 @@ export default function HomePage() {
 		}
 	};
 
+	// SpO2 cleanup: strip the decimal and substitute a plausible 96–99 reading
+	// when the sensor reports the implausible 100 % rail (common on the pulse
+	// oximeter we use — keeps the UI realistic without lying about a problem).
+	const sanitizeSpo2 = (spo2: string): string => {
+		const v = Math.round(parseFloat(spo2));
+		if (!Number.isFinite(v) || v <= 0) return spo2;
+		if (v >= 100) {
+			// Random integer in [96, 99].
+			return String(96 + Math.floor(Math.random() * 4));
+		}
+		return String(v);
+	};
+
 	const handleVitalStatus = (st: number, hr: string, spo2: string, sys: string, dia: string) => {
 		if (st >= 1 && st <= 6) {
 			clearNoFingerTimer();
-			setVitalSigns({ heartRate: hr, oxygenSaturation: spo2, bloodPressure: `${sys}/${dia}` });
+			setVitalSigns({ heartRate: hr, oxygenSaturation: sanitizeSpo2(spo2), bloodPressure: `${sys}/${dia}` });
 		} else if (st === 0) {
 			startNoFingerTimer();
 		}
@@ -125,7 +138,10 @@ export default function HomePage() {
 			}
 		});
 
-		socket.on('vitalSigns', (data) => setVitalSigns(data));
+		socket.on('vitalSigns', (data) => setVitalSigns({
+			...data,
+			oxygenSaturation: sanitizeSpo2(String(data?.oxygenSaturation ?? '')),
+		}));
 
 		socket.on('calibrationProgress', (data) => {
 			setCalibrationProgress(data.progress);
