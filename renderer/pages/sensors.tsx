@@ -186,11 +186,11 @@ export default function SensorsPage() {
 			setRawData(Array.isArray(errorData.data) ? errorData.data : []);
 
 			// Chiller comm / run state:
-			//   data[28] === 10 → bridge unreachable / device off
+			//   data[27] === 10 → bridge unreachable / device off
 			//   data[29] bit 0  → Run flag (Status flag 1)
-			const d28 = errorData.data?.[28];
+			const d27 = errorData.data?.[27];
 			const d29 = errorData.data?.[29];
-			const commErr = Number(d28) === 10;
+			const commErr = Number(d27) === 10;
 			setChillerCommError(commErr);
 			if (!commErr && Number.isFinite(d29)) {
 				setChillerRunning((Number(d29) & 1) === 1);

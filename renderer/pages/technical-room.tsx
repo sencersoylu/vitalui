@@ -94,11 +94,11 @@ export default function TechnicalRoomPage() {
 			// Chiller PV: raw data[15] is in 0.1 C units.
 			if (Number.isFinite(d[15])) setChillerCurrentTemp(d[15] / 10);
 
-			// Chiller comm / run state (see CLAUDE.md notes):
-			//   data[28] === 10 → bridge unreachable / device off (sentinel value)
+			// Chiller comm / set / run state (see CLAUDE.md notes):
+			//   data[27] === 10 → bridge unreachable / device off (sentinel value)
 			//   data[28] / 10   → Set Temp in °C (e.g. 55 → 5.5 °C)
 			//   data[29] bit 0  → Run flag (Status flag 1)
-			const commErr = Number(d[28]) === 10;
+			const commErr = Number(d[27]) === 10;
 			setChillerCommError(commErr);
 			if (!commErr && Number.isFinite(d[28])) {
 				setChillerSetTemp(Number(d[28]) / 10);

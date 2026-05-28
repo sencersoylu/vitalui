@@ -142,12 +142,13 @@ function HomeContent() {
 			setChillerCurrentTemp(errorData.data[15] / 10);
 
 			// Chiller comm / set / run state.
-			//   data[28] === 10  → sentinel: bridge unreachable / device powered off
+			//   data[27] === 10  → sentinel: bridge unreachable / device powered off
 			//   data[28] / 10    → Set Temp in °C (e.g. 55 → 5.5 °C)
 			//   data[29] bit 0   → Run flag (Status flag 1): 1 = Run, 0 = Stop
+			const d27 = errorData.data?.[27];
 			const d28 = errorData.data?.[28];
 			const d29 = errorData.data?.[29];
-			const commErr = Number(d28) === 10;
+			const commErr = Number(d27) === 10;
 			setChillerCommError(commErr);
 			if (!commErr && Number.isFinite(d28)) {
 				setChillerSetTemp(Number(d28) / 10);
