@@ -30,8 +30,6 @@ export default function SensorsPage() {
 		setAnteSmokeDetected,
 		setMainHighO2,
 		setAnteHighO2,
-		airTankPressure,
-		primaryO2Pressure,
 		mainFssPressure,
 		mainFssLevel,
 		anteFssPressure,
@@ -76,14 +74,49 @@ export default function SensorsPage() {
 	const mainFfsLowPressure = isFfsAirLow(22) || isFfsAirLow(23);
 	const anteFfsLowPressure = isFfsAirLow(24);
 
-	// O2 Pressure health: derived from primaryO2Pressure (bar). >= 4 bar = OK,
-	// matches the DetectorPanel threshold.
-	const o2PressureHealth = (): 'ok' | 'nok' =>
-		typeof primaryO2Pressure === 'number' && primaryO2Pressure >= 4 ? 'ok' : 'nok';
+	// Air / O2 line pressures are computed live from the PLC data[] array using
+	// the same calibration the dashboard uses (json.php?i=tech). Reading from
+	// the Zustand store directly would surface a stale value when this page is
+	// opened without the dashboard having run first (persisted to localStorage).
+	const airPressureBar = (): number | null => {
+		const raw = rawData[8];
+		if (typeof raw !== 'number') return null;
+		if (!(techCal.tech_pressure_analog > 0)) return null;
+		const v = linearConversion(
+			0,
+			techCal.tech_pressure_upper,
+			techCal.tech_pressure_offset,
+			techCal.tech_pressure_analog,
+			raw,
+			1,
+		);
+		return typeof v === 'number' ? v : null;
+	};
+	const o2PressureBar = (): number | null => {
+		const raw = rawData[9];
+		if (typeof raw !== 'number') return null;
+		if (!(techCal.tech_o_analog > 0)) return null;
+		const v = linearConversion(
+			0,
+			techCal.tech_o_upper,
+			techCal.tech_o_offset,
+			techCal.tech_o_analog,
+			raw,
+			1,
+		);
+		return typeof v === 'number' ? v : null;
+	};
 
-	// Air Pressure health: derived from airTankPressure (bar). >= 5 bar = OK.
-	const airPressureHealth = (): 'ok' | 'nok' =>
-		typeof airTankPressure === 'number' && airTankPressure >= 5 ? 'ok' : 'nok';
+	// >= 5 bar = OK (matches the LP Compressor cutoff).
+	const airPressureHealth = (): 'ok' | 'nok' => {
+		const bar = airPressureBar();
+		return bar !== null && bar >= 5 ? 'ok' : 'nok';
+	};
+	// >= 4 bar = OK (matches DetectorPanel's o2Ok rule).
+	const o2PressureHealth = (): 'ok' | 'nok' => {
+		const bar = o2PressureBar();
+		return bar !== null && bar >= 4 ? 'ok' : 'nok';
+	};
 
 	// FFS Level health: data[11] / data[13] in 0–100 %. Healthy when level > 70 %.
 	const FFS_LEVEL_MIN = 70;
