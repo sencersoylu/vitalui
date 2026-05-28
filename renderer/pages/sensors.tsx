@@ -81,9 +81,9 @@ export default function SensorsPage() {
 	const o2PressureHealth = (): 'ok' | 'nok' =>
 		typeof primaryO2Pressure === 'number' && primaryO2Pressure >= 4 ? 'ok' : 'nok';
 
-	// Air Pressure health: derived from airTankPressure (bar). >= 4 bar = OK.
+	// Air Pressure health: derived from airTankPressure (bar). >= 5 bar = OK.
 	const airPressureHealth = (): 'ok' | 'nok' =>
-		typeof airTankPressure === 'number' && airTankPressure >= 4 ? 'ok' : 'nok';
+		typeof airTankPressure === 'number' && airTankPressure >= 5 ? 'ok' : 'nok';
 
 	// FFS Level health: data[11] / data[13] in 0–100 %. Healthy when level > 70 %.
 	const FFS_LEVEL_MIN = 70;
