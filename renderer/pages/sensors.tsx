@@ -94,21 +94,14 @@ export default function SensorsPage() {
 		return typeof pct === 'number' && pct >= FFS_LEVEL_MIN ? 'ok' : 'nok';
 	};
 
-	// FFS Line pressure health: data[10] (Main, tech_yssp_main / ANAYSS) and
-	// data[12] (Ante, tech_yssp_entry / ARAYSS). Uses per-install calibration
-	// from json.php?i=tech — same conversion the legacy hipertech_bilgi UI runs.
-	// Healthy when line pressure stays at or above 6 bar.
+	// FFS Line pressure health: data[10] (Main, ANAYSS) and data[12] (Ante,
+	// ARAYSS) are fixed-range 0–16 bar sensors on standard 4–20 mA
+	// (3240 → 16383). Healthy when line pressure stays at or above 6 bar.
 	const FFS_PRESSURE_MIN = 6;
 	const ffsPressureHealth = (i: 10 | 12): 'ok' | 'nok' => {
 		const raw = rawData[i];
 		if (typeof raw !== 'number') return 'nok';
-		const upper = i === 10 ? techCal.tech_yssp_main_upper : techCal.tech_yssp_entry_upper;
-		const analog = i === 10 ? techCal.tech_yssp_main_analog : techCal.tech_yssp_entry_analog;
-		const offset = i === 10 ? techCal.tech_yssp_main_offset : techCal.tech_yssp_entry_offset;
-		// Calibration not yet loaded → assume OK (don't false-positive while the
-		// REST fetch is still in flight / retrying).
-		if (!(analog > 0)) return 'ok';
-		const bar = linearConversion(0, upper, offset, analog, raw, 1);
+		const bar = linearConversion(0, 16, 3240, 16383, raw, 1);
 		return typeof bar === 'number' && bar >= FFS_PRESSURE_MIN ? 'ok' : 'nok';
 	};
 
