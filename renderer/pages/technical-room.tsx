@@ -29,7 +29,7 @@ const toLevel = (raw: number | undefined): string | number =>
  * cylinder is considered depleted and the UI flashes a 'Low Pressure'
  * warning instead of the bar reading.
  */
-const LOW_PRESSURE_BAR = 50;
+const LOW_PRESSURE_BAR = 100;
 const isLowPressure = (raw: number | undefined): boolean => {
 	const v = toBar(raw);
 	return typeof v === 'number' && v < LOW_PRESSURE_BAR;

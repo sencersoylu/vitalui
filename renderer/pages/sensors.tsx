@@ -66,7 +66,7 @@ export default function SensorsPage() {
 	// FFS Air cylinder low-pressure check — < 50 bar mirrors the technical-room
 	// 'Low Pressure' warning. Used to flag the chamber FFS cards as CHECK when any
 	// of the chamber's air bottles drops below threshold.
-	const FFS_LOW_BAR = 50;
+	const FFS_LOW_BAR = 100;
 	const isFfsAirLow = (i: number): boolean => {
 		const raw = rawData[i];
 		if (typeof raw !== 'number') return false;
