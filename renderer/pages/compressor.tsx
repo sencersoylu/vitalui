@@ -96,17 +96,17 @@ const GROUPS: {
 		dot: 'bg-sky-400',
 		tint: 'text-sky-400',
 		color: '#38bdf8',
-		cols: 'grid-cols-5',
-		keys: ['finalPressure1', 'finalPressure2', 'intakePressure', 'oilPressure', 'crankcasePress'],
+		cols: 'grid-cols-2',
+		keys: ['finalPressure1', 'oilPressure'],
 	},
 	{
-		title: 'Temperatures & Level',
+		title: 'Temperatures',
 		icon: Thermometer,
 		dot: 'bg-amber-400',
 		tint: 'text-amber-400',
 		color: '#fbbf24',
-		cols: 'grid-cols-4',
-		keys: ['coolingAirTemp', 'lastStageTemp', 'dewPoint', 'gasBalloonLevel'],
+		cols: 'grid-cols-3',
+		keys: ['coolingAirTemp', 'lastStageTemp', 'dewPoint'],
 	},
 	{
 		title: 'Gas & Air Quality',
@@ -480,51 +480,6 @@ export default function CompressorPage() {
 								</div>
 							</div>
 
-							{/* Control panel */}
-							<div className="shrink-0 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-sm p-3.5">
-								<h2 className="mb-2.5 text-[14px] font-bold uppercase tracking-wider text-slate-300">
-									Control
-								</h2>
-								<div className="grid grid-cols-3 gap-3">
-									<ControlButton
-										label="ON"
-										icon={<Power size={26} />}
-										tone="on"
-										disabled={!connected || pending !== null}
-										loading={pending === 'ON'}
-										onClick={() => sendCommand('ON')}
-									/>
-									<ControlButton
-										label="OFF"
-										icon={<PowerOff size={26} />}
-										tone="off"
-										disabled={!connected || pending !== null}
-										loading={pending === 'OFF'}
-										onClick={() => sendCommand('OFF')}
-									/>
-									<ControlButton
-										label="RESET"
-										icon={<RotateCcw size={26} />}
-										tone="reset"
-										disabled={!connected || pending !== null}
-										loading={pending === 'RESET'}
-										onClick={() => sendCommand('RESET')}
-									/>
-								</div>
-								{/* Reserves height so the buttons don't shift when a
-								    command result appears; empty until a button is pressed. */}
-								<div
-									className="mt-2.5 flex h-5 items-center justify-center text-[13px] font-medium"
-									role="status"
-									aria-live="polite"
-								>
-									{feedback && (
-										<span className={feedback.ok ? 'text-emerald-400' : 'text-rose-400'}>
-											{feedback.msg}
-										</span>
-									)}
-								</div>
-							</div>
 						</aside>
 					</main>
 				</div>
