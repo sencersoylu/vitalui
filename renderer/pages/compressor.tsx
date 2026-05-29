@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import Head from 'next/head';
 import io from 'socket.io-client';
 import {
@@ -81,12 +81,21 @@ const LABELS: Record<string, string> = {
 };
 
 // ---- Metric grouping (keys must match lib/registerMap.js) --------------
-const GROUPS: { title: string; icon: any; dot: string; tint: string; cols: string; keys: string[] }[] = [
+const GROUPS: {
+	title: string;
+	icon: any;
+	dot: string;
+	tint: string;
+	color: string;
+	cols: string;
+	keys: string[];
+}[] = [
 	{
 		title: 'Pressures',
 		icon: Gauge,
 		dot: 'bg-sky-400',
 		tint: 'text-sky-400',
+		color: '#38bdf8',
 		cols: 'grid-cols-5',
 		keys: ['finalPressure1', 'finalPressure2', 'intakePressure', 'oilPressure', 'crankcasePress'],
 	},
@@ -95,6 +104,7 @@ const GROUPS: { title: string; icon: any; dot: string; tint: string; cols: strin
 		icon: Thermometer,
 		dot: 'bg-amber-400',
 		tint: 'text-amber-400',
+		color: '#fbbf24',
 		cols: 'grid-cols-4',
 		keys: ['coolingAirTemp', 'lastStageTemp', 'dewPoint', 'gasBalloonLevel'],
 	},
@@ -103,10 +113,15 @@ const GROUPS: { title: string; icon: any; dot: string; tint: string; cols: strin
 		icon: Wind,
 		dot: 'bg-emerald-400',
 		tint: 'text-emerald-400',
+		color: '#34d399',
 		cols: 'grid-cols-5',
 		keys: ['o2', 'co2', 'co', 'humidity', 'voc'],
 	},
 ];
+
+// ---- Trend history buffer (30 min × 5 s = 360 samples) -----------------
+const HIST_LEN = 360;
+const SAMPLE_MS = 5000;
 
 // ---- Helpers -----------------------------------------------------------
 const fmt = (v: number | undefined): string => {
@@ -226,6 +241,49 @@ export default function CompressorPage() {
 
 	const analog = telemetry?.analog;
 	const status = telemetry?.status;
+
+	// Current (scaled / derived) value for each rendered metric key. Used
+	// both for display and for snapshotting into the trend buffer.
+	const currentValues = useMemo(() => {
+		const m: Record<string, number | undefined> = {};
+		for (const g of GROUPS) {
+			for (const key of g.keys) {
+				if (key === 'dewPoint') {
+					const dp = dewPointFromAbsHumidity(scaled('humidity', analog?.humidity?.value));
+					m[key] = dp ?? undefined;
+				} else {
+					m[key] = scaled(key, analog?.[key]?.value);
+				}
+			}
+		}
+		return m;
+	}, [analog]);
+
+	// 30-minute rolling history per metric. Snapshots taken on a steady 5 s
+	// interval regardless of bridge update rate, so the sparkline timeline
+	// stays uniform.
+	const [history, setHistory] = useState<Record<string, number[]>>({});
+	const currentValuesRef = useRef(currentValues);
+	currentValuesRef.current = currentValues;
+
+	useEffect(() => {
+		const id = setInterval(() => {
+			setHistory((prev) => {
+				const cv = currentValuesRef.current;
+				const next: Record<string, number[]> = { ...prev };
+				for (const key of Object.keys(cv)) {
+					const v = cv[key];
+					if (v === undefined || !Number.isFinite(v)) continue;
+					const arr = next[key] ? next[key].slice() : [];
+					arr.push(v);
+					if (arr.length > HIST_LEN) arr.shift();
+					next[key] = arr;
+				}
+				return next;
+			});
+		}, SAMPLE_MS);
+		return () => clearInterval(id);
+	}, []);
 
 	const counts = useMemo(
 		() => ({
@@ -375,9 +433,11 @@ export default function CompressorPage() {
 												<MetricTile
 													key={key}
 													dot={group.dot}
+													color={group.color}
 													label={LABELS[key] ?? a?.label ?? key}
 													value={displayValue}
 													unit={key === 'dewPoint' ? '°C' : a?.unit ?? ''}
+													history={history[key]}
 												/>
 											);
 										})}
@@ -489,32 +549,89 @@ function HeaderStat({ label, value }: { label: string; value: string }) {
 
 function MetricTile({
 	dot,
+	color,
 	label,
 	value,
 	unit,
+	history,
 }: {
 	dot: string;
+	color: string;
 	label: string;
 	value: string;
 	unit: string;
+	history?: number[];
 }) {
 	return (
-		<div className="flex h-full flex-col justify-center gap-2 rounded-xl border border-slate-700/50 bg-slate-800/50 px-3.5">
+		<div className="flex h-full flex-col gap-1.5 rounded-xl border border-slate-700/50 bg-slate-800/50 px-3.5 py-2.5">
 			{/* Fixed-height label area keeps values aligned across a row even
 			    when a label wraps to two lines. */}
-			<div className="flex h-[34px] items-start gap-1.5">
+			<div className="flex h-[30px] shrink-0 items-start gap-1.5">
 				<span className={cn('mt-[3px] h-2 w-2 shrink-0 rounded-full', dot)} />
-				<span className="text-[13px] font-semibold leading-[1.25] tracking-wide text-slate-400 line-clamp-2">
+				<span className="text-[12.5px] font-semibold leading-[1.2] tracking-wide text-slate-400 line-clamp-2">
 					{label}
 				</span>
 			</div>
-			<div className="flex items-baseline gap-1.5">
-				<span className="text-[31px] font-bold leading-none tabular-nums text-white">
+			<div className="flex shrink-0 items-baseline gap-1.5">
+				<span className="text-[28px] font-bold leading-none tabular-nums text-white">
 					{value}
 				</span>
-				{unit && <span className="text-[15px] font-medium text-slate-500">{unit}</span>}
+				{unit && <span className="text-[14px] font-medium text-slate-500">{unit}</span>}
+			</div>
+			{/* 30-min rolling trend, fills remaining height */}
+			<div className="mt-auto min-h-0 flex-1">
+				<Sparkline values={history} color={color} />
 			</div>
 		</div>
+	);
+}
+
+function Sparkline({ values, color }: { values?: number[]; color: string }) {
+	const gradId = useId().replace(/:/g, '');
+	if (!values || values.length < 2) {
+		return <div className="h-full w-full" />;
+	}
+	const W = 200;
+	const H = 32;
+	const min = Math.min(...values);
+	const max = Math.max(...values);
+	const range = max - min || 1;
+	const stepX = W / (values.length - 1);
+	let path = '';
+	let lastX = 0;
+	let lastY = 0;
+	for (let i = 0; i < values.length; i++) {
+		const x = i * stepX;
+		const y = H - ((values[i] - min) / range) * (H - 6) - 3;
+		path += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1) + ' ';
+		lastX = x;
+		lastY = y;
+	}
+	const area = path + `L${W},${H} L0,${H} Z`;
+	return (
+		<svg
+			viewBox={`0 0 ${W} ${H}`}
+			preserveAspectRatio="none"
+			className="block h-full w-full overflow-visible"
+		>
+			<defs>
+				<linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stopColor={color} stopOpacity={0.35} />
+					<stop offset="100%" stopColor={color} stopOpacity={0} />
+				</linearGradient>
+			</defs>
+			<path d={area} fill={`url(#${gradId})`} />
+			<path
+				d={path}
+				fill="none"
+				stroke={color}
+				strokeWidth="1.4"
+				strokeLinejoin="round"
+				strokeLinecap="round"
+				vectorEffect="non-scaling-stroke"
+			/>
+			<circle cx={lastX.toFixed(1)} cy={lastY.toFixed(1)} r="2.2" fill={color} />
+		</svg>
 	);
 }
 
