@@ -364,16 +364,19 @@ export default function CompressorPage() {
 											// Dew Point is derived locally from absolute
 											// humidity (g/m³) via inverse-interpolation
 											// against the saturated-vapor table.
-											const v =
-												key === 'dewPoint'
-													? dewPointFromAbsHumidity(scaled('humidity', analog?.humidity?.value)) ?? undefined
-													: scaled(key, a?.value);
+											let displayValue: string;
+											if (key === 'dewPoint') {
+												const dp = dewPointFromAbsHumidity(scaled('humidity', analog?.humidity?.value));
+												displayValue = dp === null ? '###' : fmtMetric(key, dp);
+											} else {
+												displayValue = fmtMetric(key, scaled(key, a?.value));
+											}
 											return (
 												<MetricTile
 													key={key}
 													dot={group.dot}
 													label={LABELS[key] ?? a?.label ?? key}
-													value={fmtMetric(key, v)}
+													value={displayValue}
 													unit={key === 'dewPoint' ? '°C' : a?.unit ?? ''}
 												/>
 											);
