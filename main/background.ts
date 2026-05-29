@@ -11,43 +11,24 @@ import { createWindow } from './helpers';
 const isProd = process.env.NODE_ENV === 'production';
 
 if (process.platform === 'linux') {
-	// Each tuning flag is behind an env var so it can be probed individually
-	// on the RPi without rebuilding for each combination:
-	//
-	//   WAYLAND=1     → native Wayland (avoids XWayland hop)
-	//   ANGLE_EGL=1   → ANGLE EGL backend
-	//   ZERO_COPY=1   → HW raster + DMA-buf zero-copy
-	//
-	// Stacking known-safe: WAYLAND=1 ZERO_COPY=1 ./MY_APP.AppImage
+	// RPi 5 / labwc GPU tuning — verified 2026-05-29.
+	// ANGLE → native EGL (matches system Chromium on RPi OS).
+	app.commandLine.appendSwitch('use-angle', 'gles-egl');
+	// HW raster + DMA-buf zero-copy: cuts the One-copy frame copy that was
+	// causing animation jank under XWayland.
+	app.commandLine.appendSwitch('enable-gpu-rasterization');
+	app.commandLine.appendSwitch('enable-zero-copy');
 
-	// Wayland probing — labwc on RPi 5 sometimes rejects WaylandWindowDecorations
-	// (needs xdg-decoration). Test thinnest variant first:
-	//   WAYLAND_BARE=1  → ozone-platform=wayland (nothing else)
-	//   WAYLAND_USE=1   → + UseOzonePlatform feature flag
-	//   WAYLAND=1       → + WaylandWindowDecorations (the most fragile combo)
-	if (process.env.WAYLAND_BARE === '1' || process.env.WAYLAND_USE === '1' || process.env.WAYLAND === '1') {
-		app.commandLine.appendSwitch('ozone-platform', 'wayland');
-	}
-	if (process.env.WAYLAND_USE === '1' || process.env.WAYLAND === '1') {
-		app.commandLine.appendSwitch('enable-features', 'UseOzonePlatform');
-	}
-	if (process.env.WAYLAND === '1') {
-		// Re-append; appendSwitch with the same key overwrites the value, so
-		// we set the combined feature list once here.
-		app.commandLine.appendSwitch('enable-features', 'UseOzonePlatform,WaylandWindowDecorations');
-	}
-	if (process.env.ANGLE_EGL === '1') {
-		app.commandLine.appendSwitch('use-angle', 'gles-egl');
-	}
-	if (process.env.ZERO_COPY === '1') {
-		app.commandLine.appendSwitch('enable-gpu-rasterization');
-		app.commandLine.appendSwitch('enable-zero-copy');
-	}
+	// Wayland (ozone-platform=wayland, with or without UseOzonePlatform /
+	// WaylandWindowDecorations) white-screens Electron on this Pi + labwc
+	// build — Wayland surface creation fails before the first paint. Stay on
+	// XWayland for now; revisit after the next labwc / Electron upgrade.
+	// Opt-in env vars are still wired in git history (commit 557c6b7) if
+	// someone wants to re-probe.
 
 	// `disable-gpu-compositing` removed 2026-05-24 — was forcing software
 	// compositing. `in-process-gpu` removed 2026-05-26 — match system
-	// Chromium and keep GPU work off the main process. Put either back if
-	// the renderer crashes or white-screens.
+	// Chromium and keep GPU work off the main process.
 	app.commandLine.appendSwitch('js-flags', '--max-old-space-size=384');
 }
 
