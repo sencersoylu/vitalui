@@ -6,7 +6,14 @@ if (process.env.ELECTRON_DISABLE_SANDBOX) {
 	app.commandLine.appendSwitch('no-sandbox');
 }
 import serve from 'electron-serve';
+import Store from 'electron-store';
 import { createWindow } from './helpers';
+
+// Persistent file-backed store for the renderer. Replaces localStorage on
+// prod AppImage builds where Chromium's storage layer for the `app://`
+// custom scheme was being wiped between launches. Lives at
+// `<userData>/dashboard-store.json`.
+const dashboardStore = new Store({ name: 'dashboard-store' });
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -300,4 +307,21 @@ ipcMain.on('message', async (event, arg) => {
 
 ipcMain.on('get-server-ip', (event) => {
 	event.returnValue = serverIp;
+});
+
+// Renderer-side Zustand persist storage. Synchronous handlers via
+// event.returnValue so the persist middleware can read/write without
+// async plumbing. Values are JSON strings managed by Zustand.
+ipcMain.on('store:get', (event, key: string) => {
+	event.returnValue = dashboardStore.get(key, null);
+});
+
+ipcMain.on('store:set', (event, key: string, value: string) => {
+	dashboardStore.set(key, value);
+	event.returnValue = true;
+});
+
+ipcMain.on('store:remove', (event, key: string) => {
+	dashboardStore.delete(key);
+	event.returnValue = true;
 });

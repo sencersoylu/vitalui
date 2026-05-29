@@ -19,6 +19,17 @@ const handler = {
   getServerIp(): string {
     return ipcRenderer.sendSync('get-server-ip')
   },
+  store: {
+    get(key: string): string | null {
+      return ipcRenderer.sendSync('store:get', key)
+    },
+    set(key: string, value: string): void {
+      ipcRenderer.sendSync('store:set', key, value)
+    },
+    remove(key: string): void {
+      ipcRenderer.sendSync('store:remove', key)
+    },
+  },
 }
 
 contextBridge.exposeInMainWorld('ipc', handler)

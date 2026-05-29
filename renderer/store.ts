@@ -1,5 +1,34 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware'
+
+// On Electron, route persist through the main process so state lives in a
+// real file (<userData>/dashboard-store.json) instead of localStorage —
+// which Chromium was wiping on prod AppImage launches under the `app://`
+// scheme. Falls back to localStorage in plain browser / dev contexts where
+// `window.ipc` isn't exposed.
+const electronStorage: StateStorage = {
+  getItem: (name) => {
+    if (typeof window !== 'undefined' && (window as any).ipc?.store) {
+      return (window as any).ipc.store.get(name)
+    }
+    if (typeof window !== 'undefined') return window.localStorage.getItem(name)
+    return null
+  },
+  setItem: (name, value) => {
+    if (typeof window !== 'undefined' && (window as any).ipc?.store) {
+      ;(window as any).ipc.store.set(name, value)
+      return
+    }
+    if (typeof window !== 'undefined') window.localStorage.setItem(name, value)
+  },
+  removeItem: (name) => {
+    if (typeof window !== 'undefined' && (window as any).ipc?.store) {
+      ;(window as any).ipc.store.remove(name)
+      return
+    }
+    if (typeof window !== 'undefined') window.localStorage.removeItem(name)
+  },
+}
 
 function getWindowId(): string {
   if (typeof window === 'undefined') return 'main'
@@ -290,6 +319,7 @@ export const useDashboardStore = create<DashboardState>()(
     }),
     {
       name: `dashboard-storage-${getWindowId()}`,
+      storage: createJSONStorage(() => electronStorage),
     }
   )
 ) 
