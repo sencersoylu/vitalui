@@ -244,14 +244,6 @@ function loadWindowsConfig(): WindowsConfig | null {
 			}
 		});
 
-		// Launch with OPEN_GPU=1 ./MY_APP.AppImage to auto-open chrome://gpu —
-		// useful when running headless over SSH where the keyboard shortcut
-		// can't be triggered.
-		if (process.env.OPEN_GPU === '1') {
-			const gpuWin = new BrowserWindow({ width: 1100, height: 800 });
-			gpuWin.loadURL('chrome://gpu');
-		}
-
 		if (isProd) {
 			await mainWindow.loadURL('app://./home_dik');
 		} else {
@@ -259,6 +251,15 @@ function loadWindowsConfig(): WindowsConfig | null {
 			await mainWindow.loadURL(`http://localhost:${port}/home_dik`);
 			mainWindow.webContents.openDevTools();
 		}
+	}
+
+	// Auto-open chrome://gpu when launched with OPEN_GPU=1. Works for both the
+	// multi-window config path and the single-mainWindow fallback above so SSH
+	// users can trigger the GPU diagnostic without a keyboard.
+	if (process.env.OPEN_GPU === '1') {
+		console.log('[OPEN_GPU] opening chrome://gpu');
+		const gpuWin = new BrowserWindow({ width: 1100, height: 800, alwaysOnTop: true });
+		gpuWin.loadURL('chrome://gpu');
 	}
 })();
 
