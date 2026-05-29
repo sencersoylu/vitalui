@@ -10,18 +10,20 @@
 Port the active surface of the hyperbaric chamber / O2 monitoring HMI from Nextron to **PySide6 + QML**, preserving pixel-level visual fidelity and 1:1 behavioral parity, while keeping the existing Nextron app untouched until the new app reaches full feature parity.
 
 **In scope (active pages only):**
-- `home.tsx` (Dashboard)
-- `o2-analyzer.tsx`
-- `technical-room.tsx`
-- `patient-monitor.tsx`
-- `compressor.tsx`
-- `sensors.tsx`
+- `dashboard.tsx` → `qml/pages/Dashboard.qml` — the chamber control dashboard (Zustand-backed, uses Header / ChamberControlPanel / AuxiliaryOutputPanel / LightingPanel / FanPanel and 3 modals; talks to PLC at `192.168.77.100:4000`)
+- `home.tsx` → `qml/pages/VitalSigns.qml` — vital-signs page (heart rate / SpO2 / blood pressure; local state, talks to a separate Socket.io server at a configurable URL — currently an ngrok endpoint hard-coded as `https://6b07-...ngrok-free.app`; will be moved to config)
+- `o2-analyzer.tsx` → `qml/pages/O2Analyzer.qml`
+- `technical-room.tsx` → `qml/pages/TechnicalRoom.qml`
+- `patient-monitor.tsx` → `qml/pages/PatientMonitor.qml`
+- `compressor.tsx` → `qml/pages/Compressor.qml`
+- `sensors.tsx` → `qml/pages/Sensors.qml`
 
 **Out of scope:** `-old`, `-v2`, `-backup`, `dashboardtr`, `home_dik`, `next`, `slider-example`, `test.html` variants.
 
 **Backends are unchanged.** The Qt app talks to the same servers as Nextron:
-- Socket.io PLC bridge: `http://192.168.77.100:4000`
-- Socket.io B-Control bridge + REST: `http://localhost:3001` (REST under `/api`)
+- Socket.io PLC bridge: `http://192.168.77.100:4000` (used by Dashboard, TechnicalRoom, Sensors)
+- Socket.io B-Control bridge + REST: `http://localhost:3001` (REST under `/api`; B-Control used by Compressor, TechnicalRoom, Sensors)
+- Socket.io vital-signs server: configurable URL (currently the ngrok endpoint hard-coded in `home.tsx`; moved into `app/config.py` as `VITAL_SIGNS_URL`) — used only by VitalSigns page
 
 **Target platforms:**
 - Production: Raspberry Pi 5 (Linux ARM64, labwc/XWayland, fullscreen kiosk)
@@ -53,7 +55,9 @@ MY_APP_QT/
     state.py             # AppState QObject (Zustand store equivalent)
     plc_client.py        # Socket.io :4000 PLC bridge
     bcontrol_client.py   # Socket.io :3001 B-Control bridge
+    vitals_client.py     # Socket.io vital-signs (configurable URL)
     rest_client.py       # httpx async REST client
+    config.py            # URLs (PLC, B-Control, REST, vital-signs)
     plc_data_map.py      # Indexed mapping of the 30-element `data` array
     persistence.py       # QSettings wrapper (localStorage equivalent)
     router.py            # StackView page navigation helper
@@ -61,7 +65,8 @@ MY_APP_QT/
     Main.qml
     Theme.qml            # pragma Singleton — colors, font, dark-mode
     pages/
-      Home.qml
+      Dashboard.qml        # port of dashboard.tsx (chamber control)
+      VitalSigns.qml       # port of home.tsx (vital signs)
       O2Analyzer.qml
       TechnicalRoom.qml
       PatientMonitor.qml
@@ -148,7 +153,7 @@ def darkMode(self, v):
 | Errors | `errorMessage` | no |
 | Time | `currentTime`, `currentTime2` | no |
 
-Persistence key namespace: `QSettings("soylu", "rsp-qt")`.
+Persistence key namespace: `QSettings("soylu", "rsp-qt")`. (The Nextron app uses `dashboard-storage-${windowId}` via Zustand `persist`; the Qt app is single-window so a single namespace is enough.)
 
 ### 3.3 Command vs state separation
 
@@ -172,10 +177,18 @@ This matches Zustand's existing pattern and avoids feedback loops.
 - `seatAlarm` — `{seat: int, ...}`
 
 **Outbound (QML-invokable `@Slot`s):**
-- `writeRegister(address: str, value: int)` — analog (0–255), registers `R01700`/`R01702`/`R01704`/`R01706`
-- `writeBit(address: str, value: int)` — binary (0/1), bits `M0200`–`M0503`
+- `writeRegister(register: str, value: int)` — analog (0–255), registers `R01700` / `R01702` / `R01704` / `R01706`. Payload sent: `{"register": <str>, "value": <int>}` (verified against `dashboard.tsx:326`).
+- `writeBit(register: str, value: int)` — binary (0/1), bits `M0200`–`M0503`. Payload: `{"register": <str>, "value": <int>}` (verified against `dashboard.tsx:367`).
 
 Each outbound call schedules `sio.emit(...)` on the qasync loop with `asyncio.create_task(...)` so QML stays non-blocking.
+
+### 4.1a Vital-Signs Socket Client (configurable URL)
+
+`app/vitals_client.py` — Socket.io client used only by VitalSigns page.
+
+- **Inbound:** `vitalSigns` (heart rate, SpO2, blood pressure), `serialData` (raw payload parsed for calibration / seat alarm cues — see `home.tsx:65`)
+- **Outbound:** `serialSend` (string command, e.g. `"M"` — see `home.tsx:73`)
+- **URL:** `config.VITAL_SIGNS_URL` (currently the ngrok endpoint; change in one place when the production URL is known)
 
 ### 4.2 B-Control Socket Client (`localhost:3001`)
 
@@ -281,7 +294,8 @@ Seven SVG-backed visuals (PatientSilhouette, DetectorPanel gauges, TankSystemPan
 
 | Page | Top-level layout | Panels / modals |
 |---|---|---|
-| `Home.qml` | `RowLayout` | Header, ChamberControlPanel, AuxiliaryOutputPanel, LightingPanel, FanPanel + ChillerModal, ErrorModal, SeatAlarmModal |
+| `Dashboard.qml` | `RowLayout` | Header, ChamberControlPanel, AuxiliaryOutputPanel, LightingPanel, FanPanel + ChillerControlModal, ErrorModal, SeatAlarmModal |
+| `VitalSigns.qml` | `ColumnLayout` | Vital-signs cards (heart rate, SpO2, blood pressure), calibration modal, error modal, seat-alarm modal. Local state (not bound to `AppState`); subscribes to `vitalsClient` |
 | `O2Analyzer.qml` | `GridLayout` | `O2AnalyzerCard` × N, O2AnalyzerSettings modal; REST polling every 5s |
 | `TechnicalRoom.qml` | Fixed 1280×720 `Item`, scaled to viewport | TechRoomHeader + SVG/PNG overlays (HP1, chiller, tanks) |
 | `PatientMonitor.qml` | `GridLayout columns: 4` | `PatientCard` × 12, SessionInfoPanel, PatientSilhouette |
@@ -374,13 +388,14 @@ Per the user's choice ("staged: skeleton first + one page"), the work is split i
 | **0** | Repo init, `pyproject.toml`, folder skeleton, `Theme.qml`, `Main.qml`, Poppins font bundle | Empty window opens; dark/light toggle works |
 | **1** | `AppState` (full field set), `PlcClient`, `BControlClient`, `RestClient`, QSettings persistence, reconnect | Headless tests pass; QML reads `appState.darkMode` |
 | **2** | `ui/` component library + tailwind-to-qml cheat-sheet | Showcase QML page renders every primitive |
-| **3** | `Home.qml` + 4 panels + 3 modals + HyperbaricChamber / CylinderBank / ChamberSeatOverlay | Runs on RPi5 against live PLC; visual parity confirmed |
-| 4 | `O2Analyzer.qml` + REST polling | Separate spec |
-| 5 | `TechnicalRoom.qml` (scaled 1280×720) | Separate spec |
-| 6 | `PatientMonitor.qml` | Separate spec |
-| 7 | `Compressor.qml` + B-Control HMI | Separate spec |
-| 8 | `Sensors.qml` | Separate spec |
-| 9 | RPi5 deploy script + labwc autostart + final acceptance | Old Nextron app removed |
+| **3** | `Dashboard.qml` + 4 panels + 3 modals + HyperbaricChamber / CylinderBank / ChamberSeatOverlay | Runs on RPi5 against live PLC; visual parity confirmed |
+| 4 | `VitalSigns.qml` + `vitals_client.py` | Separate spec |
+| 5 | `O2Analyzer.qml` + REST polling | Separate spec |
+| 6 | `TechnicalRoom.qml` (scaled 1280×720) | Separate spec |
+| 7 | `PatientMonitor.qml` | Separate spec |
+| 8 | `Compressor.qml` + B-Control HMI | Separate spec |
+| 9 | `Sensors.qml` | Separate spec |
+| 10 | RPi5 deploy script + labwc autostart + final acceptance | Old Nextron app removed |
 
 ## 10. Risks
 
@@ -407,6 +422,6 @@ The implementation plan covering Phases 0–3 is complete when:
 2. `AppState` exposes every field listed in §3.2 with persistence behavior matching Zustand.
 3. `PlcClient`, `BControlClient`, and `RestClient` connect, reconnect, and round-trip a write under unit tests.
 4. The `ui/` component library renders every primitive in a showcase page.
-5. `Home.qml` runs on RPi5 against the live PLC with visual parity confirmed by side-by-side comparison.
+5. `Dashboard.qml` runs on RPi5 against the live PLC with visual parity confirmed by side-by-side comparison.
 
-Phases 4–9 are planned in subsequent specs.
+Phases 4–10 are planned in subsequent specs.
