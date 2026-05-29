@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { getBControlUrl } from '../config';
 import { cn } from '../components/utils';
+import { dewPointFromAbsHumidity } from '../utils/dewPoint';
 
 /**
  * B-Control Micro +NET — live compressor monitoring & control.
@@ -131,6 +132,7 @@ const DECIMALS: Record<string, number> = {
 	humidity: 1,
 	co2: 0,
 	voc: 2,
+	dewPoint: 1,
 };
 const fmtMetric = (key: string, v: number | undefined): string => {
 	if (v === undefined || v === null || Number.isNaN(v)) return '—';
@@ -359,13 +361,20 @@ export default function CompressorPage() {
 									<div className={cn('grid min-h-0 flex-1 gap-2.5', group.cols)}>
 										{group.keys.map((key) => {
 											const a = analog?.[key];
+											// Dew Point is derived locally from absolute
+											// humidity (g/m³) via inverse-interpolation
+											// against the saturated-vapor table.
+											const v =
+												key === 'dewPoint'
+													? dewPointFromAbsHumidity(scaled('humidity', analog?.humidity?.value)) ?? undefined
+													: scaled(key, a?.value);
 											return (
 												<MetricTile
 													key={key}
 													dot={group.dot}
 													label={LABELS[key] ?? a?.label ?? key}
-													value={fmtMetric(key, scaled(key, a?.value))}
-													unit={a?.unit ?? ''}
+													value={fmtMetric(key, v)}
+													unit={key === 'dewPoint' ? '°C' : a?.unit ?? ''}
 												/>
 											);
 										})}
