@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { app, ipcMain, screen } from 'electron';
+import { app, BrowserWindow, ipcMain, screen } from 'electron';
 
 if (process.env.ELECTRON_DISABLE_SANDBOX) {
 	app.commandLine.appendSwitch('no-sandbox');
@@ -235,6 +235,14 @@ function loadWindowsConfig(): WindowsConfig | null {
 		});
 
 		attachWindowLogging(mainWindow, 'main');
+
+		// Ctrl+Shift+G → open chrome://gpu in a new window for GPU diagnostics.
+		mainWindow.webContents.on('before-input-event', (_event, input) => {
+			if (input.control && input.shift && input.key.toLowerCase() === 'g') {
+				const gpuWin = new BrowserWindow({ width: 1100, height: 800 });
+				gpuWin.loadURL('chrome://gpu');
+			}
+		});
 
 		if (isProd) {
 			await mainWindow.loadURL('app://./home_dik');
