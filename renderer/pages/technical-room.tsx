@@ -389,21 +389,17 @@ export default function TechnicalRoomPage() {
 					</div>
 					<div
 						className={`absolute rounded-full ${
-							chillerCommError ? 'led-warn' : chillerRunning ? 'led-on' : 'led-off'
+							!chillerCommError && chillerRunning ? 'led-on' : 'led-off'
 						}`}
 						style={{ left: s(1196), top: s(670), width: s(20), height: s(20) }}
 					/>
 					<span
 						className={`absolute font-poppins font-bold uppercase tracking-wider drop-shadow ${
-							chillerCommError
-								? 'text-amber-400'
-								: chillerRunning
-									? 'text-emerald-400'
-									: 'text-rose-400'
+							!chillerCommError && chillerRunning ? 'text-emerald-400' : 'text-rose-400'
 						}`}
 						style={{ left: s(1226), top: s(663), fontSize: s(24) }}
 					>
-						{chillerCommError ? 'COMM' : chillerRunning ? 'ON' : 'OFF'}
+						{!chillerCommError && chillerRunning ? 'ON' : 'OFF'}
 					</span>
 					<p
 						className="absolute text-center font-poppins font-bold text-white drop-shadow-md"
