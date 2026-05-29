@@ -12,19 +12,17 @@ const isProd = process.env.NODE_ENV === 'production';
 
 if (process.platform === 'linux') {
 	// RPi 5 / labwc GPU tuning — verified 2026-05-29.
-	// ANGLE → native EGL (matches system Chromium on RPi OS).
-	app.commandLine.appendSwitch('use-angle', 'gles-egl');
 	// HW raster + DMA-buf zero-copy: cuts the One-copy frame copy that was
-	// causing animation jank under XWayland.
+	// causing animation jank under XWayland. chrome://gpu shows
+	// "Tile Update Mode: Zero-copy" with these on.
 	app.commandLine.appendSwitch('enable-gpu-rasterization');
 	app.commandLine.appendSwitch('enable-zero-copy');
 
-	// Wayland (ozone-platform=wayland, with or without UseOzonePlatform /
-	// WaylandWindowDecorations) white-screens Electron on this Pi + labwc
-	// build — Wayland surface creation fails before the first paint. Stay on
-	// XWayland for now; revisit after the next labwc / Electron upgrade.
-	// Opt-in env vars are still wired in git history (commit 557c6b7) if
-	// someone wants to re-probe.
+	// `use-angle=gles-egl` flipped compositing to Software only on this Pi
+	// (EGL config negotiation failed). Default ANGLE backend (gl + EGL win
+	// binding) keeps "Compositing: Hardware accelerated" — leave the switch
+	// out. Wayland (ozone-platform=wayland, any variant) white-screens; stay
+	// on XWayland. See git history (commit 557c6b7) for the gated probes.
 
 	// `disable-gpu-compositing` removed 2026-05-24 — was forcing software
 	// compositing. `in-process-gpu` removed 2026-05-26 — match system
