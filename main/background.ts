@@ -20,8 +20,20 @@ if (process.platform === 'linux') {
 	//
 	// Stacking known-safe: WAYLAND=1 ZERO_COPY=1 ./MY_APP.AppImage
 
-	if (process.env.WAYLAND === '1') {
+	// Wayland probing — labwc on RPi 5 sometimes rejects WaylandWindowDecorations
+	// (needs xdg-decoration). Test thinnest variant first:
+	//   WAYLAND_BARE=1  → ozone-platform=wayland (nothing else)
+	//   WAYLAND_USE=1   → + UseOzonePlatform feature flag
+	//   WAYLAND=1       → + WaylandWindowDecorations (the most fragile combo)
+	if (process.env.WAYLAND_BARE === '1' || process.env.WAYLAND_USE === '1' || process.env.WAYLAND === '1') {
 		app.commandLine.appendSwitch('ozone-platform', 'wayland');
+	}
+	if (process.env.WAYLAND_USE === '1' || process.env.WAYLAND === '1') {
+		app.commandLine.appendSwitch('enable-features', 'UseOzonePlatform');
+	}
+	if (process.env.WAYLAND === '1') {
+		// Re-append; appendSwitch with the same key overwrites the value, so
+		// we set the combined feature list once here.
 		app.commandLine.appendSwitch('enable-features', 'UseOzonePlatform,WaylandWindowDecorations');
 	}
 	if (process.env.ANGLE_EGL === '1') {
