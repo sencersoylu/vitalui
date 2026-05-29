@@ -123,6 +123,26 @@ const GROUPS: {
 const HIST_LEN = 360;
 const SAMPLE_MS = 5000;
 
+// ---- EN 12021 breathing-air thresholds — turn the tile red on breach --
+// Values are compared against the *scaled / derived* metric (same number
+// the operator sees). Humidity is in g/m³; the standard quotes mg/m³, so
+// the limit is 160 mg/m³ = 0.160 g/m³.
+type Threshold = { min?: number; max?: number };
+const THRESHOLDS: Record<string, Threshold> = {
+	co: { max: 5 },          // ≤ 5 ppm
+	co2: { max: 500 },       // ≤ 500 ppm
+	o2: { min: 20, max: 22 },// 21 ± 1 %
+	humidity: { max: 0.16 }, // ≤ 160 mg/m³ → 0.160 g/m³
+};
+const isOverThreshold = (key: string, v: number | undefined): boolean => {
+	if (v === undefined || !Number.isFinite(v)) return false;
+	const t = THRESHOLDS[key];
+	if (!t) return false;
+	if (t.max !== undefined && v > t.max) return true;
+	if (t.min !== undefined && v < t.min) return true;
+	return false;
+};
+
 // ---- Helpers -----------------------------------------------------------
 const fmt = (v: number | undefined): string => {
 	if (v === undefined || v === null || Number.isNaN(v)) return '—';
@@ -423,11 +443,14 @@ export default function CompressorPage() {
 											// humidity (g/m³) via inverse-interpolation
 											// against the saturated-vapor table.
 											let displayValue: string;
+											let numericValue: number | undefined;
 											if (key === 'dewPoint') {
 												const dp = dewPointFromAbsHumidity(scaled('humidity', analog?.humidity?.value));
 												displayValue = dp === null ? '###' : fmtMetric(key, dp);
+												numericValue = dp ?? undefined;
 											} else {
-												displayValue = fmtMetric(key, scaled(key, a?.value));
+												numericValue = scaled(key, a?.value);
+												displayValue = fmtMetric(key, numericValue);
 											}
 											return (
 												<MetricTile
@@ -438,6 +461,7 @@ export default function CompressorPage() {
 													value={displayValue}
 													unit={key === 'dewPoint' ? '°C' : a?.unit ?? ''}
 													history={history[key]}
+													alarm={isOverThreshold(key, numericValue)}
 												/>
 											);
 										})}
@@ -509,6 +533,7 @@ function MetricTile({
 	value,
 	unit,
 	history,
+	alarm,
 }: {
 	dot: string;
 	color: string;
@@ -516,26 +541,60 @@ function MetricTile({
 	value: string;
 	unit: string;
 	history?: number[];
+	alarm?: boolean;
 }) {
+	// EN 12021 limit breach: tint the value red and the card border/glow.
+	const effectiveColor = alarm ? '#f43f5e' : color;
 	return (
-		<div className="flex h-full flex-col gap-1.5 rounded-xl border border-slate-700/50 bg-slate-800/50 px-3.5 py-2.5">
+		<div
+			className={cn(
+				'flex h-full flex-col gap-1.5 rounded-xl border px-3.5 py-2.5 transition-colors duration-200',
+				alarm
+					? 'border-rose-500/60 bg-rose-500/[0.08] shadow-[inset_0_0_0_1px_rgba(244,63,94,0.15)]'
+					: 'border-slate-700/50 bg-slate-800/50'
+			)}
+		>
 			{/* Fixed-height label area keeps values aligned across a row even
 			    when a label wraps to two lines. */}
 			<div className="flex h-[30px] shrink-0 items-start gap-1.5">
-				<span className={cn('mt-[3px] h-2 w-2 shrink-0 rounded-full', dot)} />
-				<span className="text-[12.5px] font-semibold leading-[1.2] tracking-wide text-slate-400 line-clamp-2">
+				<span
+					className={cn(
+						'mt-[3px] h-2 w-2 shrink-0 rounded-full',
+						alarm ? 'bg-rose-500' : dot
+					)}
+				/>
+				<span
+					className={cn(
+						'text-[12.5px] font-semibold leading-[1.2] tracking-wide line-clamp-2',
+						alarm ? 'text-rose-300' : 'text-slate-400'
+					)}
+				>
 					{label}
 				</span>
 			</div>
 			<div className="flex shrink-0 items-baseline gap-1.5">
-				<span className="text-[28px] font-bold leading-none tabular-nums text-white">
+				<span
+					className={cn(
+						'text-[28px] font-bold leading-none tabular-nums',
+						alarm ? 'text-rose-400' : 'text-white'
+					)}
+				>
 					{value}
 				</span>
-				{unit && <span className="text-[14px] font-medium text-slate-500">{unit}</span>}
+				{unit && (
+					<span
+						className={cn(
+							'text-[14px] font-medium',
+							alarm ? 'text-rose-400/70' : 'text-slate-500'
+						)}
+					>
+						{unit}
+					</span>
+				)}
 			</div>
 			{/* 30-min rolling trend, fills remaining height */}
 			<div className="mt-auto min-h-0 flex-1">
-				<Sparkline values={history} color={color} />
+				<Sparkline values={history} color={effectiveColor} />
 			</div>
 		</div>
 	);
