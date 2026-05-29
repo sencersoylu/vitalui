@@ -11,12 +11,31 @@ import { createWindow } from './helpers';
 const isProd = process.env.NODE_ENV === 'production';
 
 if (process.platform === 'linux') {
-	// `disable-gpu-compositing` removed 2026-05-24 — it was forcing
-	// software compositing and causing animation jank on RPi 5.
-	// `in-process-gpu` removed 2026-05-26 — the Pi's system Chromium
-	// runs the GPU process out-of-process (verified via chrome://gpu)
-	// and so should we, so the main process isn't blocked by GPU work.
-	// If renderer crashes or white screens appear, put either flag back.
+	// Each tuning flag is behind an env var so it can be probed individually
+	// on the RPi without rebuilding for each combination:
+	//
+	//   WAYLAND=1     → native Wayland (avoids XWayland hop)
+	//   ANGLE_EGL=1   → ANGLE EGL backend
+	//   ZERO_COPY=1   → HW raster + DMA-buf zero-copy
+	//
+	// Stacking known-safe: WAYLAND=1 ZERO_COPY=1 ./MY_APP.AppImage
+
+	if (process.env.WAYLAND === '1') {
+		app.commandLine.appendSwitch('ozone-platform', 'wayland');
+		app.commandLine.appendSwitch('enable-features', 'UseOzonePlatform,WaylandWindowDecorations');
+	}
+	if (process.env.ANGLE_EGL === '1') {
+		app.commandLine.appendSwitch('use-angle', 'gles-egl');
+	}
+	if (process.env.ZERO_COPY === '1') {
+		app.commandLine.appendSwitch('enable-gpu-rasterization');
+		app.commandLine.appendSwitch('enable-zero-copy');
+	}
+
+	// `disable-gpu-compositing` removed 2026-05-24 — was forcing software
+	// compositing. `in-process-gpu` removed 2026-05-26 — match system
+	// Chromium and keep GPU work off the main process. Put either back if
+	// the renderer crashes or white-screens.
 	app.commandLine.appendSwitch('js-flags', '--max-old-space-size=384');
 }
 
