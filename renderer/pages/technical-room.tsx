@@ -12,17 +12,17 @@ const s = (n: number) => Math.round(n * (CANVAS_W / 1920));
 
 /**
  * Raw 4-20mA analog reading → bar.
- * O2 bank / nitrogen sensors: 0-400 bar, raw range 3240 (4mA) … 16383 (20mA).
+ * O2 bank / nitrogen sensors: 0-400 bar, raw range 3280 (4mA) … 16383 (20mA).
  */
 const toBar = (raw: number | undefined): string | number =>
-	typeof raw === 'number' ? linearConversion(0, 400, 3240, 16383, raw, 0) : '–';
+	typeof raw === 'number' ? linearConversion(0, 400, 3280, 16383, raw, 0) : '–';
 
 /**
  * Raw 4-20mA analog reading → level percentage.
- * FFS level sensors: 0-100 %, raw range 3240 (4mA) … 16383 (20mA).
+ * FFS level sensors: 0-100 %, raw range 3280 (4mA) … 16383 (20mA).
  */
 const toLevel = (raw: number | undefined): string | number =>
-	typeof raw === 'number' ? linearConversion(0, 100, 3240, 16383, raw, 0) : '–';
+	typeof raw === 'number' ? linearConversion(0, 100, 3280, 16383, raw, 0) : '–';
 
 /**
  * Low-pressure threshold for FFS Air cylinders. Below this value the
