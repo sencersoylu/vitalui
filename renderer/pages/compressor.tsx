@@ -125,14 +125,13 @@ const SAMPLE_MS = 5000;
 
 // ---- EN 12021 breathing-air thresholds — turn the tile red on breach --
 // Values are compared against the *scaled / derived* metric (same number
-// the operator sees). Humidity is in g/m³; the standard quotes mg/m³, so
-// the limit is 160 mg/m³ = 0.160 g/m³.
+// the operator sees). Humidity arrives from the bridge in mg/m³ already.
 type Threshold = { min?: number; max?: number };
 const THRESHOLDS: Record<string, Threshold> = {
 	co: { max: 5 },          // ≤ 5 ppm
 	co2: { max: 500 },       // ≤ 500 ppm
 	o2: { min: 20, max: 22 },// 21 ± 1 %
-	humidity: { max: 0.16 }, // ≤ 160 mg/m³ → 0.160 g/m³
+	humidity: { max: 160 },  // ≤ 160 mg/m³
 	voc: { max: 0.5 },       // Oil residue ≤ 0.5 mg/m³
 };
 const isOverThreshold = (key: string, v: number | undefined): boolean => {
@@ -270,7 +269,7 @@ export default function CompressorPage() {
 		for (const g of GROUPS) {
 			for (const key of g.keys) {
 				if (key === 'dewPoint') {
-					const dp = dewPointFromAbsHumidity(scaled('humidity', analog?.humidity?.value));
+					const dp = dewPointFromAbsHumidity(((scaled('humidity', analog?.humidity?.value) ?? 0)) / 1000);
 					m[key] = dp ?? undefined;
 				} else {
 					m[key] = scaled(key, analog?.[key]?.value);
@@ -446,7 +445,7 @@ export default function CompressorPage() {
 											let displayValue: string;
 											let numericValue: number | undefined;
 											if (key === 'dewPoint') {
-												const dp = dewPointFromAbsHumidity(scaled('humidity', analog?.humidity?.value));
+												const dp = dewPointFromAbsHumidity(((scaled('humidity', analog?.humidity?.value) ?? 0)) / 1000);
 												displayValue = dp === null ? '###' : fmtMetric(key, dp);
 												numericValue = dp ?? undefined;
 											} else {
