@@ -145,8 +145,9 @@ def darkMode(self, v):
 | Modals | `showAuxPanel`, `showCalibrationModal`, `showErrorModal`, `showSeatAlarmModal`, `showChillerModal` | no |
 | Calibration | `calibrationProgress`, `calibrationStatus` | no |
 | Chiller | `chillerRunning`, `chillerCurrentTemp`, `chillerSetTemp`, `chillerCommError` | mixed |
-| Tech sensors | `lp1Status`, `lp2Status`, `hp1Status`, `hpCylinderPressure`, `airTankPressure`, `nitrogen1Pressure`, `nitrogen2Pressure` | no |
-| FSS | `mainFssActive`, `mainFssAlarm`, `mainFssLevel`, `mainFssPressure`, `anteFssActive`, `anteFssAlarm`, `anteFssLevel`, `anteFssPressure` | no |
+| Chamber sensors | `mainPressure`, `mainO2`, `mainTemp`, `mainHumidity`, `antePressure`, `anteO2`, `anteTemp`, `anteHumidity` (new for Qt — Zustand kept these in component-local state) | no |
+| Tech sensors | `lp1Status`, `lp2Status`, `hp1Status` (HP1 comes from B-Control, not PLC), `hpCylinderPressure`, `airTankPressure` (now from `data[30]`, not `data[8]`), `nitrogen1Pressure`, `nitrogen2Pressure`, `techO2Pressure` (new — `data[9]`), `anteFssNitrogenPressure` (new — `data[24]`) | no |
+| FSS | `mainFssActive`, `mainFssAlarm`, `mainFssLevel`, `mainFssPressure`, `anteFssActive`, `anteFssAlarm`, `anteFssWarning`, `anteFssLevel`, `anteFssPressure` | no |
 | O2 | `primaryO2Active`, `primaryO2Pressure`, `secondaryO2Active`, `secondaryO2Pressure`, `liquidO2Active`, `liquidO2Pressure`, `mainHighO2`, `anteHighO2` | no |
 | Detectors | `mainFlameDetected`, `mainSmokeDetected`, `anteSmokeDetected` | no |
 | Alarms | `activeSeatAlarm` (dict\|None), `seatPressures` (list[12]) | no |
@@ -171,10 +172,27 @@ This matches Zustand's existing pattern and avoids feedback loops.
 `app/plc_client.py` wraps `socketio.AsyncClient` with auto-reconnect (1s → 5s exponential backoff, unbounded retries).
 
 **Inbound events:**
-- `data` — 30-element array, indexed mapping in `app/plc_data_map.py` (derived from `reference_socket_data_mapping.md` in user memory)
-- `chillerData` — temperature + running state
+- `data` — envelope `{isConnectedPLC: 0|1, data: number[]}`. The array is ≥31 numeric elements in current firmware (live-verified 2026-05-22 and 2026-05-26). Full index map in `app/plc_data_map.py`, derived from `reference_socket_data_mapping.md`. Highlights:
+    - `0..2` main chamber pressure / O2 / temperature
+    - `3` ante chamber humidity (live-verified, not unused)
+    - `4..6` ante chamber pressure / O2 / temperature
+    - `7` main chamber humidity
+    - `9` tech O2 pressure
+    - `10..13` main/ante FSS pressure and level
+    - `14`, `17`, `18`, `25`, `26` unmapped (logged at debug level)
+    - `15` chiller PV (current temp) — divide by 10
+    - `16` seat alarm number (also delivered as `seatAlarm` event)
+    - `19` alarm bitfield (bits: 2=MainFSS, 3=AnteFSS, 4=MainFlame, 5=MainSmoke, 6=AnteSmoke, 7=MainHighO2, 8=AnteHighO2)
+    - `20..21` O2 cylinder bank 1 / 2
+    - `22..23` main FSS nitrogen #1 / #2
+    - `24` ante FSS nitrogen #1
+    - `27` chiller link status — `=== 10` means **comm error** (Phase 1 plan corrected from `data[28]`)
+    - `28` chiller set temp × 10 (only trusted when `data[27] !== 10`)
+    - `29` chiller status flag 1; bit 0 = running
+    - `30` air tank pressure (replaces the older `data[8]` mapping)
+- `chillerData` — only `currentTemp` / 10 is used. The `running` field on this event is intentionally ignored (run state is read from `data[29]` bit 0).
 - `calibrationProgress` — progress percentage + status string
-- `seatAlarm` — `{seat: int, ...}`
+- `seatAlarm` — `{seatNumber: int, ...}`
 
 **Outbound (QML-invokable `@Slot`s):**
 - `writeRegister(register: str, value: int)` — analog (0–255), registers `R01700` / `R01702` / `R01704` / `R01706`. Payload sent: `{"register": <str>, "value": <int>}` (verified against `dashboard.tsx:326`).
