@@ -114,6 +114,35 @@ const fmt = (v: number | undefined): string => {
 	return v.toFixed(2);
 };
 
+// Bridge returns CO2 and CO in low-resolution raw units; the panel displays
+// the human-readable ppm scale.
+const SCALES: Record<string, number> = {
+	co2: 100, // 4.40 → 440 ppm
+	co: 10,   // 0.20 → 2.0 ppm
+};
+const scaled = (key: string, v: number | undefined): number | undefined =>
+	v === undefined || v === null || Number.isNaN(v) ? v : v * (SCALES[key] ?? 1);
+
+// Per-metric decimal places. Falls back to the default fmt() for any key
+// not listed here.
+const DECIMALS: Record<string, number> = {
+	o2: 1,
+	co: 1,
+	humidity: 1,
+	co2: 0,
+	voc: 2,
+};
+const fmtMetric = (key: string, v: number | undefined): string => {
+	if (v === undefined || v === null || Number.isNaN(v)) return '—';
+	const d = DECIMALS[key];
+	if (d !== undefined) return v.toFixed(d);
+	return fmt(v);
+};
+
+// Plain integer string (no thousands separator) — used for the serial no.
+const fmtPlain = (v: number | undefined): string =>
+	v === undefined || v === null || Number.isNaN(v) ? '—' : String(v);
+
 // =======================================================================
 export default function CompressorPage() {
 	const socketRef = useRef<any>(null);
@@ -267,19 +296,18 @@ export default function CompressorPage() {
 							/>
 							<div className="h-10 w-px bg-slate-700" />
 							<div>
-								<h1 className="flex items-center gap-2 whitespace-nowrap text-[21px] font-bold leading-tight">
-									<Activity size={20} className="text-[#4a90e2]" />
-									B-Control Micro +NET
+								<h1 className="flex items-center gap-2 text-[19px] font-bold leading-tight">
+									<Activity size={20} className="shrink-0 text-[#4a90e2]" />
+									<span className="flex flex-col leading-[1.15]">
+										<span>HP Compressor &amp;</span>
+										<span>B-Detection Monitoring</span>
+									</span>
 								</h1>
-								<p className="whitespace-nowrap text-[12.5px] text-slate-400">
-									Compressor monitoring &amp; control ·{' '}
-									<span className="font-semibold text-slate-300">{profile}</span>
-								</p>
 							</div>
 						</div>
 
 						<div className="flex items-center gap-4">
-							<HeaderStat label="Serial No." value={fmt(analog?.serialNumber?.value)} />
+							<HeaderStat label="Serial No." value={fmtPlain(analog?.serialNumber?.value)} />
 							<HeaderStat
 								label="Op. Hours"
 								value={`${fmt(analog?.operatingHours?.value)} h`}
@@ -336,7 +364,7 @@ export default function CompressorPage() {
 													key={key}
 													dot={group.dot}
 													label={LABELS[key] ?? a?.label ?? key}
-													value={fmt(a?.value)}
+													value={fmtMetric(key, scaled(key, a?.value))}
 													unit={a?.unit ?? ''}
 												/>
 											);
