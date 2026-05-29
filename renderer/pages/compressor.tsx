@@ -133,6 +133,7 @@ const THRESHOLDS: Record<string, Threshold> = {
 	co2: { max: 500 },       // ≤ 500 ppm
 	o2: { min: 20, max: 22 },// 21 ± 1 %
 	humidity: { max: 0.16 }, // ≤ 160 mg/m³ → 0.160 g/m³
+	voc: { max: 0.5 },       // Oil residue ≤ 0.5 mg/m³
 };
 const isOverThreshold = (key: string, v: number | undefined): boolean => {
 	if (v === undefined || !Number.isFinite(v)) return false;
