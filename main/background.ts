@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { app, BrowserWindow, ipcMain, screen } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol, screen } from 'electron';
 
 if (process.env.ELECTRON_DISABLE_SANDBOX) {
 	app.commandLine.appendSwitch('no-sandbox');
@@ -9,6 +9,23 @@ import serve from 'electron-serve';
 import { createWindow } from './helpers';
 
 const isProd = process.env.NODE_ENV === 'production';
+
+// Mark the `app://` scheme used by electron-serve as standard + secure so
+// Chromium treats it as a stable, secure origin. Without this, localStorage
+// (and Zustand persist) is treated as session-only and prod builds lose
+// state across restarts. Must run before app.whenReady().
+protocol.registerSchemesAsPrivileged([
+	{
+		scheme: 'app',
+		privileges: {
+			standard: true,
+			secure: true,
+			supportFetchAPI: true,
+			allowServiceWorkers: true,
+			stream: true,
+		},
+	},
+]);
 
 if (process.platform === 'linux') {
 	// RPi 5 / labwc GPU tuning — verified 2026-05-29.
