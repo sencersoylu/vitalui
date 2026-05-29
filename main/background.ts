@@ -244,6 +244,14 @@ function loadWindowsConfig(): WindowsConfig | null {
 			}
 		});
 
+		// Launch with OPEN_GPU=1 ./MY_APP.AppImage to auto-open chrome://gpu —
+		// useful when running headless over SSH where the keyboard shortcut
+		// can't be triggered.
+		if (process.env.OPEN_GPU === '1') {
+			const gpuWin = new BrowserWindow({ width: 1100, height: 800 });
+			gpuWin.loadURL('chrome://gpu');
+		}
+
 		if (isProd) {
 			await mainWindow.loadURL('app://./home_dik');
 		} else {
