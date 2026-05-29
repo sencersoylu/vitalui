@@ -31,6 +31,7 @@ export function ChamberControlPanel({
 		ventilMode,
 		chillerRunning,
 		chillerCurrentTemp,
+		chillerCommError,
 	} = useDashboardStore();
 
 	return (
@@ -73,14 +74,18 @@ export function ChamberControlPanel({
 				    but still a Button with Monitor icon and label so it reads
 				    as the "open settings" action. */}
 				<Button
-					variant={chillerRunning ? 'info' : 'muted'}
+					variant={chillerCommError ? 'muted' : chillerRunning ? 'info' : 'muted'}
 					size="lg"
 					fullWidth
 					onClick={onOpenChiller}
 					leftIcon={<Monitor className="w-5 h-5" />}
 					className="!rounded-full">
 					{t('chiller')}{' '}
-					{chillerRunning ? `${(chillerCurrentTemp ?? 0).toFixed(1)}°C` : t('off')}
+					{chillerCommError
+						? t('off')
+						: chillerRunning
+							? `${(chillerCurrentTemp ?? 0).toFixed(1)}°C`
+							: t('off')}
 				</Button>
 			</div>
 		</Card>
