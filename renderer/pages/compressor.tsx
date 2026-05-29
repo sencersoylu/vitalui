@@ -269,7 +269,7 @@ export default function CompressorPage() {
 		for (const g of GROUPS) {
 			for (const key of g.keys) {
 				if (key === 'dewPoint') {
-					const dp = dewPointFromAbsHumidity(((scaled('humidity', analog?.humidity?.value) ?? 0)) / 1000);
+					const dp = dewPointFromAbsHumidity(scaled('humidity', analog?.humidity?.value));
 					m[key] = dp ?? undefined;
 				} else {
 					m[key] = scaled(key, analog?.[key]?.value);
@@ -445,7 +445,7 @@ export default function CompressorPage() {
 											let displayValue: string;
 											let numericValue: number | undefined;
 											if (key === 'dewPoint') {
-												const dp = dewPointFromAbsHumidity(((scaled('humidity', analog?.humidity?.value) ?? 0)) / 1000);
+												const dp = dewPointFromAbsHumidity(scaled('humidity', analog?.humidity?.value));
 												displayValue = dp === null ? '###' : fmtMetric(key, dp);
 												numericValue = dp ?? undefined;
 											} else {
